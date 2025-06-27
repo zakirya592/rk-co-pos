@@ -1,7 +1,7 @@
-
-import React, { useState } from 'react';
+import React from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import Products from './Products';
+import Products from '../pages/Product/Products';
 import Categories from './Categories';
 import Reports from './Reports';
 import History from './History';
@@ -10,40 +10,32 @@ import Customers from './Customers';
 import Settings from './Settings';
 
 const Layout = () => {
-  const [currentPage, setCurrentPage] = useState('products');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'products':
-        return <Products />;
-      case 'categories':
-        return <Categories />;
-      case 'reports':
-        return <Reports />;
-      case 'history':
-        return <History />;
-      case 'pos':
-        return <POS />;
-      case 'customers':
-        return <Customers />;
-      case 'settings':
-        return <Settings />;
-      default:
-        return <Products />;
-    }
-  };
+  // Optional: Highlight current page in Sidebar based on URL
+  const currentPage = location.pathname.replace('/', '') || 'products';
 
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar
         currentPage={currentPage}
-        onPageChange={setCurrentPage}
+        onPageChange={page => navigate(`/${page}`)}
         isCollapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
       <div className="flex-1 overflow-auto">
-        {renderPage()}
+        <Routes>
+          <Route path="/products" element={<Products />} />
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/reports" element={<Reports />} />
+          <Route path="/history" element={<History />} />
+          <Route path="/pos" element={<POS />} />
+          <Route path="/customers" element={<Customers />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="*" element={<Products />} />
+        </Routes>
       </div>
     </div>
   );

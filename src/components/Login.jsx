@@ -1,15 +1,17 @@
-
 import React, { useState } from 'react';
 import { Card, CardBody, Input, Button, Divider } from '@nextui-org/react';
-import { FaUser, FaLock, FaStore } from 'react-icons/fa';
+import { FaUser, FaLock, FaStore, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // <-- Add this
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { login } = useAuth();
+  const navigator = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,10 +19,8 @@ const Login = () => {
     setError('');
 
     const success = await login(username, password);
-    if (!success) {
-      setError('Invalid username or password');
-    }
     setLoading(false);
+    navigator("/products");
   };
 
   return (
@@ -50,12 +50,26 @@ const Login = () => {
             />
 
             <Input
-              type="password"
+              type={showPassword ? "text" : "password"}
               label="Password"
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               startContent={<FaLock className="text-gray-400" />}
+              endContent={
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className="focus:outline-none"
+                  onClick={() => setShowPassword((v) => !v)}
+                >
+                  {showPassword ? (
+                    <FaEyeSlash className="text-gray-400" />
+                  ) : (
+                    <FaEye className="text-gray-400" />
+                  )}
+                </button>
+              }
               variant="bordered"
               required
             />
@@ -66,7 +80,7 @@ const Login = () => {
 
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold py-3"
+              className="w-full bg-gradient-to-r from-[#87CEEB] to-purple-600 text-white font-semibold py-3"
               size="lg"
               isLoading={loading}
             >

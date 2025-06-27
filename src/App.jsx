@@ -1,9 +1,10 @@
-
-import React from 'react';
-import { NextUIProvider } from '@nextui-org/react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import Login from './components/Login';
-import Layout from './components/Layout';
+import React from "react";
+import { NextUIProvider } from "@nextui-org/react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import Login from "./components/Login";
+import Layout from "./components/Layout";
+import { Toaster } from "react-hot-toast";
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -19,14 +20,29 @@ function AppContent() {
     );
   }
 
-  return user ? <Layout /> : <Login />;
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      {/* Protected routes */}
+      {user && (
+        <>
+          <Route path="/*" element={<Layout />} />
+        </>
+      )}
+      {/* Fallback for unauthenticated users */}
+      {!user && <Route path="/*" element={<Login />} />}
+    </Routes>
+  );
 }
 
 function App() {
   return (
     <NextUIProvider>
       <AuthProvider>
-        <AppContent />
+        <BrowserRouter>
+          <AppContent />
+          <Toaster />
+        </BrowserRouter>
       </AuthProvider>
     </NextUIProvider>
   );
