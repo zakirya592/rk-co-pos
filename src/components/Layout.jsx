@@ -5,6 +5,9 @@ import Products from './Products';
 import Categories from './Categories';
 import Reports from './Reports';
 import History from './History';
+import POS from './POS';
+import Customers from './Customers';
+import Settings from './Settings';
 
 const Layout = () => {
   const [currentPage, setCurrentPage] = useState('products');
@@ -21,11 +24,11 @@ const Layout = () => {
       case 'history':
         return <History />;
       case 'pos':
-        return <div className="p-6"><h1 className="text-3xl font-bold">POS Terminal</h1><p>Point of sale interface coming soon...</p></div>;
+        return <POS />;
       case 'customers':
-        return <div className="p-6"><h1 className="text-3xl font-bold">Customers</h1><p>Customer management coming soon...</p></div>;
+        return <Customers />;
       case 'settings':
-        return <div className="p-6"><h1 className="text-3xl font-bold">Settings</h1><p>System settings coming soon...</p></div>;
+        return <Settings />;
       default:
         return <Products />;
     }
