@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Select, SelectItem, Button } from "@nextui-org/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Select, SelectItem, Button, Textarea } from "@nextui-org/react";
 import { FaImage, FaTrash } from "react-icons/fa";
 
 const EditProductModal = ({
@@ -8,9 +8,11 @@ const EditProductModal = ({
   categories,
   editProduct,
   setEditProduct,
-  handleUpdateProduct
+  handleUpdateProduct,
+  handleImageChange,
 }) => (
   <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
+    {console.log(editProduct?.price, "editProduct")}
     <ModalContent>
       <ModalHeader>
         <h2 className="text-xl font-bold">Edit Product</h2>
@@ -21,14 +23,18 @@ const EditProductModal = ({
             <Input
               label="Product Name"
               value={editProduct.name}
-              onChange={(e) => setEditProduct({ ...editProduct, name: e.target.value })}
+              onChange={(e) =>
+                setEditProduct({ ...editProduct, name: e.target.value })
+              }
               variant="bordered"
               required
             />
             <Select
               label="Category"
               value={editProduct.category}
-              onChange={(e) => setEditProduct({ ...editProduct, category: e.target.value })}
+              onChange={(e) =>
+                setEditProduct({ ...editProduct, category: e.target.value })
+              }
               variant="bordered"
               required
             >
@@ -39,36 +45,44 @@ const EditProductModal = ({
               ))}
             </Select>
             <Input
-              label="Retail Price"
+              label="price"
               type="number"
-              value={editProduct.retailPrice}
-              onChange={(e) => setEditProduct({ ...editProduct, retailPrice: e.target.value })}
+              value={editProduct.price}
+              onChange={(e) =>
+                setEditProduct({ ...editProduct, price: e.target.value })
+              }
               startContent="Rs."
               variant="bordered"
               required
             />
-            <Input
-              label="Wholesale Price"
-              type="number"
-              value={editProduct.wholesalePrice}
-              onChange={(e) => setEditProduct({ ...editProduct, wholesalePrice: e.target.value })}
-              startContent="Rs."
-              variant="bordered"
-              required
-            />
+
             <Input
               label="Stock Quantity"
               type="number"
-              value={editProduct.stock}
-              onChange={(e) => setEditProduct({ ...editProduct, stock: e.target.value })}
+              value={editProduct.countInStock}
+              onChange={(e) =>
+                setEditProduct({ ...editProduct, countInStock: e.target.value })
+              }
               variant="bordered"
               required
             />
-            <Input
+            {/* <Input
               label="Barcode"
               value={editProduct.barcode}
               onChange={(e) => setEditProduct({ ...editProduct, barcode: e.target.value })}
               variant="bordered"
+            /> */}
+            <Textarea
+              label="Description"
+              placeholder="Enter product description"
+              value={editProduct.description}
+              onChange={(e) =>
+                setEditProduct({ ...editProduct, description: e.target.value })
+              }
+              variant="bordered"
+              required
+              minRows={3}
+              className="md:col-span-2"
             />
             {/* Image upload for edit */}
             <div className="flex flex-col gap-2 md:col-span-2">
@@ -86,28 +100,39 @@ const EditProductModal = ({
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (!file) return;
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          setEditProduct({ ...editProduct, image: reader.result });
-                        };
-                        reader.readAsDataURL(file);
-                      }}
+                      onChange={handleImageChange}
+                      // onChange={(e) => {
+                      //   const file = e.target.files[0];
+                      //   if (!file) return;
+                      //   const reader = new FileReader();
+                      //   reader.onloadend = () => {
+                      //     setEditProduct({
+                      //       ...editProduct,
+                      //       image: reader.result,
+                      //     });
+                      //   };
+                      //   reader.readAsDataURL(file);
+                      // }}
                     />
                   </label>
                 ) : (
                   <div className="relative w-36 h-32">
                     <img
-                      src={editProduct.image}
+                      // src={editProduct.image}
+                      src={
+                        editProduct.image instanceof File
+                          ? URL.createObjectURL(editProduct.image)
+                          : editProduct.image
+                      }
                       alt="Preview"
                       className="w-full h-full object-cover rounded-lg border"
                     />
                     <button
                       type="button"
                       className="absolute top-1 right-1 bg-white bg-opacity-80 rounded-full p-1 shadow hover:bg-red-100 transition-colors"
-                      onClick={() => setEditProduct({ ...editProduct, image: "" })}
+                      onClick={() =>
+                        setEditProduct({ ...editProduct, image: "" })
+                      }
                       title="Remove image"
                     >
                       <FaTrash className="text-red-500" />

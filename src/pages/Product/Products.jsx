@@ -41,17 +41,21 @@ const fetchProducts = async (key, searchTerm, currentPage) => {
 };
 
 const Products = () => {
-  const [categories] = useState(['Electronics', 'Furniture', 'Clothing', 'Books', 'Sports']);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [categories] = useState([
+    "Electronics",
+    "Furniture",
+    "Clothing",
+    "Books",
+    "Sports",
+  ]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: "",
     category: "",
-    retailPrice: "",
-    wholesalePrice: "",
+    price: "",
     countInStock: "",
-    barcode: "",
     description: "",
     image: "",
   });
@@ -63,8 +67,8 @@ const Products = () => {
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery(
-    ['products', searchTerm, currentPage],
-    () => fetchProducts('products', searchTerm, currentPage),
+    ["products", searchTerm, currentPage],
+    () => fetchProducts("products", searchTerm, currentPage),
     { keepPreviousData: true }
   );
 
@@ -75,16 +79,21 @@ const Products = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setNewProduct({ ...newProduct, image: reader.result });
-    };
-    reader.readAsDataURL(file);
+    setNewProduct({ ...newProduct, image: file });
+  };
+  // Add this in Products.jsx
+  const handleEditImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setEditProduct({ ...editProduct, image: file });
   };
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === '' || product.category === selectedCategory;
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch = product.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "" || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -96,41 +105,61 @@ const Products = () => {
   );
 
   //  Handle add product
-  const handleAddProduct = () => {
-    const product = {
-      id: Date.now(),
-      ...newProduct,
-      retailPrice: parseFloat(newProduct.retailPrice),
-      wholesalePrice: parseFloat(newProduct.wholesalePrice),
-      countInStock: parseInt(newProduct.countInStock),
-      status: "active",
-    };
+  const handleAddProduct = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("name", newProduct.name);
+      formData.append("price", newProduct.price);
+      formData.append("description", newProduct.description);
+      formData.append("category", newProduct.category);
+      formData.append("countInStock", newProduct.countInStock);
+      formData.append("image", newProduct.image);
 
-    setProducts([...products, product]);
-    setNewProduct({
-      name: "",
-      category: "",
-      retailPrice: "",
-      wholesalePrice: "",
-      countInStock: "",
-      barcode: "",
-      description: "",
-      image: "",
-    });
-    setShowAddModal(false);
-    setCurrentPage(1); // Go to first page after adding
-    toast.success("Product added successfully!"); // <-- Show toast
+      await userRequest.post("/products", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      setShowAddModal(false);
+      setCurrentPage(1);
+      setNewProduct({
+        name: "",
+        category: "",
+        price: "",
+        countInStock: "",
+        description: "",
+        image: "",
+      });
+      toast.success("Product added successfully!");
+      queryClient.invalidateQueries(["products"]); // Refetch products
+    } catch (error) {
+      toast.error("Failed to add product.");
+    }
   };
 
   // Handle update product
-  const handleUpdateProduct = () => {
-    setProducts(products.map(p =>
-      p.id === editProduct.id
-        ? { ...editProduct, retailPrice: parseFloat(editProduct.retailPrice), wholesalePrice: parseFloat(editProduct.wholesalePrice), countInStock: parseInt(editProduct.countInStock) }
-        : p
-    ));
-    toast.success("Product Updated successfully!"); 
-    setEditProduct(null);
+  const handleUpdateProduct = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("name", editProduct.name);
+      formData.append("price", editProduct.price);
+      formData.append("description", editProduct.description);
+      formData.append("category", editProduct.category);
+      formData.append("countInStock", editProduct.countInStock);
+      formData.append("image", editProduct.image);
+
+      await userRequest.put(`/products/${editProduct?._id || ""}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      toast.success("Product updated successfully!");
+      setEditProduct(null);
+      queryClient.invalidateQueries(["products"]);
+    } catch (error) {
+      toast.error(
+        error?.response?.data.message ||
+          error.message ||
+          "Failed to update product."
+      );
+    }
   };
 
   // Handle delete product
@@ -149,26 +178,24 @@ const Products = () => {
         try {
           await userRequest.delete(`/products/${id}`);
           toast.success("The product has been deleted.");
-          queryClient.invalidateQueries(['products']); // Refetch products
+          queryClient.invalidateQueries(["products"]);
         } catch (error) {
           toast.error("Failed to delete the product.");
         }
       }
     });
   };
-const getStockColor = (countInStock) => {
+  const getStockColor = (countInStock) => {
     if (countInStock <= 5) return "danger";
     if (countInStock <= 10) return "warning";
     return "success";
   };
 
-
   const bottomContent = useMemo(
     () => (
       <div className="flex justify-between items-center mt-4">
         <span className="text-small text-default-400">
-          Total: {totalProducts}{" "}
-          {totalProducts === 1 ? "product" : "products"}
+          Total: {totalProducts} {totalProducts === 1 ? "product" : "products"}
         </span>
         <div className="flex items-center gap-4">
           <Pagination
@@ -198,9 +225,15 @@ const getStockColor = (countInStock) => {
               variant="bordered"
               size="sm"
             >
-              <SelectItem key="5" value="5">5</SelectItem>
-              <SelectItem key="10" value="10">10</SelectItem>
-              <SelectItem key="15" value="15">15</SelectItem>
+              <SelectItem key="5" value="5">
+                5
+              </SelectItem>
+              <SelectItem key="10" value="10">
+                10
+              </SelectItem>
+              <SelectItem key="15" value="15">
+                15
+              </SelectItem>
             </Select>
           </label>
         </div>
@@ -270,10 +303,9 @@ const getStockColor = (countInStock) => {
           <TableColumn>IMAGE</TableColumn>
           <TableColumn>NAME</TableColumn>
           <TableColumn>CATEGORY</TableColumn>
-          <TableColumn>PRICE</TableColumn>
-          {/* <TableColumn>WHOLESALE PRICE</TableColumn> */}
+          <TableColumn>price</TableColumn>
+          {/* <TableColumn>WHOLESALE price</TableColumn> */}
           <TableColumn>STOCK</TableColumn>
-          {/* <TableColumn>BARCODE</TableColumn> */}
           <TableColumn>ACTIONS</TableColumn>
         </TableHeader>
         <TableBody
@@ -309,17 +341,11 @@ const getStockColor = (countInStock) => {
                 </Chip>
               </TableCell>
               <TableCell>{product.price}</TableCell>
-              {/* <TableCell>
-                    Rs. {product.wholesalePrice.toLocaleString()}
-                  </TableCell> */}
               <TableCell>
                 <Chip size="sm" color={getStockColor(product.countInStock)}>
                   {product.countInStock} units
                 </Chip>
               </TableCell>
-              {/* <TableCell className="font-mono text-sm">
-                    {product.barcode}
-                  </TableCell> */}
               <TableCell>
                 <div className="flex gap-2">
                   <Tooltip content="View Product" placement="top">
@@ -362,7 +388,6 @@ const getStockColor = (countInStock) => {
           ))}
         </TableBody>
       </Table>
-        
 
       {/* Add Product Modal */}
       <AddProductModal
@@ -390,6 +415,7 @@ const getStockColor = (countInStock) => {
         editProduct={editProduct}
         setEditProduct={setEditProduct}
         handleUpdateProduct={handleUpdateProduct}
+        handleImageChange={handleEditImageChange}
       />
     </div>
   );

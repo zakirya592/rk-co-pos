@@ -1,9 +1,9 @@
 import React from "react";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Select, SelectItem, Button } from "@nextui-org/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Select, SelectItem, Button, Textarea } from "@nextui-org/react";
 import { FaImage, FaTrash } from "react-icons/fa";
 
-const AddProductModal = ({isOpen,onClose,categories,newProduct,setNewProduct,handleAddProduct,handleImageChange}) => (
-  
+const AddProductModal = ({ isOpen, onClose, categories, newProduct, setNewProduct, handleAddProduct, handleImageChange }) => (
+
   <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
     <ModalContent>
       <ModalHeader>
@@ -34,21 +34,11 @@ const AddProductModal = ({isOpen,onClose,categories,newProduct,setNewProduct,han
             ))}
           </Select>
           <Input
-            label="Retail Price"
+            label="price"
             placeholder="0.00"
             type="number"
-            value={newProduct.retailPrice}
-            onChange={(e) => setNewProduct({ ...newProduct, retailPrice: e.target.value })}
-            startContent="Rs."
-            variant="bordered"
-            required
-          />
-          <Input
-            label="Wholesale Price"
-            placeholder="0.00"
-            type="number"
-            value={newProduct.wholesalePrice}
-            onChange={(e) => setNewProduct({ ...newProduct, wholesalePrice: e.target.value })}
+            value={newProduct.price}
+            onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
             startContent="Rs."
             variant="bordered"
             required
@@ -58,17 +48,21 @@ const AddProductModal = ({isOpen,onClose,categories,newProduct,setNewProduct,han
             placeholder="0"
             type="number"
             value={newProduct.stock}
-            onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
+            onChange={(e) => setNewProduct({ ...newProduct, countInStock: e.target.value })}
             variant="bordered"
             required
           />
-          <Input
-            label="Barcode"
-            placeholder="Enter barcode"
-            value={newProduct.barcode}
-            onChange={(e) => setNewProduct({ ...newProduct, barcode: e.target.value })}
+          <Textarea
+            label="Description"
+            placeholder="Enter product description"
+            value={newProduct.description}
+            onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
             variant="bordered"
+            required
+            minRows={3}
+            className="md:col-span-2"
           />
+
           {/* Image upload */}
           <div className="flex flex-col gap-2 md:col-span-2">
             <label className="font-medium text-gray-700">Product Image</label>
@@ -91,7 +85,7 @@ const AddProductModal = ({isOpen,onClose,categories,newProduct,setNewProduct,han
               ) : (
                 <div className="relative w-32 h-32">
                   <img
-                    src={newProduct.image}
+                    src={newProduct.image instanceof File ? URL.createObjectURL(newProduct.image) : newProduct.image}
                     alt="Preview"
                     className="w-full h-full object-cover rounded-lg border"
                   />
