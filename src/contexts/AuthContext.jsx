@@ -1,5 +1,6 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import userRequest from '../utils/userRequest';
+import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
 
@@ -17,6 +18,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check if user is logged in from localStorage
+    localStorage.getItem("token");
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
       setUser(JSON.parse(savedUser));
@@ -24,26 +26,28 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = async (username, password) => {
-    // Mock authentication - replace with real API call
-    if (username === 'admin' && password === 'password') {
-      const userData = {
-        id: 1,
-        username: 'admin',
-        role: 'admin',
-        shopName: 'RK & Co',
-        contact: '+92-XXX-XXXXXXX'
-      };
+  const login = async (email, password) => {
+    try {
+      const response = await userRequest.post("/users/login", {
+        email,
+        password,
+      });
+      const userData = response?.data?.data || "";
       setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("token", userData?.token);
+      toast.success("Login successful!");
       return true;
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Invalid email or password");
+      return false;
     }
-    return false;
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
   };
 
   const value = {

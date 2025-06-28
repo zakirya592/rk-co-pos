@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Card,
   CardBody,
@@ -13,60 +13,63 @@ import {
   Select,
   SelectItem,
   Chip,
-  Pagination
-} from '@nextui-org/react';
+  Pagination,
+  Spinner,
+  Tooltip,
+} from "@nextui-org/react";
 import { FaPlus, FaSearch, FaEdit, FaTrash, FaEye, FaImage } from 'react-icons/fa';
 import AddProductModal from './AddProductModal';
 import ViewProductModal from './ViewProductModal';
 import EditProductModal from './EditProductModal';
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
+import { useQuery, useQueryClient } from 'react-query';
+import userRequest from '../../utils/userRequest';
 
-const PRODUCTS_PER_PAGE = 5;
+
+const fetchProducts = async (key, searchTerm, currentPage) => {
+  const res = await userRequest.get("/products", {
+    params: {
+      search: searchTerm,
+      page: currentPage,
+    },
+  });
+  return {
+    products: res.data.data || [],
+    total: res.data.results || 0,
+  };
+};
 
 const Products = () => {
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: 'Laptop Dell XPS 13',
-      category: 'Electronics',
-      retailPrice: 85000,
-      wholesalePrice: 80000,
-      stock: 15,
-      barcode: '1234567890123',
-      status: 'active',
-      image: ''
-    },
-    {
-      id: 2,
-      name: 'Office Chair',
-      category: 'Furniture',
-      retailPrice: 12000,
-      wholesalePrice: 10000,
-      stock: 8,
-      barcode: '1234567890124',
-      status: 'active',
-      image: ''
-    }
-  ]);
-
   const [categories] = useState(['Electronics', 'Furniture', 'Clothing', 'Books', 'Sports']);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [newProduct, setNewProduct] = useState({
-    name: '',
-    category: '',
-    retailPrice: '',
-    wholesalePrice: '',
-    stock: '',
-    barcode: '',
-    description: '',
-    image: ''
+    name: "",
+    category: "",
+    retailPrice: "",
+    wholesalePrice: "",
+    countInStock: "",
+    barcode: "",
+    description: "",
+    image: "",
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [viewProduct, setViewProduct] = useState(null);
   const [editProduct, setEditProduct] = useState(null);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const queryClient = useQueryClient();
+
+  const { data, isLoading } = useQuery(
+    ['products', searchTerm, currentPage],
+    () => fetchProducts('products', searchTerm, currentPage),
+    { keepPreviousData: true }
+  );
+
+  const products = data?.products || [];
+  const totalProducts = data?.total || 0;
 
   // Handle image upload
   const handleImageChange = (e) => {
@@ -86,19 +89,20 @@ const Products = () => {
   });
 
   // Pagination logic
-  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
+  const totalPages = Math.ceil(totalProducts / rowsPerPage);
   const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * PRODUCTS_PER_PAGE,
-    currentPage * PRODUCTS_PER_PAGE
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
   );
 
+  //  Handle add product
   const handleAddProduct = () => {
     const product = {
       id: Date.now(),
       ...newProduct,
       retailPrice: parseFloat(newProduct.retailPrice),
       wholesalePrice: parseFloat(newProduct.wholesalePrice),
-      stock: parseInt(newProduct.stock),
+      countInStock: parseInt(newProduct.countInStock),
       status: "active",
     };
 
@@ -108,7 +112,7 @@ const Products = () => {
       category: "",
       retailPrice: "",
       wholesalePrice: "",
-      stock: "",
+      countInStock: "",
       barcode: "",
       description: "",
       image: "",
@@ -122,7 +126,7 @@ const Products = () => {
   const handleUpdateProduct = () => {
     setProducts(products.map(p =>
       p.id === editProduct.id
-        ? { ...editProduct, retailPrice: parseFloat(editProduct.retailPrice), wholesalePrice: parseFloat(editProduct.wholesalePrice), stock: parseInt(editProduct.stock) }
+        ? { ...editProduct, retailPrice: parseFloat(editProduct.retailPrice), wholesalePrice: parseFloat(editProduct.wholesalePrice), countInStock: parseInt(editProduct.countInStock) }
         : p
     ));
     toast.success("Product Updated successfully!"); 
@@ -140,19 +144,70 @@ const Products = () => {
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Yes, delete it!",
       cancelButtonText: "No, cancel!",
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        setProducts(products.filter((product) => product.id !== id));
-        toast.success("The product has been deleted.");
+        try {
+          await userRequest.delete(`/products/${id}`);
+          toast.success("The product has been deleted.");
+          queryClient.invalidateQueries(['products']); // Refetch products
+        } catch (error) {
+          toast.error("Failed to delete the product.");
+        }
       }
     });
   };
-
-  const getStockColor = (stock) => {
-    if (stock <= 5) return 'danger';
-    if (stock <= 10) return 'warning';
-    return 'success';
+const getStockColor = (countInStock) => {
+    if (countInStock <= 5) return "danger";
+    if (countInStock <= 10) return "warning";
+    return "success";
   };
+
+
+  const bottomContent = useMemo(
+    () => (
+      <div className="flex justify-between items-center mt-4">
+        <span className="text-small text-default-400">
+          Total: {totalProducts}{" "}
+          {totalProducts === 1 ? "product" : "products"}
+        </span>
+        <div className="flex items-center gap-4">
+          <Pagination
+            isCompact
+            total={totalPages}
+            page={currentPage}
+            onChange={setCurrentPage}
+            showControls
+            showShadow
+            color="primary"
+            classNames={{
+              wrapper: "gap-1",
+              item: "bg-transparent text-gray-700 hover:bg-green-50",
+              cursor: "bg-green-600 text-white font-medium",
+            }}
+          />
+          <label className="flex items-center gap-2 text-default-400 text-small">
+            Rows per page:
+            <Select
+              className="w-20"
+              selectedKeys={[String(rowsPerPage)]}
+              onSelectionChange={(keys) => {
+                const value = Number(Array.from(keys)[0]);
+                setRowsPerPage(value);
+                setCurrentPage(1);
+              }}
+              variant="bordered"
+              size="sm"
+            >
+              <SelectItem key="5" value="5">5</SelectItem>
+              <SelectItem key="10" value="10">10</SelectItem>
+              <SelectItem key="15" value="15">15</SelectItem>
+            </Select>
+          </label>
+        </div>
+      </div>
+    ),
+    [totalPages, currentPage, rowsPerPage, totalProducts]
+  );
 
   return (
     <div className="p-6 space-y-6">
@@ -210,108 +265,104 @@ const Products = () => {
       </Card>
 
       {/* Products Table */}
-      <Card>
-        <CardBody>
-          <Table aria-label="Products table">
-            <TableHeader>
-              <TableColumn>IMAGE</TableColumn>
-              <TableColumn>NAME</TableColumn>
-              <TableColumn>CATEGORY</TableColumn>
-              <TableColumn>RETAIL PRICE</TableColumn>
-              <TableColumn>WHOLESALE PRICE</TableColumn>
-              <TableColumn>STOCK</TableColumn>
-              <TableColumn>BARCODE</TableColumn>
-              <TableColumn>ACTIONS</TableColumn>
-            </TableHeader>
-            <TableBody>
-              {paginatedProducts.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell>
-                    {product.image ? (
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-12 h-12 object-cover rounded"
-                      />
-                    ) : (
-                      <FaImage className="text-gray-300 text-2xl" />
-                    )}
-                  </TableCell>
-                  <TableCell className="font-semibold">
-                    {product.name}
-                  </TableCell>
-                  <TableCell>
-                    <Chip size="sm" variant="flat" color="primary">
-                      {product.category}
-                    </Chip>
-                  </TableCell>
-                  <TableCell>
-                    Rs. {product.retailPrice.toLocaleString()}
-                  </TableCell>
-                  <TableCell>
+      <Table aria-label="Products table" bottomContent={bottomContent}>
+        <TableHeader>
+          <TableColumn>IMAGE</TableColumn>
+          <TableColumn>NAME</TableColumn>
+          <TableColumn>CATEGORY</TableColumn>
+          <TableColumn>PRICE</TableColumn>
+          {/* <TableColumn>WHOLESALE PRICE</TableColumn> */}
+          <TableColumn>STOCK</TableColumn>
+          {/* <TableColumn>BARCODE</TableColumn> */}
+          <TableColumn>ACTIONS</TableColumn>
+        </TableHeader>
+        <TableBody
+          isLoading={isLoading}
+          loadingContent={
+            <div className="flex justify-center items-center py-8">
+              <Spinner color="success" size="lg" />
+            </div>
+          }
+          emptyContent={
+            <div className="text-center text-gray-500 py-8">
+              No Product found
+            </div>
+          }
+        >
+          {paginatedProducts.map((product) => (
+            <TableRow key={product.id}>
+              <TableCell>
+                {product.image ? (
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-12 h-12 object-cover rounded"
+                  />
+                ) : (
+                  <FaImage className="text-gray-300 text-2xl" />
+                )}
+              </TableCell>
+              <TableCell className="font-semibold">{product.name}</TableCell>
+              <TableCell>
+                <Chip size="sm" variant="flat" color="primary">
+                  {product.category}
+                </Chip>
+              </TableCell>
+              <TableCell>{product.price}</TableCell>
+              {/* <TableCell>
                     Rs. {product.wholesalePrice.toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    <Chip size="sm" color={getStockColor(product.stock)}>
-                      {product.stock} units
-                    </Chip>
-                  </TableCell>
-                  <TableCell className="font-mono text-sm">
+                  </TableCell> */}
+              <TableCell>
+                <Chip size="sm" color={getStockColor(product.countInStock)}>
+                  {product.countInStock} units
+                </Chip>
+              </TableCell>
+              {/* <TableCell className="font-mono text-sm">
                     {product.barcode}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        color="primary"
-                        onClick={() => setViewProduct(product)}
-                      >
-                        <FaEye />
-                      </Button>
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        color="warning"
-                        onClick={() => setEditProduct(product)}
-                      >
-                        <FaEdit />
-                      </Button>
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        color="danger"
-                        onClick={() => handleDeleteProduct(product.id)}
-                      >
-                        <FaTrash />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          {/* Pagination */}
-          <div className="flex justify-between items-center mt-4">
-            <span className="text-small text-default-400">
-              Total: {filteredProducts.length}{" "}
-              {filteredProducts.length === 1 ? "product" : "products"}
-            </span>
-            <Pagination
-              isCompact
-              total={totalPages}
-              page={currentPage}
-              onChange={setCurrentPage}
-              showControls
-              showShadow
-              color="primary"
-            />
-          </div>
-        </CardBody>
-      </Card>
+                  </TableCell> */}
+              <TableCell>
+                <div className="flex gap-2">
+                  <Tooltip content="View Product" placement="top">
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      color="primary"
+                      onClick={() => setViewProduct(product)}
+                    >
+                      <FaEye />
+                    </Button>
+                  </Tooltip>
+                  <Tooltip content="Edit Product" placement="top">
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      color="warning"
+                      onClick={() => setEditProduct(product)}
+                    >
+                      <FaEdit />
+                    </Button>
+                  </Tooltip>
+
+                  <Tooltip content="Delete Product" placement="top">
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      color="danger"
+                      onClick={() => handleDeleteProduct(product._id)}
+                    >
+                      <FaTrash />
+                    </Button>
+                  </Tooltip>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+        
 
       {/* Add Product Modal */}
       <AddProductModal

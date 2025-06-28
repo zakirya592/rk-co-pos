@@ -3,9 +3,10 @@ import { Card, CardBody, Input, Button, Divider } from '@nextui-org/react';
 import { FaUser, FaLock, FaStore, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import toast from "react-hot-toast";
 
 const Login = () => {
-  const [username, setUsername] = useState('');
+  const [email, setemail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false); // <-- Add this
   const [loading, setLoading] = useState(false);
@@ -17,10 +18,13 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
-    const success = await login(username, password);
+    const success = await login(email, password);
     setLoading(false);
-    navigator("/products");
+    if (success) {
+      navigator("/products");
+    } else {
+      setError("Invalid email or password");
+    }
   };
 
   return (
@@ -40,10 +44,10 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <Input
               type="text"
-              label="Username"
-              placeholder="Enter your username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              label="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setemail(e.target.value)}
               startContent={<FaUser className="text-gray-400" />}
               variant="bordered"
               required
@@ -90,9 +94,9 @@ const Login = () => {
 
           <Divider className="my-6" />
 
-          <div className="text-center text-sm text-gray-600">
+          {/* <div className="text-center text-sm text-gray-600">
             Demo credentials: admin / password
-          </div>
+          </div> */}
         </CardBody>
       </Card>
     </div>

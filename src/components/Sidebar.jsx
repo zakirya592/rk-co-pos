@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, Button, Avatar, Divider } from '@nextui-org/react';
 import { 
@@ -29,7 +28,11 @@ const Sidebar = ({ currentPage, onPageChange, isCollapsed, onToggleCollapse }) =
   ];
 
   return (
-    <Card className={`h-screen ${isCollapsed ? 'w-16' : 'w-64'} transition-all duration-300 rounded-none border-r`}>
+    <Card
+      className={`h-screen ${
+        isCollapsed ? "w-16" : "w-64"
+      } transition-all duration-300 rounded-none border-r`}
+    >
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="p-4 border-b">
@@ -61,11 +64,11 @@ const Sidebar = ({ currentPage, onPageChange, isCollapsed, onToggleCollapse }) =
           <div className="p-4 border-b">
             <div className="flex items-center space-x-3">
               <Avatar
-                name={user?.username || 'User'}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+                name={user?.role ? user.role.charAt(0).toUpperCase() : "R"}
+                className="bg-gradient-to-r from-blue-500 to-purple-600 text-border text-2xl text-white"
               />
               <div className="flex-1">
-                <p className="font-semibold">{user?.username}</p>
+                <p className="font-semibold">{user?.name}</p>
                 <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
               </div>
             </div>
@@ -78,15 +81,17 @@ const Sidebar = ({ currentPage, onPageChange, isCollapsed, onToggleCollapse }) =
             {menuItems.map((item) => (
               <Button
                 key={item.id}
-                variant={currentPage === item.id ? 'solid' : 'light'}
+                variant={currentPage === item.id ? "solid" : "light"}
                 className={`w-full justify-start ${
-                  currentPage === item.id 
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white' 
-                    : 'text-gray-700 hover:bg-gray-100'
-                } ${isCollapsed ? 'px-2' : 'px-4'}`}
+                  currentPage === item.id
+                    ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                } ${isCollapsed ? "px-2" : "px-4"}`}
                 onClick={() => onPageChange(item.id)}
               >
-                <item.icon className={`${isCollapsed ? 'text-xl' : 'text-lg mr-3'}`} />
+                <item.icon
+                  className={`${isCollapsed ? "text-xl" : "text-lg mr-3"}`}
+                />
                 {!isCollapsed && item.label}
               </Button>
             ))}
@@ -98,12 +103,14 @@ const Sidebar = ({ currentPage, onPageChange, isCollapsed, onToggleCollapse }) =
           <Button
             variant="light"
             className={`w-full justify-start text-red-600 hover:bg-red-50 ${
-              isCollapsed ? 'px-2' : 'px-4'
+              isCollapsed ? "px-2" : "px-4"
             }`}
             onClick={logout}
           >
-            <FaSignOutAlt className={`${isCollapsed ? 'text-xl' : 'text-lg mr-3'}`} />
-            {!isCollapsed && 'Logout'}
+            <FaSignOutAlt
+              className={`${isCollapsed ? "text-xl" : "text-lg mr-3"}`}
+            />
+            {!isCollapsed && "Logout"}
           </Button>
         </div>
       </div>

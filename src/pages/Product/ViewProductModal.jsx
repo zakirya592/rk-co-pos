@@ -2,6 +2,12 @@ import React from "react";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@nextui-org/react";
 import { FaImage } from "react-icons/fa";
 
+const getStockColor = (countInStock) => {
+  if (countInStock <= 5) return "text-red-600 font-semibold";
+  if (countInStock <= 10) return "text-yellow-600 font-semibold";
+  return "text-green-600 font-semibold";
+};
+
 const ViewProductModal = ({ isOpen, onClose, viewProduct }) => (
   <Modal isOpen={isOpen} onClose={onClose} size="md">
     <ModalContent>
@@ -20,14 +26,41 @@ const ViewProductModal = ({ isOpen, onClose, viewProduct }) => (
             ) : (
               <FaImage className="text-6xl text-gray-300" />
             )}
-            <div className="w-full">
-              <div className="font-bold text-lg">{viewProduct.name}</div>
-              <div className="text-gray-600 mb-2">{viewProduct.category}</div>
-              <div>Retail Price: Rs. {viewProduct.retailPrice}</div>
-              <div>Wholesale Price: Rs. {viewProduct.wholesalePrice}</div>
-              <div>Stock: {viewProduct.stock}</div>
-              <div>Barcode: {viewProduct.barcode}</div>
-              <div>Description: {viewProduct.description}</div>
+            <div className="w-full space-y-1">
+              <div className="text-lg">
+                <span className="text-blue-700 font-semibold">Name: </span>
+                {viewProduct.name}
+              </div>
+              <div className="mb-2 text-lg">
+                <span className="text-blue-700 font-semibold">Category: </span>
+                {viewProduct.category}
+              </div>
+              <div className="text-lg">
+                <span className="text-blue-700 font-semibold">Price: </span>
+                {viewProduct.price}
+              </div>
+              <div className="text-lg">
+                <span className="text-blue-700 font-semibold">Stock: </span>
+                <span className={getStockColor(viewProduct.countInStock)}>
+                  {viewProduct.countInStock}
+                </span>
+              </div>
+              <div className="text-lg">
+                <span className="text-blue-700 font-semibold">Status: </span>
+                <span
+                  className={
+                    viewProduct.isActive
+                      ? "text-green-600 font-semibold"
+                      : "text-red-600 font-semibold"
+                  }
+                >
+                  {viewProduct.isActive ? "Active" : "No Active"}
+                </span>
+              </div>
+              <div className="text-lg">
+                <span className="text-blue-700 font-semibold">Description: </span>
+                {viewProduct.description}
+              </div>
             </div>
           </div>
         )}

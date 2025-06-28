@@ -5,6 +5,10 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Login from "./components/Login";
 import Layout from "./components/Layout";
 import { Toaster } from "react-hot-toast";
+import { QueryClient, QueryClientProvider } from "react-query";
+
+const queryClient = new QueryClient();
+
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -39,10 +43,12 @@ function App() {
   return (
     <NextUIProvider>
       <AuthProvider>
+      <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AppContent />
           <Toaster />
         </BrowserRouter>
+        </QueryClientProvider>
       </AuthProvider>
     </NextUIProvider>
   );
