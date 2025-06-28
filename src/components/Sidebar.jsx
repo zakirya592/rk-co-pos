@@ -1,30 +1,32 @@
 import React, { useState } from 'react';
 import { Card, Button, Avatar, Divider } from '@nextui-org/react';
-import { 
-  FaBoxes, 
-  FaTags, 
-  FaChartBar, 
-  FaHistory, 
-  FaSignOutAlt, 
+import {
+  FaBoxes,
+  FaTags,
+  FaChartBar,
+  FaHistory,
+  FaSignOutAlt,
   FaBars,
   FaStore,
   FaShoppingCart,
   FaUsers,
-  FaCog
-} from 'react-icons/fa';
+  FaCog,
+  FaUser,
+} from "react-icons/fa";
 import { useAuth } from '../contexts/AuthContext';
 
 const Sidebar = ({ currentPage, onPageChange, isCollapsed, onToggleCollapse }) => {
   const { user, logout } = useAuth();
 
   const menuItems = [
-    { id: 'products', label: 'Products', icon: FaBoxes },
-    { id: 'categories', label: 'Categories', icon: FaTags },
-    { id: 'pos', label: 'POS', icon: FaShoppingCart },
-    { id: 'customers', label: 'Customers', icon: FaUsers },
-    { id: 'reports', label: 'Reports', icon: FaChartBar },
-    { id: 'history', label: 'History', icon: FaHistory },
-    { id: 'settings', label: 'Settings', icon: FaCog },
+    { id: "products", label: "Products", icon: FaBoxes },
+    { id: "categories", label: "Categories", icon: FaTags },
+    { id: "user", label: "User", icon: FaUser },
+    { id: "pos", label: "POS", icon: FaShoppingCart },
+    { id: "customers", label: "Customers", icon: FaUsers },
+    { id: "reports", label: "Reports", icon: FaChartBar },
+    { id: "history", label: "History", icon: FaHistory },
+    { id: "settings", label: "Settings", icon: FaCog },
   ];
 
   return (

@@ -8,6 +8,7 @@ import History from './History';
 import POS from './POS';
 import Customers from './Customers';
 import Settings from './Settings';
+import User from '../pages/User/User';
 
 const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
@@ -21,7 +22,7 @@ const Layout = () => {
     <div className="flex h-screen bg-gray-50">
       <Sidebar
         currentPage={currentPage}
-        onPageChange={page => navigate(`/${page}`)}
+        onPageChange={(page) => navigate(`/${page}`)}
         isCollapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
@@ -34,6 +35,7 @@ const Layout = () => {
           <Route path="/pos" element={<POS />} />
           <Route path="/customers" element={<Customers />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/user" element={<User />} />
           {/* <Route path="*" element={<Products />} /> */}
         </Routes>
       </div>
