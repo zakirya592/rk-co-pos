@@ -21,9 +21,17 @@ const AddUser = ({
   handleAddProduct,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Wrap the add handler to set loading
+  const handleAdd = async () => {
+    setLoading(true);
+    await handleAddProduct();
+    setLoading(false);
+  };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md">
+    <Modal isOpen={isOpen}  size="md">
       <ModalContent>
         <ModalHeader>Add New User</ModalHeader>
         <ModalBody>
@@ -97,7 +105,8 @@ const AddUser = ({
           </Button>
           <Button
             className="bg-gradient-to-r from-blue-500 to-purple-600 text-white"
-            onPress={handleAddProduct}
+            onPress={handleAdd}
+            isLoading={loading}
           >
             Add User
           </Button>

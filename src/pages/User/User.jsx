@@ -21,6 +21,7 @@ import AddUser from './AddUser';
 import UpdateUser from './UpdateUser';
 import userRequest from '../../utils/userRequest';
 import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 
 const fetchUsers = async () => {
     const res = await userRequest.get("/users");
@@ -86,13 +87,24 @@ const User = () => {
         setShowDetailsModal(true);
     };
 
-    const handleUpdateUser = async () => {
+    const handleEditUser = (user) => {
+    //   setUpdatedUser({
+    //     name: user.name,
+    //     email: user.email,
+    //     password: "", 
+    //     role: user.role || "", 
+    //   });
+    setUpdatedUser(user)
+      setShowUpdateModal(true);
+    };
+
+    const handleUpdateUser = async () => {    
         try {
-            await userRequest.put("/users/profile", {
-                name: updatedUser.name,
-                email: updatedUser.email,
-                role: updatedUser.role,
-                password: updatedUser.password,
+            await userRequest.put(`/users/${updatedUser?._id}`, {
+              name: updatedUser.name,
+              email: updatedUser.email,
+              role: updatedUser.role,
+              password: updatedUser.password,
             });
             setShowUpdateModal(false);
             toast.success("User updated successfully!");
@@ -102,7 +114,28 @@ const User = () => {
         }
     };
 
-
+    const handleDeleteProduct = (user) => {
+      Swal.fire({
+        title: "Are you sure?",
+        text: `You will not be able to recover this ${user?.name || ""}`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it!",
+        cancelButtonText: "No, cancel!",
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            await userRequest.delete(`/users/${user?._id || ""}`);
+            toast.success("The user has been deleted.");
+            refetch();
+          } catch (error) {
+            toast.error(error?.response?.data?.message ||  "Failed to delete the User.");
+          }
+        }
+      });
+    };
 
     const bottomContent = useMemo(
         () => (
@@ -204,8 +237,7 @@ const User = () => {
                                             variant="light"
                                             color="warning"
                                             onClick={() => {
-                                                setUpdatedUser(user);
-                                                setShowUpdateModal(true);
+                                                handleEditUser(user);
                                             }}
                                         >
                                             <FaEdit />
@@ -217,7 +249,9 @@ const User = () => {
                                             size="sm"
                                             variant="light"
                                             color="danger"
-                                        // onClick={...}
+                                            onClick={() => {
+                                                handleDeleteProduct(user);
+                                            }}
                                         >
                                             <FaTrash />
                                         </Button>

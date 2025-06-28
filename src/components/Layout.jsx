@@ -16,7 +16,7 @@ const Layout = () => {
   const navigate = useNavigate();
 
   // Optional: Highlight current page in Sidebar based on URL
-  const currentPage = location.pathname.replace('/', '') || 'products';
+  const currentPage = location.pathname.replace('/', '') || '';
 
   return (
     <div className="flex h-screen bg-gray-50">
