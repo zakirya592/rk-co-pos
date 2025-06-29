@@ -40,14 +40,19 @@ const fetchProducts = async (key, searchTerm, currentPage) => {
   };
 };
 
+// Add this fetch function
+const fetchCategories = async () => {
+  const res = await userRequest.get("/categories");
+  return res.data.data || [];
+};
+
 const Products = () => {
-  const [categories] = useState([
-    "Electronics",
-    "Furniture",
-    "Clothing",
-    "Books",
-    "Sports",
-  ]);
+  // Fetch categories
+  const { data: categories = [], isLoading: isCategoriesLoading } = useQuery(
+    ["categories"],
+    fetchCategories
+  );
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -132,7 +137,7 @@ const Products = () => {
       toast.success("Product added successfully!");
       queryClient.invalidateQueries(["products"]); // Refetch products
     } catch (error) {
-      toast.error("Failed to add product.");
+      toast.error(error?.response?.data?.message || error.message ||"Failed to add product.");
     }
   };
 
@@ -242,6 +247,14 @@ const Products = () => {
     [totalPages, currentPage, rowsPerPage, totalProducts]
   );
 
+  const categoryMap = useMemo(() => {
+    const map = {};
+    categories.forEach((cat) => {
+      map[cat._id] = cat;
+    });
+    return map;
+  }, [categories]);
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -283,13 +296,14 @@ const Products = () => {
                 setCurrentPage(1);
               }}
               variant="bordered"
+              isLoading={isCategoriesLoading}
             >
               <SelectItem key="" value="">
                 All Categories
               </SelectItem>
               {categories.map((category) => (
-                <SelectItem key={category} value={category}>
-                  {category}
+                <SelectItem key={category._id} value={category.name}>
+                  {category.name}
                 </SelectItem>
               ))}
             </Select>
@@ -337,8 +351,10 @@ const Products = () => {
               <TableCell className="font-semibold">{product.name}</TableCell>
               <TableCell>
                 <Chip size="sm" variant="flat" color="primary">
-                  {product.category}
+                  {categoryMap[product.category]?.name || "Unknown"}
                 </Chip>
+                {/* Optionally show description below */}
+                {/* <div className="text-xs text-gray-400">{categoryMap[product.category]?.description}</div> */}
               </TableCell>
               <TableCell>{product.price}</TableCell>
               <TableCell>
