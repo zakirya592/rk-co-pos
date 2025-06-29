@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   CardBody,
@@ -12,69 +12,30 @@ import {
   Select,
   SelectItem,
   Chip,
-  Divider
+  Divider,
+  Spinner
 } from '@nextui-org/react';
 import { FaSearch, FaPlus, FaMinus, FaTrash, FaPrint, FaUser, FaPercent, FaCalculator } from 'react-icons/fa';
+import CustomerSelectionModal from './CustomerSelectionModal';
+import PaymentModal from "./PaymentModal";
+import { useQuery } from "react-query";// Adjust the import based on your file structure
+import userRequest from '../../utils/userRequest';
+
+
+const fetchProducts = async (key, searchTerm, currentPage) => {
+  const res = await userRequest.get("/products", {
+    params: {
+      search: searchTerm,
+      page: currentPage,
+    },
+  });
+  return {
+    products: res.data.data || [],
+    total: res.data.results || 0,
+  };
+};
 
 const POS = () => {
-  // Sample products with barcode support
-  const [products] = useState([
-    {
-      id: 1,
-      name: 'Laptop Dell XPS 13',
-      category: 'Electronics',
-      retailPrice: 85000,
-      wholesalePrice: 80000,
-      stock: 15,
-      barcode: '1234567890123'
-    },
-    {
-      id: 2,
-      name: 'Office Chair',
-      category: 'Furniture',
-      retailPrice: 12000,
-      wholesalePrice: 10000,
-      stock: 8,
-      barcode: '1234567890124'
-    },
-    {
-      id: 3,
-      name: 'iPhone 15',
-      category: 'Electronics',
-      retailPrice: 250000,
-      wholesalePrice: 240000,
-      stock: 5,
-      barcode: '1234567890125'
-    },
-    {
-      id: 4,
-      name: 'iPhone 15',
-      category: 'Electronics',
-      retailPrice: 250000,
-      wholesalePrice: 240000,
-      stock: 5,
-      barcode: '1234567890125'
-    },
-    {
-      id: 5,
-      name: 'iPhone 15',
-      category: 'Electronics',
-      retailPrice: 250000,
-      wholesalePrice: 240000,
-      stock: 5,
-      barcode: '1234567890125'
-    },
-    {
-      id: 6,
-      name: 'iPhone 15',
-      category: 'Electronics',
-      retailPrice: 250000,
-      wholesalePrice: 240000,
-      stock: 5,
-      barcode: '1234567890125'
-    }
-  ]);
-
   const [customers] = useState([
     { id: 1, name: 'Walk-in Customer', contact: '', address: '', type: 'retail' },
     { id: 2, name: 'Ahmad Khan', contact: '03001234567', address: 'Lahore', type: 'wholesale' },
@@ -83,6 +44,7 @@ const POS = () => {
 
   const [cart, setCart] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedCustomer, setSelectedCustomer] = useState(customers[0]);
   const [discount, setDiscount] = useState(0);
   const [tax, setTax] = useState(17); // Default GST
@@ -90,10 +52,22 @@ const POS = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [totalPaid, setTotalPaid] = useState(0);
+  const [categories, setCategories] = useState([]);
+
+  // Fetch products using react-query
+  const { data, isLoading } = useQuery(
+    ["products", searchTerm, currentPage],
+    () => fetchProducts("products", searchTerm, currentPage),
+    { keepPreviousData: true }
+  );
+
+  const products = data?.products || [];
+  const totalProducts = data?.total || 0;
 
   const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.barcode.includes(searchTerm)
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) 
+    // ||
+    // product.barcode.includes(searchTerm)
   );
 
   const addToCart = (product) => {
@@ -203,43 +177,62 @@ const POS = () => {
                 {selectedCustomer.type})
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 h-full ">
-                {filteredProducts.map((product) => (
-                  <Card
-                    key={product.id}
-                    isPressable
-                    onPress={() => addToCart(product)}
-                    className="hover:scale-105 transition-transform"
-                  >
-                    <CardBody className="p-3">
-                      <h4 className="font-semibold text-sm">{product.name}</h4>
-                      <p className="text-xs text-gray-600">
-                        {product.category}
-                      </p>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="text-sm font-bold">
-                          Rs.{" "}
-                          {selectedCustomer.type === "wholesale"
-                            ? product.wholesalePrice.toLocaleString()
-                            : product.retailPrice.toLocaleString()}
-                        </span>
-                        <Chip
-                          size="sm"
-                          color={
-                            product.stock > 10
-                              ? "success"
-                              : product.stock > 0
-                              ? "warning"
-                              : "danger"
-                          }
-                        >
-                          {product.stock}
-                        </Chip>
-                      </div>
-                    </CardBody>
-                  </Card>
-                ))}
-              </div>
+              {isLoading ? (
+                <div className="flex justify-center items-center py-8">
+                  <Spinner color="success" size="lg" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 h-full ">
+                  {filteredProducts.map((product) => (
+                    <Card
+                      key={product.id}
+                      isPressable
+                      onPress={() => addToCart(product)}
+                      className="hover:scale-105 transition-transform"
+                    >
+                      <CardBody className="p-3">
+                        <div className="flex items-center gap-2">
+                          {product.image && (
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="w-10 h-10 object-cover rounded"
+                            />
+                          )}
+                          <h4 className="font-semibold text-sm">
+                            {product.name}
+                          </h4>
+                        </div>
+                        <p className="text-xs text-gray-600">
+                          {/* {categoryMap[product.category]?.name || "Unknown"} */}
+                          {product?.category?.name || ""}
+                        </p>
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-sm font-bold">
+                            Rs.{" "}
+                            {/* {selectedCustomer.type === "wholesale"
+                              ? product.wholesalePrice.toLocaleString()
+                              : product.retailPrice.toLocaleString()} */}
+                            {product.price.toLocaleString()}
+                          </span>
+                          <Chip
+                            size="sm"
+                            color={
+                              product.countInStock > 10
+                                ? "success"
+                                : product.countInStock > 0
+                                ? "warning"
+                                : "danger"
+                            }
+                          >
+                            {product.countInStock}
+                          </Chip>
+                        </div>
+                      </CardBody>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </CardBody>
           </Card>
         </div>
@@ -259,15 +252,15 @@ const POS = () => {
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {cart.map((item) => (
                       <div
-                        key={item.id}
+                        key={item.id || ""}
                         className="flex items-center justify-between p-2 border rounded"
                       >
                         <div className="flex-1">
                           <div className="font-semibold text-sm">
-                            {item.name}
+                            {item.name || ""}
                           </div>
                           <div className="text-xs text-gray-600">
-                            Rs. {item.price.toLocaleString()}
+                            Rs. {item.price.toLocaleString() || ""}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -374,154 +367,25 @@ const POS = () => {
       </div>
 
       {/* Customer Selection Modal */}
-      <Modal
+      <CustomerSelectionModal
         isOpen={showCustomerModal}
         onClose={() => setShowCustomerModal(false)}
-        size="2xl"
-        scrollBehavior="inside"
-      >
-        <ModalContent>
-          <ModalHeader>Select Customer</ModalHeader>
-          <ModalBody>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-3">
-              {customers.map((customer) => (
-                <Card
-                  key={customer.id}
-                  isPressable
-                  onPress={() => {
-                    setSelectedCustomer(customer);
-                    setShowCustomerModal(false);
-                  }}
-                  className={
-                    selectedCustomer.id === customer.id
-                      ? "border-2 border-primary"
-                      : ""
-                  }
-                >
-                  <CardBody className="p-3">
-                    <div className="font-semibold">{customer.name}</div>
-                    <div className="text-sm text-gray-600">
-                      {customer.contact}
-                    </div>
-                    <Chip
-                      size="sm"
-                      color={
-                        customer.type === "wholesale" ? "secondary" : "primary"
-                      }
-                    >
-                      {customer.type}
-                    </Chip>
-                  </CardBody>
-                </Card>
-              ))}
-            </div>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+        customers={customers}
+        selectedCustomer={selectedCustomer}
+        setSelectedCustomer={setSelectedCustomer}
+      />
 
       {/* Payment Modal */}
-      <Modal
+      <PaymentModal
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
-        size="2xl"
-      >
-        <ModalContent>
-          <ModalHeader>Payment Details</ModalHeader>
-          <ModalBody>
-            <div className="space-y-4">
-              <div className="bg-gray-100 p-4 rounded">
-                <div className="text-lg font-bold">
-                  Total Amount: Rs. {total.toLocaleString()}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <h4 className="font-semibold">Payment Methods</h4>
-                  <Button
-                    size="sm"
-                    onPress={addPaymentMethod}
-                    startContent={<FaPlus />}
-                  >
-                    Add Payment
-                  </Button>
-                </div>
-
-                {paymentMethods.map((payment, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Select
-                      placeholder="Payment Method"
-                      value={payment.method}
-                      onChange={(e) =>
-                        updatePaymentMethod(index, "method", e.target.value)
-                      }
-                      className="flex-1"
-                    >
-                      <SelectItem key="cash" value="cash">
-                        Cash
-                      </SelectItem>
-                      <SelectItem key="card" value="card">
-                        Card
-                      </SelectItem>
-                      <SelectItem key="bank" value="bank">
-                        Bank Transfer
-                      </SelectItem>
-                      <SelectItem key="easypaisa" value="easypaisa">
-                        EasyPaisa
-                      </SelectItem>
-                      <SelectItem key="jazzcash" value="jazzcash">
-                        JazzCash
-                      </SelectItem>
-                    </Select>
-                    <Input
-                      type="number"
-                      placeholder="Amount"
-                      value={payment.amount}
-                      onChange={(e) =>
-                        updatePaymentMethod(index, "amount", e.target.value)
-                      }
-                      className="flex-1"
-                    />
-                  </div>
-                ))}
-
-                <div className="bg-blue-50 p-2 rounded">
-                  <div className="flex justify-between">
-                    <span>Total Paid:</span>
-                    <span className="font-bold">
-                      Rs. {totalPaid.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Balance:</span>
-                    <span
-                      className={`font-bold ${
-                        total - totalPaid > 0
-                          ? "text-red-600"
-                          : "text-green-600"
-                      }`}
-                    >
-                      Rs. {(total - totalPaid).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="light" onPress={() => setShowPaymentModal(false)}>
-              Cancel
-            </Button>
-            <Button
-              color="success"
-              onPress={completeSale}
-              isDisabled={totalPaid < total}
-            >
-              Complete Sale
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+        total={total}
+        paymentMethods={paymentMethods}
+        addPaymentMethod={addPaymentMethod}
+        updatePaymentMethod={updatePaymentMethod}
+        totalPaid={totalPaid}
+        completeSale={completeSale}
+      />
     </div>
   );
 };

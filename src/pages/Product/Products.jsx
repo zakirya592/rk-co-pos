@@ -148,7 +148,7 @@ const Products = () => {
       formData.append("name", editProduct.name);
       formData.append("price", editProduct.price);
       formData.append("description", editProduct.description);
-      formData.append("category", editProduct.category);
+      formData.append("category", typeof editProduct.category === "object" && editProduct.category !== null ? editProduct.category._id : editProduct.category);
       formData.append("countInStock", editProduct.countInStock);
       formData.append("image", editProduct.image);
 
@@ -247,14 +247,6 @@ const Products = () => {
     [totalPages, currentPage, rowsPerPage, totalProducts]
   );
 
-  const categoryMap = useMemo(() => {
-    const map = {};
-    categories.forEach((cat) => {
-      map[cat._id] = cat;
-    });
-    return map;
-  }, [categories]);
-
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -351,7 +343,8 @@ const Products = () => {
               <TableCell className="font-semibold">{product.name}</TableCell>
               <TableCell>
                 <Chip size="sm" variant="flat" color="primary">
-                  {categoryMap[product.category]?.name || "Unknown"}
+                  {/* {categoryMap[product.category]?.name || "Unknown"} */}
+                  {product.category.name}
                 </Chip>
                 {/* Optionally show description below */}
                 {/* <div className="text-xs text-gray-400">{categoryMap[product.category]?.description}</div> */}

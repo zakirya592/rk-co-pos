@@ -33,7 +33,7 @@ const ViewProductModal = ({ isOpen, onClose, viewProduct }) => (
               </div>
               <div className="mb-2 text-lg">
                 <span className="text-blue-700 font-semibold">Category: </span>
-                {viewProduct.category}
+                {viewProduct.category.name}
               </div>
               <div className="text-lg">
                 <span className="text-blue-700 font-semibold">Price: </span>
@@ -58,7 +58,9 @@ const ViewProductModal = ({ isOpen, onClose, viewProduct }) => (
                 </span>
               </div>
               <div className="text-lg">
-                <span className="text-blue-700 font-semibold">Description: </span>
+                <span className="text-blue-700 font-semibold">
+                  Description:{" "}
+                </span>
                 {viewProduct.description}
               </div>
             </div>

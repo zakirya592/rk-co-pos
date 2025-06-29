@@ -14,9 +14,16 @@ const EditProductModal = ({
   const [loading, setLoading] = useState(false);
 
   const handleUpdate = async () => {
-    setLoading(true);
+    setLoading(true);    
     await handleUpdateProduct();
     setLoading(false);
+  };
+
+  const getCategoryId = () => {
+    if (!editProduct.category) return "";
+    return typeof editProduct.category === "object"
+      ? editProduct.category._id
+      : editProduct.category;
   };
 
   return (
@@ -40,8 +47,8 @@ const EditProductModal = ({
               <Select
                 placeholder="Select category"
                 label="Category"
-                value={editProduct.category}
-                selectedKeys={editProduct.category ? [editProduct.category] : []}
+                value={getCategoryId()}
+                selectedKeys={getCategoryId() ? [getCategoryId()] : []}
                 onChange={(e) =>
                   setEditProduct({ ...editProduct, category: e.target.value })
                 }
@@ -49,7 +56,7 @@ const EditProductModal = ({
                 required
               >
                 {categories.map((category) => (
-                  <SelectItem key={category._id} value={category.name}>
+                  <SelectItem key={category._id} value={category._id}>
                     {category.name}
                   </SelectItem>
                 ))}
@@ -79,12 +86,6 @@ const EditProductModal = ({
                 variant="bordered"
                 required
               />
-              {/* <Input
-                label="Barcode"
-                value={editProduct.barcode}
-                onChange={(e) => setEditProduct({ ...editProduct, barcode: e.target.value })}
-                variant="bordered"
-              /> */}
               <Textarea
                 label="Description"
                 placeholder="Enter product description"

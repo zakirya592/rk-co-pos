@@ -48,7 +48,7 @@ const AddProductModal = ({
               required
             >
               {categories.map((category) => (
-                <SelectItem key={category.name} value={category.name}>
+                <SelectItem key={category._id} value={category._id}>
                   {category.name}
                 </SelectItem>
               ))}
