@@ -28,11 +28,23 @@ const fetchCategories = async () => {
   return res.data.data;
 };
 
+const fetchProducts = async () => {
+  const res = await userRequest.get("/products", {
+    params: { page: 1, search: "" }, // adjust as needed
+  });
+  return res.data.data || [];
+};
+
 const Categories = () => {
 
   const { data: categoriess = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['categories'],
     queryFn: fetchCategories
+  });
+
+  const { data: products = [], isLoading: isProductsLoading } = useQuery({
+    queryKey: ['products', 'all'],
+    queryFn: fetchProducts,
   });
 
 
@@ -120,6 +132,12 @@ const Categories = () => {
     setShowEditModal(true);
   };
 
+  const getProductCountForCategory = (categoryId) => {
+    return products.filter(
+      (product) => product.category && product.category._id === categoryId
+    ).length;
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -199,12 +217,12 @@ const Categories = () => {
                 </div>
 
                 <div className="space-y-2 mb-4">
-                  {/* <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center">
                     <span className="text-gray-600">Products:</span>
                     <Chip size="sm" color="primary">
-                      {category.productCount}
+                      {getProductCountForCategory(category._id)}
                     </Chip>
-                  </div> */}
+                  </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Created:</span>
                     <span className="text-sm">

@@ -328,7 +328,7 @@ const Products = () => {
           }
         >
           {paginatedProducts.map((product) => (
-            <TableRow key={product.id}>
+            <TableRow key={product._id}>
               <TableCell>
                 {product.image ? (
                   <img
