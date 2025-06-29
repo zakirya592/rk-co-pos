@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -46,6 +45,33 @@ const POS = () => {
     },
     {
       id: 3,
+      name: 'iPhone 15',
+      category: 'Electronics',
+      retailPrice: 250000,
+      wholesalePrice: 240000,
+      stock: 5,
+      barcode: '1234567890125'
+    },
+    {
+      id: 4,
+      name: 'iPhone 15',
+      category: 'Electronics',
+      retailPrice: 250000,
+      wholesalePrice: 240000,
+      stock: 5,
+      barcode: '1234567890125'
+    },
+    {
+      id: 5,
+      name: 'iPhone 15',
+      category: 'Electronics',
+      retailPrice: 250000,
+      wholesalePrice: 240000,
+      stock: 5,
+      barcode: '1234567890125'
+    },
+    {
+      id: 6,
       name: 'iPhone 15',
       category: 'Electronics',
       retailPrice: 250000,
@@ -158,7 +184,7 @@ const POS = () => {
     <div className="p-4 h-screen overflow-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
         {/* Product Search & Selection */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-4 ">
           <Card>
             <CardBody className="p-4">
               <div className="flex gap-4 mb-4">
@@ -177,12 +203,13 @@ const POS = () => {
                   Customer
                 </Button>
               </div>
-              
+
               <div className="text-sm mb-4">
-                Customer: <strong>{selectedCustomer.name}</strong> ({selectedCustomer.type})
+                Customer: <strong>{selectedCustomer.name}</strong> (
+                {selectedCustomer.type})
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-96 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 h-full ">
                 {filteredProducts.map((product) => (
                   <Card
                     key={product.id}
@@ -192,12 +219,26 @@ const POS = () => {
                   >
                     <CardBody className="p-3">
                       <h4 className="font-semibold text-sm">{product.name}</h4>
-                      <p className="text-xs text-gray-600">{product.category}</p>
+                      <p className="text-xs text-gray-600">
+                        {product.category}
+                      </p>
                       <div className="flex justify-between items-center mt-2">
                         <span className="text-sm font-bold">
-                          Rs. {selectedCustomer.type === 'wholesale' ? product.wholesalePrice.toLocaleString() : product.retailPrice.toLocaleString()}
+                          Rs.{" "}
+                          {selectedCustomer.type === "wholesale"
+                            ? product.wholesalePrice.toLocaleString()
+                            : product.retailPrice.toLocaleString()}
                         </span>
-                        <Chip size="sm" color={product.stock > 10 ? 'success' : product.stock > 0 ? 'warning' : 'danger'}>
+                        <Chip
+                          size="sm"
+                          color={
+                            product.stock > 10
+                              ? "success"
+                              : product.stock > 0
+                              ? "warning"
+                              : "danger"
+                          }
+                        >
                           {product.stock}
                         </Chip>
                       </div>
@@ -215,7 +256,7 @@ const POS = () => {
             <CardBody className="p-4 flex flex-col">
               <div className="flex-1">
                 <h3 className="text-lg font-bold mb-4">Shopping Cart</h3>
-                
+
                 {cart.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     Cart is empty
@@ -223,26 +264,39 @@ const POS = () => {
                 ) : (
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {cart.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between p-2 border rounded">
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-2 border rounded"
+                      >
                         <div className="flex-1">
-                          <div className="font-semibold text-sm">{item.name}</div>
-                          <div className="text-xs text-gray-600">Rs. {item.price.toLocaleString()}</div>
+                          <div className="font-semibold text-sm">
+                            {item.name}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            Rs. {item.price.toLocaleString()}
+                          </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <Button
                             isIconOnly
                             size="sm"
                             variant="light"
-                            onPress={() => updateQuantity(item.id, item.quantity - 1)}
+                            onPress={() =>
+                              updateQuantity(item.id, item.quantity - 1)
+                            }
                           >
                             <FaMinus />
                           </Button>
-                          <span className="w-8 text-center">{item.quantity}</span>
+                          <span className="w-8 text-center">
+                            {item.quantity}
+                          </span>
                           <Button
                             isIconOnly
                             size="sm"
                             variant="light"
-                            onPress={() => updateQuantity(item.id, item.quantity + 1)}
+                            onPress={() =>
+                              updateQuantity(item.id, item.quantity + 1)
+                            }
                           >
                             <FaPlus />
                           </Button>
@@ -265,14 +319,16 @@ const POS = () => {
               {cart.length > 0 && (
                 <div className="mt-4 space-y-3">
                   <Divider />
-                  
+
                   {/* Discount & Tax */}
                   <div className="flex gap-2">
                     <Input
                       type="number"
                       label="Discount %"
                       value={discount}
-                      onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
+                      onChange={(e) =>
+                        setDiscount(parseFloat(e.target.value) || 0)
+                      }
                       startContent={<FaPercent />}
                       size="sm"
                     />
@@ -324,11 +380,16 @@ const POS = () => {
       </div>
 
       {/* Customer Selection Modal */}
-      <Modal isOpen={showCustomerModal} onClose={() => setShowCustomerModal(false)}>
+      <Modal
+        isOpen={showCustomerModal}
+        onClose={() => setShowCustomerModal(false)}
+        size="2xl"
+        scrollBehavior="inside"
+      >
         <ModalContent>
           <ModalHeader>Select Customer</ModalHeader>
           <ModalBody>
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-3">
               {customers.map((customer) => (
                 <Card
                   key={customer.id}
@@ -337,12 +398,23 @@ const POS = () => {
                     setSelectedCustomer(customer);
                     setShowCustomerModal(false);
                   }}
-                  className={selectedCustomer.id === customer.id ? 'border-2 border-primary' : ''}
+                  className={
+                    selectedCustomer.id === customer.id
+                      ? "border-2 border-primary"
+                      : ""
+                  }
                 >
                   <CardBody className="p-3">
                     <div className="font-semibold">{customer.name}</div>
-                    <div className="text-sm text-gray-600">{customer.contact}</div>
-                    <Chip size="sm" color={customer.type === 'wholesale' ? 'secondary' : 'primary'}>
+                    <div className="text-sm text-gray-600">
+                      {customer.contact}
+                    </div>
+                    <Chip
+                      size="sm"
+                      color={
+                        customer.type === "wholesale" ? "secondary" : "primary"
+                      }
+                    >
                       {customer.type}
                     </Chip>
                   </CardBody>
@@ -354,55 +426,87 @@ const POS = () => {
       </Modal>
 
       {/* Payment Modal */}
-      <Modal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} size="2xl">
+      <Modal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        size="2xl"
+      >
         <ModalContent>
           <ModalHeader>Payment Details</ModalHeader>
           <ModalBody>
             <div className="space-y-4">
               <div className="bg-gray-100 p-4 rounded">
-                <div className="text-lg font-bold">Total Amount: Rs. {total.toLocaleString()}</div>
+                <div className="text-lg font-bold">
+                  Total Amount: Rs. {total.toLocaleString()}
+                </div>
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <h4 className="font-semibold">Payment Methods</h4>
-                  <Button size="sm" onPress={addPaymentMethod} startContent={<FaPlus />}>
+                  <Button
+                    size="sm"
+                    onPress={addPaymentMethod}
+                    startContent={<FaPlus />}
+                  >
                     Add Payment
                   </Button>
                 </div>
-                
+
                 {paymentMethods.map((payment, index) => (
                   <div key={index} className="flex gap-2">
                     <Select
                       placeholder="Payment Method"
                       value={payment.method}
-                      onChange={(e) => updatePaymentMethod(index, 'method', e.target.value)}
+                      onChange={(e) =>
+                        updatePaymentMethod(index, "method", e.target.value)
+                      }
                       className="flex-1"
                     >
-                      <SelectItem key="cash" value="cash">Cash</SelectItem>
-                      <SelectItem key="card" value="card">Card</SelectItem>
-                      <SelectItem key="bank" value="bank">Bank Transfer</SelectItem>
-                      <SelectItem key="easypaisa" value="easypaisa">EasyPaisa</SelectItem>
-                      <SelectItem key="jazzcash" value="jazzcash">JazzCash</SelectItem>
+                      <SelectItem key="cash" value="cash">
+                        Cash
+                      </SelectItem>
+                      <SelectItem key="card" value="card">
+                        Card
+                      </SelectItem>
+                      <SelectItem key="bank" value="bank">
+                        Bank Transfer
+                      </SelectItem>
+                      <SelectItem key="easypaisa" value="easypaisa">
+                        EasyPaisa
+                      </SelectItem>
+                      <SelectItem key="jazzcash" value="jazzcash">
+                        JazzCash
+                      </SelectItem>
                     </Select>
                     <Input
                       type="number"
                       placeholder="Amount"
                       value={payment.amount}
-                      onChange={(e) => updatePaymentMethod(index, 'amount', e.target.value)}
+                      onChange={(e) =>
+                        updatePaymentMethod(index, "amount", e.target.value)
+                      }
                       className="flex-1"
                     />
                   </div>
                 ))}
-                
+
                 <div className="bg-blue-50 p-2 rounded">
                   <div className="flex justify-between">
                     <span>Total Paid:</span>
-                    <span className="font-bold">Rs. {totalPaid.toLocaleString()}</span>
+                    <span className="font-bold">
+                      Rs. {totalPaid.toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Balance:</span>
-                    <span className={`font-bold ${total - totalPaid > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    <span
+                      className={`font-bold ${
+                        total - totalPaid > 0
+                          ? "text-red-600"
+                          : "text-green-600"
+                      }`}
+                    >
                       Rs. {(total - totalPaid).toLocaleString()}
                     </span>
                   </div>
