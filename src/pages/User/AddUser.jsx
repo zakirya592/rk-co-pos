@@ -31,7 +31,14 @@ const AddUser = ({
   };
 
   return (
-    <Modal isOpen={isOpen} size="md">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="md"
+      backdrop="opaque"
+      isDismissable={false}
+      hideCloseButton={false}
+    >
       <ModalContent>
         <ModalHeader>Add New User</ModalHeader>
         <ModalBody>

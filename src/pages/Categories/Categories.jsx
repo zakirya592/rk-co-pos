@@ -4,15 +4,9 @@ import {
   CardBody,
   Button,
   Input,
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
   Chip,
   Spinner,
-  Tooltip // <-- Add Tooltip import
+  Tooltip
 } from '@nextui-org/react';
 import { FaPlus, FaSearch, FaEdit, FaTrash, FaTags } from 'react-icons/fa';
 import toast from 'react-hot-toast';

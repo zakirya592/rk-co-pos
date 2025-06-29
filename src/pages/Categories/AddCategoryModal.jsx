@@ -18,7 +18,13 @@ const AddCategoryModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen}  onClose={onClose}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      backdrop="opaque"
+      isDismissable={false}
+      hideCloseButton={false}
+    >
       <ModalContent>
         <ModalHeader>Add New Category</ModalHeader>
         <ModalBody>
@@ -27,7 +33,9 @@ const AddCategoryModal = ({
               label="Category Name"
               placeholder="Enter category name"
               value={newCategory.name}
-              onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+              onChange={(e) =>
+                setNewCategory({ ...newCategory, name: e.target.value })
+              }
               variant="bordered"
               required
             />
@@ -35,7 +43,9 @@ const AddCategoryModal = ({
               label="Description"
               placeholder="Enter category description"
               value={newCategory.description}
-              onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
+              onChange={(e) =>
+                setNewCategory({ ...newCategory, description: e.target.value })
+              }
               variant="bordered"
             />
           </div>

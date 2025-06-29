@@ -18,7 +18,13 @@ const UpdateCategoryModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      backdrop="opaque"
+      isDismissable={false}
+      hideCloseButton={false}
+    >
       <ModalContent>
         <ModalHeader>Edit Category</ModalHeader>
         <ModalBody>

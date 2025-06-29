@@ -9,7 +9,14 @@ const getStockColor = (countInStock) => {
 };
 
 const ViewProductModal = ({ isOpen, onClose, viewProduct }) => (
-  <Modal isOpen={isOpen} onClose={onClose} size="md">
+  <Modal
+    isOpen={isOpen}
+    onClose={onClose}
+    size="md"
+    backdrop="opaque"
+    isDismissable={false}
+    hideCloseButton={false}
+  >
     <ModalContent>
       <ModalHeader>
         <h2 className="text-xl font-bold">Product Details</h2>

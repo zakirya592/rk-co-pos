@@ -27,7 +27,15 @@ const EditProductModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
+      scrollBehavior="inside"
+      backdrop="opaque"
+      isDismissable={false}
+      hideCloseButton={false}
+    >
       <ModalContent>
         <ModalHeader>
           <h2 className="text-xl font-bold">Edit Product</h2>

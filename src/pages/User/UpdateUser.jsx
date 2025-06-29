@@ -32,7 +32,14 @@ const UpdateUser = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="md"
+      backdrop="opaque"
+      isDismissable={false}
+      hideCloseButton={false}
+    >
       <ModalContent>
         <ModalHeader>Update User</ModalHeader>
         <ModalBody>
