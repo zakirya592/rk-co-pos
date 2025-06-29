@@ -64,10 +64,15 @@ const POS = () => {
   );
 
   const addToCart = (product) => {
-    const price = selectedCustomer.type === 'wholesale' ? product.price : product.price;
+    // Use wholesalePrice for wholesale customers, otherwise use price
+    const price = selectedCustomer.type === 'wholesale'
+      ? product.wholesalePrice ?? product.price
+      : product.price;
+
     const existingItem = cart.find(item => item._id === product._id);
 
     if (existingItem) {
+      // Allow adding if stock is available, for all customer types
       if (existingItem.quantity < product.countInStock) {
         setCart(cart.map(item =>
           item._id === product._id
@@ -102,6 +107,7 @@ const POS = () => {
   const discountAmount = (subtotal * discount) / 100;
   const taxAmount = ((subtotal - discountAmount) * tax) / 100;
   const total = subtotal - discountAmount + taxAmount;
+  const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const handlePayment = () => {
     setShowPaymentModal(true);
@@ -165,9 +171,13 @@ const POS = () => {
                 </Button>
               </div>
 
-              <div className="text-sm mb-4">
-                Customer: <strong>{selectedCustomer.name}</strong> (
-                {selectedCustomer.type})
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-sm">
+                  Customer: <strong>{selectedCustomer.name}</strong> ({selectedCustomer.type})
+                </div>
+                <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow font-semibold text-sm">
+                  Total Products: {totalProducts}
+                </div>
               </div>
 
               {isLoading ? (
@@ -230,7 +240,12 @@ const POS = () => {
           <Card className="h-full">
             <CardBody className="p-4 flex flex-col">
               <div className="flex-1">
-                <h3 className="text-lg font-bold mb-4">Shopping Cart</h3>
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  Shopping Cart
+                  <span className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-2 py-1 rounded-full text-xs font-semibold shadow">
+                    {totalCartItems} item{totalCartItems !== 1 ? "s" : ""}
+                  </span>
+                </h3>
 
                 {cart.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
