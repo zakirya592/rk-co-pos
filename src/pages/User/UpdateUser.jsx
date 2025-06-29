@@ -21,9 +21,7 @@ const UpdateUser = ({
   setUpdatedUser,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false); // Add loading state
-
-  console.log("UpdateUser Component Rendered", updatedUser);
+  const [loading, setLoading] = useState(false); 
   
 
   // Wrap the update handler to set loading

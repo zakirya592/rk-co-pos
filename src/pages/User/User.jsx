@@ -88,12 +88,6 @@ const User = () => {
     };
 
     const handleEditUser = (user) => {
-    //   setUpdatedUser({
-    //     name: user.name,
-    //     email: user.email,
-    //     password: "", 
-    //     role: user.role || "", 
-    //   });
     setUpdatedUser(user)
       setShowUpdateModal(true);
     };
@@ -199,7 +193,7 @@ const User = () => {
                         </div>
                     }>
                     {filteredUsers.map((user) => (
-                        <TableRow key={user.id}>
+                        <TableRow key={user._id}>
                             <TableCell>
                                 <div className="font-semibold">{user.name}</div>
                             </TableCell>

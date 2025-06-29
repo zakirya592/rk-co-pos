@@ -4,13 +4,6 @@ import {
   CardBody,
   Button,
   Input,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Select,
-  SelectItem,
   Chip,
   Divider,
   Spinner
@@ -47,7 +40,7 @@ const POS = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCustomer, setSelectedCustomer] = useState(customers[0]);
   const [discount, setDiscount] = useState(0);
-  const [tax, setTax] = useState(17); // Default GST
+  const [tax, setTax] = useState(0); // Default GST
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState([]);
@@ -71,13 +64,13 @@ const POS = () => {
   );
 
   const addToCart = (product) => {
-    const price = selectedCustomer.type === 'wholesale' ? product.wholesalePrice : product.retailPrice;
-    const existingItem = cart.find(item => item.id === product.id);
-    
+    const price = selectedCustomer.type === 'wholesale' ? product.price : product.price;
+    const existingItem = cart.find(item => item._id === product._id);
+
     if (existingItem) {
-      if (existingItem.quantity < product.stock) {
+      if (existingItem.quantity < product.countInStock) {
         setCart(cart.map(item =>
-          item.id === product.id
+          item._id === product._id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         ));
@@ -87,22 +80,22 @@ const POS = () => {
     }
   };
 
-  const updateQuantity = (id, newQuantity) => {
+  const updateQuantity = (_id, newQuantity) => {
     if (newQuantity <= 0) {
-      removeFromCart(id);
+      removeFromCart(_id);
       return;
     }
-    
-    const product = products.find(p => p.id === id);
-    if (newQuantity <= product.stock) {
+
+    const product = products.find(p => p._id === _id);
+    if (product && newQuantity <= product.countInStock) {
       setCart(cart.map(item =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
+        item._id === _id ? { ...item, quantity: newQuantity } : item
       ));
     }
   };
 
-  const removeFromCart = (id) => {
-    setCart(cart.filter(item => item.id !== id));
+  const removeFromCart = (_id) => {
+    setCart(cart.filter(item => item._id !== _id));
   };
 
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -185,7 +178,7 @@ const POS = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 h-full ">
                   {filteredProducts.map((product) => (
                     <Card
-                      key={product.id}
+                      key={product._id}
                       isPressable
                       onPress={() => addToCart(product)}
                       className="hover:scale-105 transition-transform"
@@ -204,25 +197,20 @@ const POS = () => {
                           </h4>
                         </div>
                         <p className="text-xs text-gray-600">
-                          {/* {categoryMap[product.category]?.name || "Unknown"} */}
                           {product?.category?.name || ""}
                         </p>
                         <div className="flex justify-between items-center mt-2">
                           <span className="text-sm font-bold">
-                            Rs.{" "}
-                            {/* {selectedCustomer.type === "wholesale"
-                              ? product.wholesalePrice.toLocaleString()
-                              : product.retailPrice.toLocaleString()} */}
-                            {product.price.toLocaleString()}
+                            Rs. {product.price}
                           </span>
                           <Chip
                             size="sm"
                             color={
-                              product.countInStock > 10
-                                ? "success"
-                                : product.countInStock > 0
+                              product.countInStock <= 5
+                                ? "danger"
+                                : product.countInStock <= 10
                                 ? "warning"
-                                : "danger"
+                                : "success"
                             }
                           >
                             {product.countInStock}
@@ -252,7 +240,7 @@ const POS = () => {
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {cart.map((item) => (
                       <div
-                        key={item.id || ""}
+                        key={item._id || ""}
                         className="flex items-center justify-between p-2 border rounded"
                       >
                         <div className="flex-1">
@@ -260,7 +248,7 @@ const POS = () => {
                             {item.name || ""}
                           </div>
                           <div className="text-xs text-gray-600">
-                            Rs. {item.price.toLocaleString() || ""}
+                            Rs. {item.price || ""}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -269,7 +257,7 @@ const POS = () => {
                             size="sm"
                             variant="light"
                             onPress={() =>
-                              updateQuantity(item.id, item.quantity - 1)
+                              updateQuantity(item._id, item.quantity - 1)
                             }
                           >
                             <FaMinus />
@@ -282,7 +270,7 @@ const POS = () => {
                             size="sm"
                             variant="light"
                             onPress={() =>
-                              updateQuantity(item.id, item.quantity + 1)
+                              updateQuantity(item._id, item.quantity + 1)
                             }
                           >
                             <FaPlus />
@@ -292,7 +280,7 @@ const POS = () => {
                             size="sm"
                             color="danger"
                             variant="light"
-                            onPress={() => removeFromCart(item.id)}
+                            onPress={() => removeFromCart(item._id)}
                           >
                             <FaTrash />
                           </Button>
@@ -333,20 +321,20 @@ const POS = () => {
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
                       <span>Subtotal:</span>
-                      <span>Rs. {subtotal.toLocaleString()}</span>
+                      <span>Rs. {subtotal}</span>
                     </div>
                     <div className="flex justify-between text-green-600">
                       <span>Discount ({discount}%):</span>
-                      <span>-Rs. {discountAmount.toLocaleString()}</span>
+                      <span>-Rs. {discountAmount}</span>
                     </div>
                     <div className="flex justify-between text-red-600">
                       <span>Tax ({tax}%):</span>
-                      <span>Rs. {taxAmount.toLocaleString()}</span>
+                      <span>Rs. {taxAmount}</span>
                     </div>
                     <Divider />
                     <div className="flex justify-between font-bold text-lg">
                       <span>Total:</span>
-                      <span>Rs. {total.toLocaleString()}</span>
+                      <span>Rs. {total}</span>
                     </div>
                   </div>
 

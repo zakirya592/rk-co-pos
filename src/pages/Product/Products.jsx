@@ -98,7 +98,8 @@ const Products = () => {
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
     const matchesCategory =
-      selectedCategory === "" || product.category === selectedCategory;
+      selectedCategory === "" ||
+      (product.category && product.category._id === selectedCategory);
     return matchesSearch && matchesCategory;
   });
 
@@ -258,7 +259,7 @@ const Products = () => {
         <Button
           className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold"
           startContent={<FaPlus />}
-          onClick={() => setShowAddModal(true)}
+          onPress={() => setShowAddModal(true)}
         >
           Add Product
         </Button>
@@ -294,7 +295,7 @@ const Products = () => {
                 All Categories
               </SelectItem>
               {categories.map((category) => (
-                <SelectItem key={category._id} value={category.name}>
+                <SelectItem key={category._id} value={category._id}>
                   {category.name}
                 </SelectItem>
               ))}
@@ -363,7 +364,7 @@ const Products = () => {
                       size="sm"
                       variant="light"
                       color="primary"
-                      onClick={() => setViewProduct(product)}
+                      onPress={() => setViewProduct(product)}
                     >
                       <FaEye />
                     </Button>
@@ -374,7 +375,7 @@ const Products = () => {
                       size="sm"
                       variant="light"
                       color="warning"
-                      onClick={() => setEditProduct(product)}
+                      onPress={() => setEditProduct(product)}
                     >
                       <FaEdit />
                     </Button>
@@ -386,7 +387,7 @@ const Products = () => {
                       size="sm"
                       variant="light"
                       color="danger"
-                      onClick={() => handleDeleteProduct(product._id)}
+                      onPress={() => handleDeleteProduct(product._id)}
                     >
                       <FaTrash />
                     </Button>
