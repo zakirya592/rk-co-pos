@@ -22,7 +22,10 @@ const PaymentModal = ({
   totalPaid,
   completeSale,
 }) => (
-  <Modal isOpen={isOpen} onClose={onClose} size="2xl">
+  <Modal isOpen={isOpen} onClose={onClose} size="2xl" 
+  backdrop="opaque"
+  isDismissable={false}
+  hideCloseButton={false}>
     <ModalContent>
       <ModalHeader>Payment Details</ModalHeader>
       <ModalBody>

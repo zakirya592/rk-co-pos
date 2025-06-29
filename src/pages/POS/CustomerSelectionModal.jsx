@@ -13,6 +13,9 @@ const CustomerSelectionModal = ({
     onClose={onClose}
     size="2xl"
     scrollBehavior="inside"
+    backdrop="opaque"
+    isDismissable={false}
+    hideCloseButton={false}
   >
     <ModalContent>
       <ModalHeader>Select Customer</ModalHeader>
@@ -34,12 +37,12 @@ const CustomerSelectionModal = ({
             >
               <CardBody className="p-3">
                 <div className="font-semibold">{customer.name}</div>
-                <div className="text-sm text-gray-600">
-                  {customer.contact}
-                </div>
+                <div className="text-sm text-gray-600">{customer.contact}</div>
                 <Chip
                   size="sm"
-                  color={customer.type === "wholesale" ? "secondary" : "primary"}
+                  color={
+                    customer.type === "wholesale" ? "secondary" : "primary"
+                  }
                 >
                   {customer.type}
                 </Chip>
