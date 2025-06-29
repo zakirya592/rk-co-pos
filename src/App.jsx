@@ -26,6 +26,7 @@ function AppContent() {
 
   return (
     <Routes>
+      <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       {/* Protected routes */}
       {user && (
