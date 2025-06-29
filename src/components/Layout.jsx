@@ -5,7 +5,7 @@ import Products from '../pages/Product/Products';
 import Categories from '../pages/Categories/Categories';
 import Reports from './Reports';
 import History from './History';
-import POS from './POS';
+import POS from '../pages/POS/POS';
 import Customers from './Customers';
 import Settings from './Settings';
 import User from '../pages/User/User';
