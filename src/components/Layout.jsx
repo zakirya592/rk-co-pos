@@ -30,12 +30,12 @@ const Layout = () => {
         <Routes>
           <Route path="/products" element={<Products />} />
           <Route path="/categories" element={<Categories />} />
+          <Route path="/user" element={<User />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/history" element={<History />} />
           <Route path="/pos" element={<POS />} />
           <Route path="/customers" element={<Customers />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/user" element={<User />} />
           {/* <Route path="*" element={<Products />} /> */}
         </Routes>
       </div>

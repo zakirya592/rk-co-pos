@@ -38,6 +38,7 @@ const EditProductModal = ({
                 required
               />
               <Select
+                placeholder="Select category"
                 label="Category"
                 value={editProduct.category}
                 onChange={(e) =>
@@ -69,7 +70,10 @@ const EditProductModal = ({
                 type="number"
                 value={editProduct.countInStock}
                 onChange={(e) =>
-                  setEditProduct({ ...editProduct, countInStock: e.target.value })
+                  setEditProduct({
+                    ...editProduct,
+                    countInStock: e.target.value,
+                  })
                 }
                 variant="bordered"
                 required
@@ -85,7 +89,10 @@ const EditProductModal = ({
                 placeholder="Enter product description"
                 value={editProduct.description}
                 onChange={(e) =>
-                  setEditProduct({ ...editProduct, description: e.target.value })
+                  setEditProduct({
+                    ...editProduct,
+                    description: e.target.value,
+                  })
                 }
                 variant="bordered"
                 required
@@ -94,7 +101,9 @@ const EditProductModal = ({
               />
               {/* Image upload for edit */}
               <div className="flex flex-col gap-2 md:col-span-2">
-                <label className="font-medium text-gray-700">Product Image</label>
+                <label className="font-medium text-gray-700">
+                  Product Image
+                </label>
                 <div className="relative">
                   {!editProduct.image ? (
                     <label
@@ -102,7 +111,9 @@ const EditProductModal = ({
                       className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg h-32 cursor-pointer hover:border-blue-400 transition-colors"
                     >
                       <FaImage className="text-4xl text-gray-300 mb-2" />
-                      <span className="text-gray-500">Click to upload image</span>
+                      <span className="text-gray-500">
+                        Click to upload image
+                      </span>
                       <input
                         id="edit-product-image-upload"
                         type="file"

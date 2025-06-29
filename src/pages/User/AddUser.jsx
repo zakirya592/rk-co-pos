@@ -31,7 +31,7 @@ const AddUser = ({
   };
 
   return (
-    <Modal isOpen={isOpen}  size="md">
+    <Modal isOpen={isOpen} size="md">
       <ModalContent>
         <ModalHeader>Add New User</ModalHeader>
         <ModalBody>
@@ -80,6 +80,7 @@ const AddUser = ({
               required
             />
             <Select
+              placeholder="Select Role"
               label="Role"
               value={newUser.role}
               onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
@@ -87,9 +88,6 @@ const AddUser = ({
               variant="bordered"
               required
             >
-              <SelectItem key="" value="" isDisabled isSelected>
-                Select Role
-              </SelectItem>
               <SelectItem key="admin" value="admin">
                 Admin
               </SelectItem>
