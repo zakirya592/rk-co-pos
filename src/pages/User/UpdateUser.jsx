@@ -90,6 +90,7 @@ const UpdateUser = ({
               onChange={(e) =>
                 setUpdatedUser({ ...updatedUser, role: e.target.value })
               }
+              selectedKeys={updatedUser.role ? [updatedUser.role] : []}
               startContent={<FaIdBadge />}
               variant="bordered"
               required

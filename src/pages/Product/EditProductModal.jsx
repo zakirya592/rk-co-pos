@@ -41,6 +41,7 @@ const EditProductModal = ({
                 placeholder="Select category"
                 label="Category"
                 value={editProduct.category}
+                selectedKeys={editProduct.category ? [editProduct.category] : []}
                 onChange={(e) =>
                   setEditProduct({ ...editProduct, category: e.target.value })
                 }
