@@ -296,7 +296,7 @@ const Products = () => {
               </SelectItem>
               {categories.map((category) => (
                 <SelectItem key={category._id} value={category._id}>
-                  {category.name}
+                  {category?.name || ""}
                 </SelectItem>
               ))}
             </Select>
@@ -345,15 +345,15 @@ const Products = () => {
               <TableCell>
                 <Chip size="sm" variant="flat" color="primary">
                   {/* {categoryMap[product.category]?.name || "Unknown"} */}
-                  {product.category.name}
+                  {product?.category?.name || ""}
                 </Chip>
                 {/* Optionally show description below */}
                 {/* <div className="text-xs text-gray-400">{categoryMap[product.category]?.description}</div> */}
               </TableCell>
-              <TableCell>{product.price}</TableCell>
+              <TableCell>{product?.price || "0"}</TableCell>
               <TableCell>
                 <Chip size="sm" color={getStockColor(product.countInStock)}>
-                  {product.countInStock} units
+                  {product?.countInStock || "0"} units
                 </Chip>
               </TableCell>
               <TableCell>
