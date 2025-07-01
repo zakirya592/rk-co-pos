@@ -58,9 +58,22 @@ const Products = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: "",
-    category: "",
     price: "",
     countInStock: "",
+    category: "",
+    purchaseRate: "",
+    saleRate: "",
+    wholesaleRate: "",
+    retailRate: "",
+    size: "",
+    color: "",
+    barcode: "",
+    availableQuantity: "",
+    soldOutQuantity: "",
+    packingUnit: "",
+    pouchesOrPieces: "",
+    additionalUnit: "",
+    isActive: "active",
     description: "",
     image: "",
   });
@@ -84,6 +97,12 @@ const Products = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    const maxSize = 4 * 1024 * 1024; // 4MB in bytes
+
+    if (file.size > maxSize) {
+      toast.error("Image is greater than 4MB. Please upload a smaller image.");
+      return;
+    }
     setNewProduct({ ...newProduct, image: file });
   };
   // Add this in Products.jsx
@@ -116,9 +135,22 @@ const Products = () => {
       const formData = new FormData();
       formData.append("name", newProduct.name);
       formData.append("price", newProduct.price);
+      formData.append("purchaseRate", newProduct.purchaseRate);
+      formData.append("saleRate", newProduct.saleRate);
+      formData.append("wholesaleRate", newProduct.wholesaleRate);
+      formData.append("retailRate", newProduct.retailRate);
+      formData.append("size", newProduct.size);
+      formData.append("color", newProduct.color);
+      formData.append("barcode", newProduct.barcode);
+      formData.append("availableQuantity", newProduct.availableQuantity);
+      formData.append("soldOutQuantity", newProduct.soldOutQuantity);
+      formData.append("packingUnit", newProduct.packingUnit);
+      formData.append("additionalUnit", newProduct.additionalUnit);
+      formData.append("pouchesOrPieces", newProduct.pouchesOrPieces);
       formData.append("description", newProduct.description);
       formData.append("category", newProduct.category);
       formData.append("countInStock", newProduct.countInStock);
+      formData.append("isActive", newProduct.isActive === "active");
       formData.append("image", newProduct.image);
 
       await userRequest.post("/products", formData, {
@@ -138,6 +170,8 @@ const Products = () => {
       toast.success("Product added successfully!");
       queryClient.invalidateQueries(["products"]); // Refetch products
     } catch (error) {
+      console.log(error,'reer');
+      
       toast.error(error?.response?.data?.message || error.message ||"Failed to add product.");
     }
   };
@@ -148,9 +182,23 @@ const Products = () => {
       const formData = new FormData();
       formData.append("name", editProduct.name);
       formData.append("price", editProduct.price);
+      
+      formData.append("purchaseRate", editProduct.purchaseRate);
+      formData.append("saleRate", editProduct.saleRate);
+      formData.append("wholesaleRate", editProduct.wholesaleRate);
+      formData.append("retailRate", editProduct.retailRate);
+      formData.append("size", editProduct.size);
+      formData.append("color", editProduct.color);
+      formData.append("barcode", editProduct.barcode);
+      formData.append("availableQuantity", editProduct.availableQuantity);
+      formData.append("soldOutQuantity", editProduct.soldOutQuantity);
+      formData.append("packingUnit", editProduct.packingUnit);
+      formData.append("additionalUnit", editProduct.additionalUnit);
+      formData.append("pouchesOrPieces", editProduct.pouchesOrPieces);
       formData.append("description", editProduct.description);
       formData.append("category", typeof editProduct.category === "object" && editProduct.category !== null ? editProduct.category._id : editProduct.category);
       formData.append("countInStock", editProduct.countInStock);
+      formData.append("isActive", editProduct.isActive);
       formData.append("image", editProduct.image);
 
       await userRequest.put(`/products/${editProduct?._id || ""}`, formData, {
@@ -305,14 +353,31 @@ const Products = () => {
       </Card>
 
       {/* Products Table */}
-      <Table aria-label="Products table" bottomContent={bottomContent}>
+      <Table
+        aria-label="Products table"
+        bottomContent={bottomContent}
+        bottomContentPlacement="outside"
+        className="min-h-[400px] overflow-auto"
+      >
         <TableHeader>
           <TableColumn>IMAGE</TableColumn>
           <TableColumn>NAME</TableColumn>
           <TableColumn>CATEGORY</TableColumn>
-          <TableColumn>price</TableColumn>
-          {/* <TableColumn>WHOLESALE price</TableColumn> */}
+          <TableColumn>PRICE</TableColumn>
+          <TableColumn>PURCHASE RATE</TableColumn>
+          <TableColumn>SALE RATE</TableColumn>
+          <TableColumn>WHOLESALE RATE</TableColumn>
+          <TableColumn>RETAIL RATE</TableColumn>
+          <TableColumn>SIZE</TableColumn>
+          <TableColumn>COLOR</TableColumn>
+          <TableColumn>BARCODE</TableColumn>
+          <TableColumn>AVAILABLE QTY</TableColumn>
+          <TableColumn>SOLD OUT QTY</TableColumn>
+          <TableColumn>PACKAGING UNIT</TableColumn>
+          <TableColumn>ADDITIONAL UNIT</TableColumn>
+          <TableColumn>QUANTITY UNIT</TableColumn>
           <TableColumn>STOCK</TableColumn>
+          <TableColumn>STATUS</TableColumn>
           <TableColumn>ACTIONS</TableColumn>
         </TableHeader>
         <TableBody
@@ -329,6 +394,72 @@ const Products = () => {
           }
         >
           {paginatedProducts.map((product) => (
+            // <TableRow key={product._id}>
+            //   <TableCell>
+            //     {product.image ? (
+            //       <img
+            //         src={product.image}
+            //         alt={product.name}
+            //         className="w-12 h-12 object-cover rounded"
+            //       />
+            //     ) : (
+            //       <FaImage className="text-gray-300 text-2xl" />
+            //     )}
+            //   </TableCell>
+            //   <TableCell className="font-semibold">{product.name}</TableCell>
+            //   <TableCell>
+            //     <Chip size="sm" variant="flat" color="primary">
+            //       {/* {categoryMap[product.category]?.name || "Unknown"} */}
+            //       {product?.category?.name || ""}
+            //     </Chip>
+            //     {/* Optionally show description below */}
+            //     {/* <div className="text-xs text-gray-400">{categoryMap[product.category]?.description}</div> */}
+            //   </TableCell>
+            //   <TableCell>{product?.price || "0"}</TableCell>
+            //   <TableCell>
+            //     <Chip size="sm" color={getStockColor(product.countInStock)}>
+            //       {product?.countInStock || "0"} units
+            //     </Chip>
+            //   </TableCell>
+            //   <TableCell>
+            //     <div className="flex gap-2">
+            //       <Tooltip content="View Product" placement="top">
+            //         <Button
+            //           isIconOnly
+            //           size="sm"
+            //           variant="light"
+            //           color="primary"
+            //           onPress={() => setViewProduct(product)}
+            //         >
+            //           <FaEye />
+            //         </Button>
+            //       </Tooltip>
+            //       <Tooltip content="Edit Product" placement="top">
+            //         <Button
+            //           isIconOnly
+            //           size="sm"
+            //           variant="light"
+            //           color="warning"
+            //           onPress={() => setEditProduct(product)}
+            //         >
+            //           <FaEdit />
+            //         </Button>
+            //       </Tooltip>
+
+            //       <Tooltip content="Delete Product" placement="top">
+            //         <Button
+            //           isIconOnly
+            //           size="sm"
+            //           variant="light"
+            //           color="danger"
+            //           onPress={() => handleDeleteProduct(product._id)}
+            //         >
+            //           <FaTrash />
+            //         </Button>
+            //       </Tooltip>
+            //     </div>
+            //   </TableCell>
+            // </TableRow>
             <TableRow key={product._id}>
               <TableCell>
                 {product.image ? (
@@ -341,21 +472,45 @@ const Products = () => {
                   <FaImage className="text-gray-300 text-2xl" />
                 )}
               </TableCell>
+
               <TableCell className="font-semibold">{product.name}</TableCell>
+
               <TableCell>
                 <Chip size="sm" variant="flat" color="primary">
-                  {/* {categoryMap[product.category]?.name || "Unknown"} */}
                   {product?.category?.name || ""}
                 </Chip>
-                {/* Optionally show description below */}
-                {/* <div className="text-xs text-gray-400">{categoryMap[product.category]?.description}</div> */}
               </TableCell>
+
               <TableCell>{product?.price || "0"}</TableCell>
+              <TableCell>{product?.purchaseRate || "0"}</TableCell>
+              <TableCell>{product?.saleRate || "0"}</TableCell>
+              <TableCell>{product?.wholesaleRate || "0"}</TableCell>
+              <TableCell>{product?.retailRate || "0"}</TableCell>
+              <TableCell>{product?.size || "-"}</TableCell>
+              <TableCell>{product?.color || "-"}</TableCell>
+              <TableCell>{product?.barcode || "-"}</TableCell>
+              <TableCell>{product?.pouchesOrPieces || "0"}</TableCell>
+              <TableCell>{product?.soldOutQuantity || "0"}</TableCell>
+              <TableCell>{product?.packingUnit || "-"}</TableCell>
+              <TableCell>{product?.additionalUnit || "-"}</TableCell>
+              <TableCell>{product?.additionalUnit || "-"}</TableCell>
+
               <TableCell>
                 <Chip size="sm" color={getStockColor(product.countInStock)}>
                   {product?.countInStock || "0"} units
                 </Chip>
               </TableCell>
+
+              <TableCell>
+                <span
+                  className={`text-sm font-semibold ${
+                    product.isActive ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  {product.isActive ? "Active" : "No Active"}
+                </span>
+              </TableCell>
+
               <TableCell>
                 <div className="flex gap-2">
                   <Tooltip content="View Product" placement="top">
@@ -369,6 +524,7 @@ const Products = () => {
                       <FaEye />
                     </Button>
                   </Tooltip>
+
                   <Tooltip content="Edit Product" placement="top">
                     <Button
                       isIconOnly
