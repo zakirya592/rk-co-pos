@@ -23,28 +23,28 @@ const CustomerSelectionModal = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-3">
           {customers.map((customer) => (
             <Card
-              key={customer.id}
+              key={customer._id}
               isPressable
               onPress={() => {
                 setSelectedCustomer(customer);
                 onClose();
               }}
-              className={
-                selectedCustomer.id === customer.id
-                  ? "border-2 border-primary"
-                  : ""
-              }
+              // className={
+              //   selectedCustomer?.id || "" === customer?.id || ""
+              //     ? "border-2 border-primary"
+              //     : ""
+              // }
             >
               <CardBody className="p-3">
                 <div className="font-semibold">{customer.name}</div>
-                <div className="text-sm text-gray-600">{customer.contact}</div>
+                <div className="text-sm text-gray-600 my-2">{customer.phoneNumber}</div>
                 <Chip
                   size="sm"
                   color={
-                    customer.type === "wholesale" ? "secondary" : "primary"
+                    customer.customerType === "wholesale" ? "secondary" : "primary"
                   }
                 >
-                  {customer.type}
+                  {customer.customerType}
                 </Chip>
               </CardBody>
             </Card>

@@ -28,12 +28,31 @@ const fetchProducts = async (key, searchTerm, currentPage) => {
   };
 };
 
+const fetchCustomers = async (search = '', page = 1) => {
+    const res = await userRequest.get(`/customers?search=${search}&page=${page}`);
+    return res.data;
+};
+
 const POS = () => {
-  const [customers] = useState([
-    { id: 1, name: 'Walk-in Customer', contact: '', address: '', type: 'retail' },
-    { id: 2, name: 'Ahmad Khan', contact: '03001234567', address: 'Lahore', type: 'wholesale' },
-    { id: 3, name: 'Sarah Ahmed', contact: '03009876543', address: 'Karachi', type: 'retail' }
-  ]);
+  const [customers, setCustomers] = useState([]);
+  const [customerSearchTerm, setCustomerSearchTerm] = useState('');
+  const [customerPage, setCustomerPage] = useState(1);
+
+  // Fetch customers using react-query
+  const { data: customerData, isLoading: customersLoading } = useQuery(
+    ["customers", customerSearchTerm, customerPage],
+    () => fetchCustomers(customerSearchTerm, customerPage),
+    { keepPreviousData: true }
+  );
+
+  useEffect(() => {
+    if (customerData) {
+      setCustomers(customerData?.data || []);
+    }
+  }, [customerData]);
+
+  console.log(customerData?.data, "customers");
+  
 
   const [cart, setCart] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -65,14 +84,14 @@ const POS = () => {
 
   const addToCart = (product) => {
     // Use wholesalePrice for wholesale customers, otherwise use price
-    const price = selectedCustomer.type === 'wholesale'
+    const price = selectedCustomer.customerType === 'wholesale'
       ? product.wholesalePrice ?? product.price
       : product.price;
 
     const existingItem = cart.find(item => item._id === product._id);
 
     if (existingItem) {
-      // Allow adding if stock is available, for all customer types
+      // Allow adding if stock is available, for all customer customerType
       if (existingItem.quantity < product.countInStock) {
         setCart(cart.map(item =>
           item._id === product._id
@@ -173,7 +192,8 @@ const POS = () => {
 
               <div className="flex items-center justify-between mb-4">
                 <div className="text-sm">
-                  Customer: <strong>{selectedCustomer.name}</strong> ({selectedCustomer.type})
+                  Customer: <strong>{selectedCustomer?.name || "Select Customer"}</strong> (
+                  {selectedCustomer?.customerType || ""})
                 </div>
                 <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow font-semibold text-sm">
                   Total Products: {totalProducts}
@@ -195,12 +215,16 @@ const POS = () => {
                     >
                       <CardBody className="p-3">
                         <div className="flex items-center gap-2">
-                          {product.image && (
+                          {product.image ? (
                             <img
                               src={product.image}
                               alt={product.name}
                               className="w-10 h-10 object-cover rounded"
                             />
+                          ) : (
+                            <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
+                              <span className="text-gray-400">-</span>
+                            </div>
                           )}
                           <h4 className="font-semibold text-sm">
                             {product.name}
@@ -225,6 +249,30 @@ const POS = () => {
                           >
                             {product.countInStock}
                           </Chip>
+                        </div>
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-sm font-bold">
+                            Purchase Rate
+                          </span>
+                          <span>{product.purchaseRate}</span>
+                        </div>
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-sm font-bold">
+                            Sale Rate
+                          </span>
+                          <span>{product.saleRate}</span>
+                        </div>
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-sm font-bold">
+                            Retail Rate
+                          </span>
+                          <span>{product.retailRate}</span>
+                        </div>
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-sm font-bold">
+                            Wholesale Rate
+                          </span>
+                          <span>{product.wholesaleRate}</span>
                         </div>
                       </CardBody>
                     </Card>
