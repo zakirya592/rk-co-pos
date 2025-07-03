@@ -17,7 +17,7 @@ import {
   Spinner,
   Tooltip,
 } from "@nextui-org/react";
-import { FaPlus, FaSearch, FaEdit, FaTrash, FaEye, FaImage } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaEdit, FaTrash, FaEye, FaImage, FaRoad } from 'react-icons/fa';
 import AddProductModal from './AddProductModal';
 import ViewProductModal from './ViewProductModal';
 import EditProductModal from './EditProductModal';
@@ -25,6 +25,8 @@ import toast from "react-hot-toast";
 import Swal from "sweetalert2";
 import { useQuery, useQueryClient } from 'react-query';
 import userRequest from '../../utils/userRequest';
+import ProductJourney from './ProductJourney';
+import { useNavigate } from 'react-router-dom';
 
 
 const fetchProducts = async (key, searchTerm, currentPage) => {
@@ -47,6 +49,8 @@ const fetchCategories = async () => {
 };
 
 const Products = () => {
+  
+  const navigator = useNavigate();
   // Fetch categories
   const { data: categories = [], isLoading: isCategoriesLoading } = useQuery(
     ["categories"],
@@ -56,6 +60,7 @@ const Products = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showJourney, setShowJourney] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: "",
     price: "",
@@ -304,13 +309,43 @@ const Products = () => {
           <h1 className="text-3xl font-bold text-gray-800">Products</h1>
           <p className="text-gray-600">Manage your product inventory</p>
         </div>
-        <Button
-          className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold"
-          startContent={<FaPlus />}
-          onPress={() => setShowAddModal(true)}
-        >
-          Add Product
-        </Button>
+        <div className="flex gap-3">
+          <Chip
+            color="primary"
+            variant="flat"
+            className="text-base font-semibold px-3 py-4 mt-1"
+            startContent={
+              <span role="img" aria-label="count" className="mr-1">
+                📦
+              </span>
+            }
+          >
+            {filteredProducts.length} Products
+          </Chip>
+          <Button
+            variant="flat"
+            color="primary"
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium"
+            onPress={() => {
+              navigator('/products/productjourney');
+            }}
+            startContent={
+              <FaRoad className="text-white" />
+            }
+          >
+            <span className="flex items-center gap-2">
+              <span className="text-white">Product Journey</span>
+              <span className="text-xs text-gray-200">→</span>
+            </span>
+          </Button>
+          <Button
+            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold"
+            startContent={<FaPlus />}
+            onPress={() => setShowAddModal(true)}
+          >
+            Add Product
+          </Button>
+        </div>
       </div>
 
       {/* Search and Filter */}
@@ -554,6 +589,8 @@ const Products = () => {
           ))}
         </TableBody>
       </Table>
+
+      {showJourney && <ProductJourney />}
 
       {/* Add Product Modal */}
       <AddProductModal
