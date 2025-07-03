@@ -238,11 +238,19 @@ const ProductJourney = () => {
           <div className="flex justify-center items-center py-8">
             <Spinner color="success" size="lg" />
           </div>
-        ) : filteredJourneys.length === 0 ? (
+        ) : journeys.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
             <p className="text-lg">No journeys found</p>
           </div>
-        )  : (
+        ) : filteredJourneys.length === 0 ? (
+          <div className="text-center text-gray-500 py-8">
+            <div className="flex flex-col items-center gap-4">
+              <FaSearch className="text-gray-400 text-4xl" />
+              <p className="text-lg">No journeys matched your search</p>
+              <p className="text-gray-500">Try using different keywords</p>
+            </div>
+          </div>
+        ) : (
           <div className="grid grid-cols-1 gap-6">
             {filteredJourneys.map((journey) => {
               const productId = journey.product._id;
