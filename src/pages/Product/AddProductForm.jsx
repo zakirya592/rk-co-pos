@@ -1,0 +1,548 @@
+import React, { useState } from "react";
+import { Card, CardBody, Input, Select, SelectItem, Button, Textarea, Switch } from "@nextui-org/react";
+import { FaImage, FaTrash, FaShoppingCart, FaBox, FaBoxes, FaTruck } from "react-icons/fa";
+
+const AddProductForm = ({
+    handleAddProduct,
+}) => {
+    const [loading, setLoading] = useState(false);
+    const [isCustomColor, setIsCustomColor] = useState(false);
+    const [isCustompackingUnit, setIsCustompackingUnit] = useState(false);
+    const [isCustomQuantityUnit, setIsCustomQuantityUnit] = useState(false);
+    const [isCustomSize, setIsCustomSize] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        await handleAddProduct();
+        setLoading(false);
+    };
+
+    // Handle image upload
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const maxSize = 4 * 1024 * 1024; // 4MB in bytes
+
+        if (file.size > maxSize) {
+            toast.error("Image is greater than 4MB. Please upload a smaller image.");
+            return;
+        }
+        setNewProduct({ ...newProduct, image: file });
+    };
+
+    const [newProduct, setNewProduct] = useState({
+        name: "",
+        price: "",
+        countInStock: "",
+        category: "",
+        purchaseRate: "",
+        saleRate: "",
+        wholesaleRate: "",
+        retailRate: "",
+        size: "",
+        color: "",
+        barcode: "",
+        availableQuantity: "",
+        soldOutQuantity: "",
+        packingUnit: "",
+        pouchesOrPieces: "",
+        additionalUnit: "",
+        isActive: "active",
+        description: "",
+        image: "",
+    });
+
+    return (
+        <div className="p-6 space-y-6">
+            <Card>
+                <CardBody>
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-bold">Add New Product</h2>
+                        <Button
+                            type="submit"
+                            color="primary"
+                            className="w-auto"
+                            isLoading={loading}
+                        >
+                            Add Product
+                        </Button>
+                    </div>
+                    <form
+                        onSubmit={handleSubmit}
+                    // className="grid grid-cols-1 md:grid-cols-6 gap-4"
+                    >
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Input
+                                label="Product Name"
+                                labelPlacement="outside"
+                                placeholder="Enter product name"
+                                value={newProduct.name}
+                                onChange={(e) =>
+                                    setNewProduct({ ...newProduct, name: e.target.value })
+                                }
+                                variant="bordered"
+                                required
+                            />
+                            <Select
+                                label="Category"
+                                labelPlacement="outside"
+                                placeholder="Select category"
+                                value={newProduct.category}
+                                onChange={(e) =>
+                                    setNewProduct({ ...newProduct, category: e.target.value })
+                                }
+                                variant="bordered"
+                                required
+                            >
+                                {/* {categories.map((category) => (
+              <SelectItem key={category._id} value={category._id}>
+                {category.name}
+              </SelectItem>
+            ))} */}
+                            </Select>
+                        </div>
+
+                        <div className="mt-7 bg-gradient-to-r from-blue-50 via-white to-blue-50 border border-blue-100 p-5 rounded-xl shadow-md">
+                            <div className="flex flex-col gap-4 ">
+                                {/* Header Row */}
+                                <div className="flex items-center justify-between">
+                                    {/* Section Title with Icon */}
+                                    <h2 className="text-lg md:text-xl font-bold text-gray-800 flex items-center gap-2">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            className="h-6 w-6 text-blue-500"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M4 6h16M4 12h16M4 18h16"
+                                            />
+                                        </svg>
+                                        Size Options
+                                    </h2>
+
+                                    {/* Custom Size Toggle */}
+                                    <div className="flex items-center gap-3">
+                                        <label
+                                            htmlFor="custom-size-toggle"
+                                            className="flex items-center cursor-pointer select-none"
+                                        >
+                                            <div className="relative">
+                                                <input
+                                                    type="checkbox"
+                                                    id="custom-size-toggle"
+                                                    checked={isCustomSize}
+                                                    onChange={() => {
+                                                        setIsCustomSize(!isCustomSize);
+                                                        setNewProduct({ ...newProduct, size: "" });
+                                                    }}
+                                                    className="sr-only peer"
+                                                />
+                                                <div className="w-10 h-5 bg-gray-300 rounded-full peer-checked:bg-blue-500 transition-colors"></div>
+                                                <div className="absolute top-0.5 left-0.5 h-4 w-4 bg-white rounded-full shadow-md transition-transform peer-checked:translate-x-5"></div>
+                                            </div>
+                                            <span className="ml-2 text-sm text-gray-700">
+                                                Custom Size
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Predefined Sizes - Single Select */}
+                            <div className="flex flex-wrap gap-2 mt-5 ms-4">
+                                {["Small", "Medium", "Large"].map((sizeOption) => (
+                                    <label key={sizeOption} className="flex items-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            checked={newProduct.size === sizeOption}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setNewProduct({ ...newProduct, size: sizeOption });
+                                                } else {
+                                                    setNewProduct({ ...newProduct, size: "" });
+                                                }
+                                            }}
+                                            disabled={isCustomSize}
+                                        />
+                                        <span className="text-sm">{sizeOption}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Color Selection */}
+                        <div className="flex flex-col mt-5 gap-4 bg-gradient-to-r from-purple-50 via-white to-purple-50 border border-purple-100 p-5 rounded-xl shadow-md">
+                            {/* Header Row */}
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-lg md:text-xl font-bold text-gray-800 flex items-center gap-2">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-6 w-6 text-purple-500"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M20 12H4"
+                                        />
+                                    </svg>
+                                    Color Selection
+                                </h2>
+
+                                {/* Custom Color Toggle */}
+                                <div className="flex items-center gap-3">
+                                    <label
+                                        htmlFor="custom-color-toggle"
+                                        className="flex items-center cursor-pointer select-none"
+                                    >
+                                        <div className="relative">
+                                            <input
+                                                type="checkbox"
+                                                id="custom-color-toggle"
+                                                checked={isCustomColor}
+                                                onChange={() => {
+                                                    setIsCustomColor(!isCustomColor);
+                                                    setNewProduct({ ...newProduct, color: "" });
+                                                }}
+                                                className="sr-only peer"
+                                            />
+                                            <div className="w-10 h-5 bg-gray-300 rounded-full peer-checked:bg-purple-500 transition-colors"></div>
+                                            <div className="absolute top-0.5 left-0.5 h-4 w-4 bg-white rounded-full shadow-md transition-transform peer-checked:translate-x-5"></div>
+                                        </div>
+                                        <span className="ml-2 text-sm text-gray-700">
+                                            Custom Color
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {/* Predefined Colors */}
+                            <div className="flex flex-wrap gap-3 ms-4">
+                                {["white", "black"].map((colorOption) => (
+                                    <label
+                                        key={colorOption}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={newProduct.color === colorOption}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setNewProduct({
+                                                        ...newProduct,
+                                                        color: colorOption,
+                                                    });
+                                                } else {
+                                                    setNewProduct({ ...newProduct, color: "" });
+                                                }
+                                            }}
+                                            disabled={isCustomColor}
+                                        />
+                                        <span className="text-sm capitalize">{colorOption}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-7 gap-4 mt-10">
+                            <Input
+                                label="Barcode"
+                                labelPlacement="outside"
+                                placeholder="Enter barcode"
+                                value={newProduct.barcode}
+                                onChange={(e) =>
+                                    setNewProduct({ ...newProduct, barcode: e.target.value })
+                                }
+                                variant="bordered"
+                            />
+
+                            <Input
+                                label="Price"
+                                labelPlacement="outside"
+                                placeholder="0.00"
+                                type="number"
+                                value={newProduct.price}
+                                onChange={(e) =>
+                                    setNewProduct({ ...newProduct, price: e.target.value })
+                                }
+                                startContent="Rs."
+                                variant="bordered"
+                            />
+                            {/* Size Selection */}
+                            <Input
+                                label="Custom Size"
+                                labelPlacement="outside"
+                                placeholder="Enter size"
+                                value={isCustomSize ? newProduct.size : ""}
+                                onChange={(e) =>
+                                    setNewProduct({ ...newProduct, size: e.target.value })
+                                }
+                                variant="bordered"
+                                disabled={!isCustomSize}
+                                className={`transition-colors ${!isCustomSize
+                                    ? "bg-gray-100 cursor-not-allowed text-gray-400 rounded-xl border border-gray-200"
+                                    : "bg-white "
+                                    }`}
+                            />
+                            {/* Custom Color Input */}
+                            <Input
+                                label="Custom Color"
+                                labelPlacement="outside"
+                                placeholder="Enter color"
+                                value={isCustomColor ? newProduct.color : ""}
+                                onChange={(e) =>
+                                    setNewProduct({ ...newProduct, color: e.target.value })
+                                }
+                                variant="bordered"
+                                disabled={!isCustomColor}
+                                className={`transition-colors ${!isCustomColor
+                                    ? "bg-gray-100 cursor-not-allowed text-gray-400 rounded-xl border border-gray-200"
+                                    : "bg-white "
+                                    }`}
+                            />
+
+                            {/* Pricing */}
+                            <Input
+                                label="Purchase Rate"
+                                labelPlacement="outside"
+                                placeholder="0.00"
+                                type="number"
+                                value={newProduct.purchaseRate}
+                                onChange={(e) =>
+                                    setNewProduct({
+                                        ...newProduct,
+                                        purchaseRate: e.target.value,
+                                    })
+                                }
+                                startContent="Rs."
+                                variant="bordered"
+                            />
+                            <Input
+                                label="Sale Rate"
+                                labelPlacement="outside"
+                                placeholder="0.00"
+                                type="number"
+                                value={newProduct.saleRate}
+                                onChange={(e) =>
+                                    setNewProduct({ ...newProduct, saleRate: e.target.value })
+                                }
+                                startContent="Rs."
+                                variant="bordered"
+                            />
+                            <Input
+                                label="Whole Sale Rate"
+                                labelPlacement="outside"
+                                placeholder="0.00"
+                                type="number"
+                                value={newProduct.wholesaleRate}
+                                onChange={(e) =>
+                                    setNewProduct({
+                                        ...newProduct,
+                                        wholesaleRate: e.target.value,
+                                    })
+                                }
+                                startContent="Rs."
+                                variant="bordered"
+                            />
+                            <Input
+                                label="Retail Rate"
+                                labelPlacement="outside"
+                                placeholder="0.00"
+                                type="number"
+                                value={newProduct.retailRate}
+                                onChange={(e) =>
+                                    setNewProduct({ ...newProduct, retailRate: e.target.value })
+                                }
+                                startContent="Rs."
+                                variant="bordered"
+                            />
+
+                            <Input
+                                label="Available Quantity"
+                                labelPlacement="outside"
+                                placeholder="0"
+                                type="number"
+                                value={newProduct.availableQuantity}
+                                onChange={(e) =>
+                                    setNewProduct({
+                                        ...newProduct,
+                                        availableQuantity: e.target.value,
+                                    })
+                                }
+                                variant="bordered"
+                            />
+
+                            <Input
+                                label="Stock Quantity"
+                                labelPlacement="outside"
+                                placeholder="0"
+                                type="number"
+                                value={newProduct.countInStock}
+                                onChange={(e) =>
+                                    setNewProduct({
+                                        ...newProduct,
+                                        countInStock: e.target.value,
+                                    })
+                                }
+                                variant="bordered"
+                            />
+
+                            <Input
+                                label="Sold Out Quantity"
+                                labelPlacement="outside"
+                                placeholder="0"
+                                type="number"
+                                value={newProduct.soldOutQuantity}
+                                onChange={(e) =>
+                                    setNewProduct({
+                                        ...newProduct,
+                                        soldOutQuantity: e.target.value,
+                                    })
+                                }
+                                variant="bordered"
+                            />
+                            <Input
+                                label="Quantity Unit"
+                                labelPlacement="outside"
+                                placeholder="quantity unit"
+                                value={newProduct.additionalUnit}
+                                onChange={(e) =>
+                                    setNewProduct({
+                                        ...newProduct,
+                                        additionalUnit: e.target.value,
+                                    })
+                                }
+                                variant="bordered"
+                            />
+                            <Input
+                                label="packaging unit"
+                                labelPlacement="outside"
+                                placeholder="packaging unit"
+                                value={newProduct.packingUnit}
+                                onChange={(e) =>
+                                    setNewProduct({
+                                        ...newProduct,
+                                        packingUnit: e.target.value,
+                                    })
+                                }
+                                variant="bordered"
+                            />
+                            <Input
+                                label="Additional Unit"
+                                labelPlacement="outside"
+                                type="number"
+                                placeholder="Enter additional unit"
+                                value={newProduct.pouchesOrPieces}
+                                onChange={(e) =>
+                                    setNewProduct({
+                                        ...newProduct,
+                                        pouchesOrPieces: e.target.value,
+                                    })
+                                }
+                                variant="bordered"
+                            />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-7 gap-4 mt-3">
+                            {/* Description */}
+                             {/* Status */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700">
+                                    Status
+                                </label>
+                                <div className="flex items-center gap-2">
+                                    <Switch
+                                    label="Active"
+                                        isSelected={newProduct.isActive === "active"}
+                                        onValueChange={(value) =>
+                                            setNewProduct({
+                                                ...newProduct,
+                                                isActive: value ? "active" : "inactive",
+                                            })
+                                        }
+                                    />
+                                    <span className="text-sm text-gray-600">
+                                        {newProduct.isActive === "active" ? "Active" : "Inactive"}
+                                    </span>
+                                </div>
+                            </div>
+                            <Textarea
+                                label="Description"
+                                labelPlacement="outside"
+                                placeholder="Enter product description"
+                                value={newProduct.description}
+                                onChange={(e) =>
+                                    setNewProduct({ ...newProduct, description: e.target.value })
+                                }
+                                variant="bordered"
+                                minRows={3}
+                                className="md:col-span-5"
+                            />
+
+                           
+                        {/* Image upload */}
+                        <div className="flex flex-col gap-2">
+                            <label className="font-medium text-gray-700">
+                                Product Image
+                            </label>
+                            <div className="relative">
+                                {!newProduct.image ? (
+                                    <label
+                                        htmlFor="product-image-upload"
+                                        className="flex flex-col w-32 text-sm items-center justify-center border-2 border-dashed border-gray-300 rounded-lg h-32 cursor-pointer hover:border-blue-400 transition-colors"
+                                    >
+                                        <FaImage className="text-4xl text-gray-300 mb-2" />
+                                        <span className="text-gray-500">
+                                            Click to upload image
+                                        </span>
+                                        <input
+                                            id="product-image-upload"
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={handleImageChange}
+                                        />
+                                    </label>
+                                ) : (
+                                    <div className="relative w-32 h-32">
+                                        <img
+                                            src={
+                                                newProduct.image instanceof File
+                                                    ? URL.createObjectURL(newProduct.image)
+                                                    : newProduct.image
+                                            }
+                                            alt="Preview"
+                                            className="w-full h-full object-cover rounded-lg border"
+                                        />
+                                        <button
+                                            type="button"
+                                            className="absolute top-1 right-1 bg-white bg-opacity-80 rounded-full p-1 shadow hover:bg-red-100 transition-colors"
+                                            onClick={() =>
+                                                setNewProduct({ ...newProduct, image: "" })
+                                            }
+                                            title="Remove image"
+                                        >
+                                            <FaTrash className="text-red-500" />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        </div>
+
+                    </form>
+                </CardBody>
+            </Card>
+        </div>
+    );
+};
+
+export default AddProductForm;

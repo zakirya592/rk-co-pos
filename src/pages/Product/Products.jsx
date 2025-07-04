@@ -18,7 +18,7 @@ import {
   Tooltip,
 } from "@nextui-org/react";
 import { FaPlus, FaSearch, FaEdit, FaTrash, FaEye, FaImage, FaRoad } from 'react-icons/fa';
-import AddProductModal from './AddProductModal';
+import AddProductForm from './AddProductForm';
 import ViewProductModal from './ViewProductModal';
 import EditProductModal from './EditProductModal';
 import toast from "react-hot-toast";
@@ -59,7 +59,7 @@ const Products = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [showAddModal, setShowAddModal] = useState(false);
+
   const [showJourney, setShowJourney] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: "",
@@ -327,11 +327,9 @@ const Products = () => {
             color="primary"
             className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium"
             onPress={() => {
-              navigator('/products/productjourney');
+              navigator("/products/productjourney");
             }}
-            startContent={
-              <FaRoad className="text-white" />
-            }
+            startContent={<FaRoad className="text-white" />}
           >
             <span className="flex items-center gap-2">
               <span className="text-white">Product Journey</span>
@@ -341,7 +339,8 @@ const Products = () => {
           <Button
             className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold"
             startContent={<FaPlus />}
-            onPress={() => setShowAddModal(true)}
+            // onPress={() => setShowAddModal(true)}
+            onPress={() => navigator("/products/Add")}
           >
             Add Product
           </Button>
@@ -590,18 +589,15 @@ const Products = () => {
         </TableBody>
       </Table>
 
-      {showJourney && <ProductJourney />}
-
-      {/* Add Product Modal */}
-      <AddProductModal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
+      <AddProductForm
         categories={categories}
         newProduct={newProduct}
         setNewProduct={setNewProduct}
         handleAddProduct={handleAddProduct}
         handleImageChange={handleImageChange}
       />
+
+      {showJourney && <ProductJourney />}
 
       {/* View Product Modal */}
       <ViewProductModal

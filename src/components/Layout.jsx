@@ -10,6 +10,7 @@ import Customers from '../pages/Customers/Customers';
 import Settings from './Settings';
 import User from '../pages/User/User';
 import ProductJourney from '../pages/Product/ProductJourney';
+import AddProductForm from '../pages/Product/AddProductForm';
 
 const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
@@ -30,6 +31,7 @@ const Layout = () => {
       <div className="flex-1 overflow-auto">
         <Routes>
           <Route path="/products" element={<Products />} />
+          <Route path="/products/Add" element={<AddProductForm />} />
           <Route path="/products/productjourney" element={<ProductJourney />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/user" element={<User />} />
