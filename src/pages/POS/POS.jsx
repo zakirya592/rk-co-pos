@@ -17,10 +17,6 @@ import toast from 'react-hot-toast';
 
 
 const fetchProducts = async (key, searchTerm, currentPage) => {
-   const [saleData, setSaleData] = useState({
-      note: "",
-      description: "",
-    });
   const res = await userRequest.get("/products", {
     params: {
       search: searchTerm,

@@ -20,81 +20,56 @@ import {
   SelectItem,
   Chip,
   Tabs,
-  Tab
+  Tab,
+  Spinner
 } from '@nextui-org/react';
 import { FaSearch, FaEye, FaPrint, FaCalendarAlt, FaFilter } from 'react-icons/fa';
-
+import { useQuery } from 'react-query';
+import userRequest from '../utils/userRequest';
 const History = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Sample transaction history
-  const transactions = [
-    {
-      id: 'TXN-001',
-      date: '2024-01-20',
-      time: '14:30',
-      customer: 'Ahmad Khan',
-      items: [
-        { name: 'Laptop Dell XPS 13', qty: 1, price: 85000 },
-        { name: 'Mouse', qty: 2, price: 1500 }
-      ],
-      subtotal: 88000,
-      discount: 5000,
-      tax: 14110,
-      total: 97110,
-      paymentMethod: 'Card',
-      status: 'completed',
-      user: 'admin'
-    },
-    {
-      id: 'TXN-002',
-      date: '2024-01-20',
-      time: '15:45',
-      customer: 'Walk-in Customer',
-      items: [
-        { name: 'Office Chair', qty: 1, price: 12000 }
-      ],
-      subtotal: 12000,
-      discount: 0,
-      tax: 2040,
-      total: 14040,
-      paymentMethod: 'Cash',
-      status: 'completed',
-      user: 'admin'
-    },
-    {
-      id: 'TXN-003',
-      date: '2024-01-19',
-      time: '11:20',
-      customer: 'Sarah Ahmed',
-      items: [
-        { name: 'iPhone 15', qty: 1, price: 250000 }
-      ],
-      subtotal: 250000,
-      discount: 10000,
-      tax: 40800,
-      total: 280800,
-      paymentMethod: 'Bank Transfer',
-      status: 'completed',
-      user: 'admin'
-    }
-  ];
+  const fetchSales = async (key, searchTerm, currentPage) => {
+    const res = await userRequest.get("/sales", {
+      params: {
+        page: currentPage,
+        startDate: dateFilter === 'all' ? '' : dateFilter,
+        endDate: dateFilter === 'all' ? '' : dateFilter,
+        paymentStatus: statusFilter === 'all' ? '' : statusFilter,
+        invoiceNumber: searchTerm,
+        customer: searchTerm
+      }
+    });
+    return {
+      transactions: res.data.data || [],
+      total: res.data.results || 0,
+    };
+  };
+
+  const { data, isLoading } = useQuery(
+    ["sales", searchTerm, currentPage],
+    () => fetchSales("sales", searchTerm, currentPage),
+    { keepPreviousData: true }
+  );
+  const transactions = data?.transactions || [];
+  console.log(transactions, "transactions");
 
   const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = 
-      transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.customer.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesDate = dateFilter === 'all' || 
+    const matchesSearch =
+      // transaction.id.includes(searchTerm.toLowerCase()) ||
+      transaction.customer?.name.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesDate = dateFilter === 'all' ||
       (dateFilter === 'today' && transaction.date === '2024-01-20') ||
       (dateFilter === 'yesterday' && transaction.date === '2024-01-19');
-    
+
     const matchesStatus = statusFilter === 'all' || transaction.status === statusFilter;
-    
+
     return matchesSearch && matchesDate && matchesStatus;
   });
 
@@ -123,7 +98,7 @@ const History = () => {
         </div>
         <div className="text-right">
           <div className="text-sm text-gray-600">Today's Sales</div>
-          <div className="text-2xl font-bold text-green-600">Rs. {todaySales.toLocaleString()}</div>
+          <div className="text-2xl font-bold text-green-600">Rs. {todaySales}</div>
         </div>
       </div>
 
@@ -138,7 +113,7 @@ const History = () => {
               startContent={<FaSearch className="text-gray-400" />}
               className="flex-1 min-w-64"
             />
-            
+
             <Select
               placeholder="Date Filter"
               value={dateFilter}
@@ -151,7 +126,7 @@ const History = () => {
               <SelectItem key="yesterday" value="yesterday">Yesterday</SelectItem>
               <SelectItem key="week" value="week">This Week</SelectItem>
             </Select>
-            
+
             <Select
               placeholder="Status Filter"
               value={statusFilter}
@@ -173,37 +148,47 @@ const History = () => {
         <CardBody>
           <Table aria-label="Transactions table">
             <TableHeader>
-              <TableColumn>TRANSACTION ID</TableColumn>
+              <TableColumn>INVOICE NUMBER</TableColumn>
               <TableColumn>DATE & TIME</TableColumn>
               <TableColumn>CUSTOMER</TableColumn>
               <TableColumn>ITEMS</TableColumn>
               <TableColumn>TOTAL</TableColumn>
+              <TableColumn>PAID AMOUNT</TableColumn>
               <TableColumn>PAYMENT</TableColumn>
               <TableColumn>STATUS</TableColumn>
-              <TableColumn>USER</TableColumn>
               <TableColumn>ACTIONS</TableColumn>
             </TableHeader>
-            <TableBody>
+            <TableBody isLoading={isLoading} loadingContent={
+              <div className="flex justify-center items-center py-8">
+                <Spinner color="success" size="lg" />
+              </div>
+            }
+              emptyContent={
+                <div className="text-center text-gray-500 py-8">
+                  No Transaction found
+                </div>
+              }>
               {filteredTransactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell className="font-mono font-semibold">{transaction.id}</TableCell>
+                <TableRow key={transaction.invoiceNumber}>
+                  <TableCell className="font-mono font-semibold">{transaction.invoiceNumber}</TableCell>
                   <TableCell>
                     <div>
-                      <div>{new Date(transaction.date).toLocaleDateString()}</div>
+                      <div>{new Date(transaction.createdAt).toLocaleString()}</div>
                       <div className="text-sm text-gray-500">{transaction.time}</div>
                     </div>
                   </TableCell>
-                  <TableCell>{transaction.customer}</TableCell>
+                  <TableCell>{transaction.customer?.name}</TableCell>
                   <TableCell>
                     <div className="text-sm">
-                      {transaction.items.length} item(s)
+                      {transaction?.items?.length} item(s)
                       <div className="text-xs text-gray-500">
-                        {transaction.items[0].name}
-                        {transaction.items.length > 1 && ` +${transaction.items.length - 1} more`}
+                        {transaction?.items?.[0]?.product?.name || ""}
+                        {transaction?.items?.length > 1 && ` +${transaction?.items?.length - 1} more`}
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="font-semibold">Rs. {transaction.total.toLocaleString()}</TableCell>
+                  <TableCell className="font-semibold">Rs. {transaction.totalAmount}</TableCell>
+                  <TableCell className="font-semibold">Rs. {transaction.paidAmount}</TableCell>
                   <TableCell>
                     <Chip size="sm" variant="flat">
                       {transaction.paymentMethod}
@@ -213,14 +198,14 @@ const History = () => {
                     <Chip
                       size="sm"
                       color={
-                        transaction.status === 'completed' ? 'success' :
-                        transaction.status === 'pending' ? 'warning' : 'danger'
+                        transaction.paymentStatus === 'paid' ? 'success' :
+                          transaction.paymentStatus === 'partial' ? 'warning' : 'danger'
                       }
                     >
-                      {transaction.status}
+                      {transaction.paymentStatus}
                     </Chip>
                   </TableCell>
-                  <TableCell>{transaction.user}</TableCell>
+
                   <TableCell>
                     <div className="flex gap-2">
                       <Button
@@ -270,8 +255,8 @@ const History = () => {
                 {/* Transaction Details */}
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p><strong>Transaction ID:</strong> {selectedTransaction.id}</p>
-                    <p><strong>Date:</strong> {new Date(selectedTransaction.date).toLocaleDateString()}</p>
+                    <p><strong>Invoice Number:</strong> {selectedTransaction.invoiceNumber}</p>
+                    <p><strong>Date:</strong> {new Date(selectedTransaction.createdAt).toLocaleDateString()}</p>
                     <p><strong>Time:</strong> {selectedTransaction.time}</p>
                   </div>
                   <div>
@@ -296,8 +281,8 @@ const History = () => {
                         <TableRow key={index}>
                           <TableCell>{item.name}</TableCell>
                           <TableCell>{item.qty}</TableCell>
-                          <TableCell>Rs. {item.price.toLocaleString()}</TableCell>
-                          <TableCell>Rs. {(item.qty * item.price).toLocaleString()}</TableCell>
+                          <TableCell>Rs. {item.price}</TableCell>
+                          <TableCell>Rs. {(item.qty * item.price)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -308,19 +293,19 @@ const History = () => {
                 <div className="border-t pt-4">
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
-                    <span>Rs. {selectedTransaction.subtotal.toLocaleString()}</span>
+                    <span>Rs. {selectedTransaction.subtotal}</span>
                   </div>
                   <div className="flex justify-between text-green-600">
                     <span>Discount:</span>
-                    <span>-Rs. {selectedTransaction.discount.toLocaleString()}</span>
+                    <span>-Rs. {selectedTransaction.discount}</span>
                   </div>
                   <div className="flex justify-between text-red-600">
                     <span>Tax:</span>
-                    <span>Rs. {selectedTransaction.tax.toLocaleString()}</span>
+                    <span>Rs. {selectedTransaction.tax}</span>
                   </div>
                   <div className="flex justify-between text-lg font-bold border-t mt-2 pt-2">
                     <span>TOTAL:</span>
-                    <span>Rs. {selectedTransaction.total.toLocaleString()}</span>
+                    <span>Rs. {selectedTransaction.totalAmount}</span>
                   </div>
                 </div>
 

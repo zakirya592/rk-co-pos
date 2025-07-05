@@ -18,7 +18,6 @@ import {
   Tooltip,
 } from "@nextui-org/react";
 import { FaPlus, FaSearch, FaEdit, FaTrash, FaEye, FaImage, FaRoad } from 'react-icons/fa';
-import AddProductForm from './AddProductForm';
 import ViewProductModal from './ViewProductModal';
 import EditProductModal from './EditProductModal';
 import toast from "react-hot-toast";
