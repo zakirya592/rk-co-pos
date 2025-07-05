@@ -29,6 +29,7 @@ const ProductJourney = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+
   const { data: journeys = [], isLoading } = useQuery({
     queryKey: ["productjourney", searchTerm],
     queryFn: () => fetchProductJourney(searchTerm),
@@ -131,6 +132,7 @@ const ProductJourney = () => {
                                     {change.field}
                                   </p>
                                   <div className="flex items-center gap-2">
+                                    
                                     {change.field
                                       .toLowerCase()
                                       .includes("image") ? (

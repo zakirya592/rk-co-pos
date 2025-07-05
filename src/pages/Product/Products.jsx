@@ -498,7 +498,8 @@ const Products = () => {
                       size="sm"
                       variant="light"
                       color="warning"
-                      onPress={() => setEditProduct(product)}
+                      // onPress={() => setEditProduct(product)}
+                      onPress={() => navigator(`/products/update/${product._id}`)}
                     >
                       <FaEdit />
                     </Button>

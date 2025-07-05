@@ -307,7 +307,7 @@ const AddProductForm = () => {
 
                 {/* Predefined Colors */}
                 <div className="flex flex-wrap gap-3 ms-4">
-                  {["white", "black"].map((colorOption) => (
+                  {["White", "Black"].map((colorOption) => (
                     <label
                       key={colorOption}
                       className="flex items-center gap-2"
