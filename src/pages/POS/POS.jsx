@@ -13,9 +13,14 @@ import CustomerSelectionModal from './CustomerSelectionModal';
 import PaymentModal from "./PaymentModal";
 import { useQuery } from "react-query";// Adjust the import based on your file structure
 import userRequest from '../../utils/userRequest';
+import toast from 'react-hot-toast';
 
 
 const fetchProducts = async (key, searchTerm, currentPage) => {
+   const [saleData, setSaleData] = useState({
+      note: "",
+      description: "",
+    });
   const res = await userRequest.get("/products", {
     params: {
       search: searchTerm,
@@ -37,7 +42,10 @@ const POS = () => {
   const [customers, setCustomers] = useState([]);
   const [customerSearchTerm, setCustomerSearchTerm] = useState('');
   const [customerPage, setCustomerPage] = useState(1);
-
+  const [saleDataadd, setSaleDataadd] = useState({
+    note: "",
+    description: "",
+  });
   // Fetch customers using react-query
   const { data: customerData, isLoading: customersLoading } = useQuery(
     ["customers", customerSearchTerm, customerPage],
@@ -51,12 +59,10 @@ const POS = () => {
     }
   }, [customerData]);
 
-  console.log(customerData?.data, "customers");
-  
-
   const [cart, setCart] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+
   const [selectedCustomer, setSelectedCustomer] = useState(customers[0]);
   const [discount, setDiscount] = useState(0);
   const [tax, setTax] = useState(0); // Default GST
@@ -144,26 +150,40 @@ const POS = () => {
     setTotalPaid(updated.reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0));
   };
 
-  const completeSale = () => {
-    // Here you would typically save the sale to database
-    console.log('Sale completed:', {
-      customer: selectedCustomer,
-      items: cart,
-      subtotal,
-      discount: discountAmount,
-      tax: taxAmount,
-      total,
-      payments: paymentMethods,
-      timestamp: new Date()
-    });
-    
-    // Reset cart
-    setCart([]);
-    setDiscount(0);
-    setPaymentMethods([]);
-    setTotalPaid(0);
-    setShowPaymentModal(false);
-    alert('Sale completed successfully!');
+  const completeSale = async () => {
+    try {
+      const saleData = {
+        customer: selectedCustomer?._id,
+        items: cart.map((item) => ({
+          product: item._id,
+          quantity: item.quantity,
+          price: item.price,
+          discount: 0,
+          total: item.price * item.quantity - 0,
+        })),
+        totalAmount: subtotal,
+        discount: discountAmount,
+        tax: taxAmount,
+        grandTotal: total,
+        paymentMethod: paymentMethods[0]?.method || "cash",
+        paymentStatus: "paid",
+        paidAmount: totalPaid,
+        notes: saleDataadd.description,
+      };
+
+      const response = await userRequest.post('/sales', saleData);
+
+     setCart([]);
+      setDiscount(0);
+      setPaymentMethods([]);
+      setTotalPaid(0);
+      setShowPaymentModal(false);
+      toast.success("Sale completed successfully!");
+      console.log(response.data);
+      } catch (error) {
+      console.log(error,'erroe');
+      toast.error(error?.response?.data?.message || error.message || "Failed to complete sale. Please try again.");
+    }
   };
 
   return (
@@ -436,6 +456,8 @@ const POS = () => {
         updatePaymentMethod={updatePaymentMethod}
         totalPaid={totalPaid}
         completeSale={completeSale}
+        saleData={saleDataadd}
+        updateSaleData={setSaleDataadd}
       />
     </div>
   );
