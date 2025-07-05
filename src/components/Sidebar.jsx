@@ -22,7 +22,7 @@ const Sidebar = ({ currentPage, onPageChange, isCollapsed, onToggleCollapse }) =
     { id: "products", label: "Products", icon: FaBoxes },
     { id: "categories", label: "Categories", icon: FaTags },
     { id: "user", label: "User", icon: FaUser },
-    { id: "pos", label: "Purchase", icon: FaShoppingCart },
+    { id: "pos", label: "Sales", icon: FaShoppingCart },
     { id: "customers", label: "Customers", icon: FaUsers },
     { id: "reports", label: "Reports", icon: FaChartBar },
     { id: "history", label: "History", icon: FaHistory },

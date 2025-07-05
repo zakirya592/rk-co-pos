@@ -391,7 +391,7 @@ const Products = () => {
         aria-label="Products table"
         bottomContent={bottomContent}
         bottomContentPlacement="outside"
-        className="min-h-[400px] overflow-auto"
+        // className="min-h-[400px] overflow-auto"
       >
         <TableHeader>
           <TableColumn>IMAGE</TableColumn>
@@ -589,13 +589,13 @@ const Products = () => {
         </TableBody>
       </Table>
 
-      <AddProductForm
+      {/* <AddProductForm
         categories={categories}
         newProduct={newProduct}
         setNewProduct={setNewProduct}
         handleAddProduct={handleAddProduct}
         handleImageChange={handleImageChange}
-      />
+      /> */}
 
       {showJourney && <ProductJourney />}
 
