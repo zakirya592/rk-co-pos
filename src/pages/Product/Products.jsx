@@ -428,72 +428,6 @@ const Products = () => {
           }
         >
           {paginatedProducts.map((product) => (
-            // <TableRow key={product._id}>
-            //   <TableCell>
-            //     {product.image ? (
-            //       <img
-            //         src={product.image}
-            //         alt={product.name}
-            //         className="w-12 h-12 object-cover rounded"
-            //       />
-            //     ) : (
-            //       <FaImage className="text-gray-300 text-2xl" />
-            //     )}
-            //   </TableCell>
-            //   <TableCell className="font-semibold">{product.name}</TableCell>
-            //   <TableCell>
-            //     <Chip size="sm" variant="flat" color="primary">
-            //       {/* {categoryMap[product.category]?.name || "Unknown"} */}
-            //       {product?.category?.name || ""}
-            //     </Chip>
-            //     {/* Optionally show description below */}
-            //     {/* <div className="text-xs text-gray-400">{categoryMap[product.category]?.description}</div> */}
-            //   </TableCell>
-            //   <TableCell>{product?.price || "0"}</TableCell>
-            //   <TableCell>
-            //     <Chip size="sm" color={getStockColor(product.countInStock)}>
-            //       {product?.countInStock || "0"} units
-            //     </Chip>
-            //   </TableCell>
-            //   <TableCell>
-            //     <div className="flex gap-2">
-            //       <Tooltip content="View Product" placement="top">
-            //         <Button
-            //           isIconOnly
-            //           size="sm"
-            //           variant="light"
-            //           color="primary"
-            //           onPress={() => setViewProduct(product)}
-            //         >
-            //           <FaEye />
-            //         </Button>
-            //       </Tooltip>
-            //       <Tooltip content="Edit Product" placement="top">
-            //         <Button
-            //           isIconOnly
-            //           size="sm"
-            //           variant="light"
-            //           color="warning"
-            //           onPress={() => setEditProduct(product)}
-            //         >
-            //           <FaEdit />
-            //         </Button>
-            //       </Tooltip>
-
-            //       <Tooltip content="Delete Product" placement="top">
-            //         <Button
-            //           isIconOnly
-            //           size="sm"
-            //           variant="light"
-            //           color="danger"
-            //           onPress={() => handleDeleteProduct(product._id)}
-            //         >
-            //           <FaTrash />
-            //         </Button>
-            //       </Tooltip>
-            //     </div>
-            //   </TableCell>
-            // </TableRow>
             <TableRow key={product._id}>
               <TableCell>
                 {product.image ? (
@@ -526,7 +460,7 @@ const Products = () => {
               <TableCell>{product?.pouchesOrPieces || "0"}</TableCell>
               <TableCell>{product?.soldOutQuantity || "0"}</TableCell>
               <TableCell>{product?.packingUnit || "-"}</TableCell>
-              <TableCell>{product?.additionalUnit || "-"}</TableCell>
+              <TableCell>{product?.pouchesOrPieces || "-"}</TableCell>
               <TableCell>{product?.additionalUnit || "-"}</TableCell>
 
               <TableCell>
