@@ -33,16 +33,7 @@ const Suppliers = () => {
         queryKey: ['suppliers'],
         queryFn: fetchSuppliers
     });
-    console.log(suppliers, "suppliers");
 
-    const [selectedSupplier, setSelectedSupplier] = useState(null);
-    const [editSupplier, setEditSupplier] = useState({
-        name: '',
-        email: '',
-        phoneNumber: '',
-        address: '',
-        image: null
-    });
 
     const handleAddSupplier = async () => {
         try {
@@ -74,19 +65,6 @@ const Suppliers = () => {
             }
         });
     };
-
-    const openEditModal = (supplier) => {
-        setSelectedSupplier(supplier);
-        setEditSupplier({
-            name: supplier.name,
-            email: supplier.email,
-            phoneNumber: supplier.phoneNumber,
-            address: supplier.address,
-            image: null
-        });
-        navigate(`/suppliers/${supplier._id}/edit`);
-    };
-
     return (
         <div className="p-6 space-y-6">
             {/* Header */}
@@ -113,7 +91,7 @@ const Suppliers = () => {
                     <Button
                         className="bg-gradient-to-r ms-2 from-blue-500 to-purple-600 text-white font-semibold"
                         startContent={<FaPlus />}
-                        onClick={handleAddSupplier}
+                        onPress={handleAddSupplier}
                     >
                         Add Supplier
                     </Button>
