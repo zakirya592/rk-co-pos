@@ -13,6 +13,9 @@ import ProductJourney from '../pages/Product/ProductJourney';
 import AddProductForm from '../pages/Product/AddProductForm';
 import UpdateProductForm from '../pages/Product/UpdateProductForm';
 import Currency from '../pages/Currency/Currency';
+import Suppliers from '../pages/Suppliers/Suppliers';
+import AddSupplier from '../pages/Suppliers/AddSupplier';
+import UpdateSupplier from '../pages/Suppliers/UpdateSupplier';
 const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const location = useLocation();
@@ -37,6 +40,9 @@ const Layout = () => {
           <Route path="/products/productjourney" element={<ProductJourney />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/currencies" element={<Currency />} />
+          <Route path="/suppliers" element={<Suppliers />} />
+          <Route path="/suppliers/add" element={<AddSupplier />} />
+          <Route path="/suppliers/:id/edit" element={<UpdateSupplier />} />
           <Route path="/user" element={<User />} />
           <Route path="/pos" element={<POS />} />
           <Route path="/reports" element={<Reports />} />

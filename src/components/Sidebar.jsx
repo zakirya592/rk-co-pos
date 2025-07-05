@@ -23,6 +23,7 @@ const Sidebar = ({ currentPage, onPageChange, isCollapsed, onToggleCollapse }) =
     { id: "products", label: "Products", icon: FaBoxes },
     { id: "categories", label: "Categories", icon: FaTags },
     { id: "currencies", label: "Currencies", icon: FaMoneyBill },
+    { id: "suppliers", label: "Suppliers", icon: FaUser },
     { id: "user", label: "User", icon: FaUser },
     { id: "pos", label: "Sales", icon: FaShoppingCart },
     { id: "customers", label: "Customers", icon: FaUsers },
@@ -33,7 +34,7 @@ const Sidebar = ({ currentPage, onPageChange, isCollapsed, onToggleCollapse }) =
 
   return (
     <Card
-      className={`h-screen ${
+      className={`h-screen  ${
         isCollapsed ? "w-16" : "w-64"
       } transition-all duration-300 rounded-none border-r`}
     >
@@ -80,7 +81,7 @@ const Sidebar = ({ currentPage, onPageChange, isCollapsed, onToggleCollapse }) =
         )}
 
         {/* Menu Items */}
-        <div className="flex-1 p-2">
+        <div className="flex-1 p-2 overflow-y-auto">
           <nav className="space-y-1">
             {menuItems.map((item) => (
               <Button
