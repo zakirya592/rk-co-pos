@@ -24,6 +24,26 @@ const fetchProductJourney = async (searchTerm) => {
   return res?.data || [];
 };
 
+const fetchCategory = async (categoryId) => {
+  const res = await userRequest.get(`/categories/${categoryId}`);
+  return res?.data;
+};
+// Reusable inline CategoryName component
+const CategoryName = ({ categoryId, label, color }) => {
+  const { data, isLoading } = useQuery(
+    ["category", categoryId],
+    () => fetchCategory(categoryId),
+    { enabled: !!categoryId }
+  );
+
+  return (
+    <Chip color={color} variant="flat" className="text-xs">
+      {isLoading ? "Loading..." : `${label}: ${data?.data?.name || "N/A"}`}
+    </Chip>
+  );
+};
+
+
 const ProductJourney = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -132,7 +152,6 @@ const ProductJourney = () => {
                                     {change.field}
                                   </p>
                                   <div className="flex items-center gap-2">
-                                    
                                     {change.field
                                       .toLowerCase()
                                       .includes("image") ? (
@@ -177,6 +196,20 @@ const ProductJourney = () => {
                                           )}
                                         </div>
                                       </div>
+                                    ) : change.field === "category" ? (
+                                      <>
+                                        <CategoryName
+                                          categoryId={change.oldValue}
+                                          label="Old"
+                                          color="warning"
+                                        />
+                                        <span className="text-gray-500">→</span>
+                                        <CategoryName
+                                          categoryId={change.newValue}
+                                          label="New"
+                                          color="success"
+                                        />
+                                      </>
                                     ) : (
                                       <>
                                         <Chip
@@ -368,7 +401,21 @@ const ProductJourney = () => {
                                             )}
                                           </div>
                                         </div>
-                                      ) : (
+                                      ) : change.field === "category" ? (
+                                      <>
+                                        <CategoryName
+                                          categoryId={change.oldValue}
+                                          label="Old"
+                                          color="warning"
+                                        />
+                                        <span className="text-gray-500">→</span>
+                                        <CategoryName
+                                          categoryId={change.newValue}
+                                          label="New"
+                                          color="success"
+                                        />
+                                      </>
+                                    ) : (
                                         <>
                                           <Chip
                                             color="warning"
