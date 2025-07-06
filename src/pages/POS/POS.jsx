@@ -61,7 +61,7 @@ const POS = () => {
 
   const [selectedCustomer, setSelectedCustomer] = useState(customers[0]);
   const [discount, setDiscount] = useState(0);
-  const [tax, setTax] = useState(0); // Default GST
+  const [directDiscount, setDirectDiscount] = useState(0); // Direct Discount amount
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState([]);
@@ -86,9 +86,12 @@ const POS = () => {
 
   const addToCart = (product) => {
     // Use wholesalePrice for wholesale customers, otherwise use price
-    const price = selectedCustomer.customerType === 'wholesale'
-      ? product.wholesalePrice ?? product.price
-      : product.price;
+    const price =
+      selectedCustomer.customerType === "wholesale"
+        ? product.wholesalePrice ?? product.wholesaleRate
+        : selectedCustomer.customerType === "retail"
+        ? product.retailRate ?? product.retailRate
+        : product.price;
 
     const existingItem = cart.find(item => item._id === product._id);
 
@@ -126,8 +129,8 @@ const POS = () => {
 
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const discountAmount = (subtotal * discount) / 100;
-  const taxAmount = ((subtotal - discountAmount) * tax) / 100;
-  const total = subtotal - discountAmount + taxAmount;
+  const directDiscountAmount = directDiscount;
+  const total = subtotal - discountAmount - directDiscountAmount;
   const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const handlePayment = () => {
@@ -157,9 +160,9 @@ const POS = () => {
           discount: 0,
           total: item.price * item.quantity - 0,
         })),
-        totalAmount: subtotal,
+        subtotal: subtotal,
+        directDiscount: directDiscountAmount,
         discount: discountAmount,
-        tax: taxAmount,
         grandTotal: total,
         paymentMethod: paymentMethods[0]?.method || "cash",
         paymentStatus: "paid",
@@ -208,8 +211,9 @@ const POS = () => {
 
               <div className="flex items-center justify-between mb-4">
                 <div className="text-sm">
-                  Customer: <strong>{selectedCustomer?.name || "Select Customer"}</strong> (
-                  {selectedCustomer?.customerType || ""})
+                  Customer:{" "}
+                  <strong>{selectedCustomer?.name || "Select Customer"}</strong>{" "}
+                  ({selectedCustomer?.customerType || ""})
                 </div>
                 <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow font-semibold text-sm">
                   Total Products: {totalProducts}
@@ -251,7 +255,7 @@ const POS = () => {
                         </p>
                         <div className="flex justify-between items-center mt-2">
                           <span className="text-sm font-bold">
-                            Rs. {product.price}
+                            {product?.currency?.symbol || ""} {product.price}
                           </span>
                           <Chip
                             size="sm"
@@ -273,15 +277,11 @@ const POS = () => {
                           <span>{product.purchaseRate}</span>
                         </div>
                         <div className="flex justify-between items-center mt-2">
-                          <span className="text-sm font-bold">
-                            Sale Rate
-                          </span>
+                          <span className="text-sm font-bold">Sale Rate</span>
                           <span>{product.saleRate}</span>
                         </div>
                         <div className="flex justify-between items-center mt-2">
-                          <span className="text-sm font-bold">
-                            Retail Rate
-                          </span>
+                          <span className="text-sm font-bold">Retail Rate</span>
                           <span>{product.retailRate}</span>
                         </div>
                         <div className="flex justify-between items-center mt-2">
@@ -327,7 +327,7 @@ const POS = () => {
                             {item.name || ""}
                           </div>
                           <div className="text-xs text-gray-600">
-                            Rs. {item.price || ""}
+                            {item.currency?.symbol || ""} {item.price || ""}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -388,9 +388,11 @@ const POS = () => {
                     />
                     <Input
                       type="number"
-                      label="Tax %"
-                      value={tax}
-                      onChange={(e) => setTax(parseFloat(e.target.value) || 0)}
+                      label="Direct Discount"
+                      value={directDiscount}
+                      onChange={(e) =>
+                        setDirectDiscount(parseFloat(e.target.value) || 0)
+                      }
                       startContent={<FaCalculator />}
                       size="sm"
                     />
@@ -400,20 +402,20 @@ const POS = () => {
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
                       <span>Subtotal:</span>
-                      <span>Rs. {subtotal}</span>
+                      <span> {subtotal}</span>
                     </div>
                     <div className="flex justify-between text-green-600">
                       <span>Discount ({discount}%):</span>
-                      <span>-Rs. {discountAmount}</span>
+                      <span> {discountAmount}</span>
                     </div>
                     <div className="flex justify-between text-red-600">
-                      <span>Tax ({tax}%):</span>
-                      <span>Rs. {taxAmount}</span>
+                      <span>Direct ({directDiscount}%):</span>
+                      <span> {directDiscountAmount}</span>
                     </div>
                     <Divider />
                     <div className="flex justify-between font-bold text-lg">
                       <span>Total:</span>
-                      <span>Rs. {total}</span>
+                      <span> {total}</span>
                     </div>
                   </div>
 
