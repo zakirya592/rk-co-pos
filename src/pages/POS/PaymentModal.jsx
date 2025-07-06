@@ -32,6 +32,7 @@ const PaymentModal = ({
     backdrop="opaque"
     isDismissable={false}
     hideCloseButton={false}
+    scrollBehavior="inside"
   >
     <ModalContent>
       <ModalHeader>Payment Details</ModalHeader>

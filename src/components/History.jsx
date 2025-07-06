@@ -28,6 +28,7 @@ import { useQuery } from 'react-query';
 import userRequest from '../utils/userRequest';
 const History = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [invoiceNumber, setInvoiceNumber] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -43,7 +44,7 @@ const History = () => {
         startDate: startDate,
         endDate: endDate,
         paymentStatus: statusFilter === 'all' ? '' : statusFilter,
-        invoiceNumber: searchTerm,
+        invoiceNumber: invoiceNumber,
         customer: searchTerm
       }
     });
@@ -54,17 +55,16 @@ const History = () => {
   };
 
   const { data, isLoading } = useQuery(
-    ["sales", searchTerm, currentPage],
+    ["sales", searchTerm, currentPage,dateFilter,startDate,endDate,statusFilter,invoiceNumber],
     () => fetchSales("sales", searchTerm, currentPage),
     { keepPreviousData: true }
   );
   const transactions = data?.transactions || [];
-  console.log(transactions, "transactions");
 
   const filteredTransactions = transactions.filter(transaction => {
     const matchesSearch =
-      // transaction.id.includes(searchTerm.toLowerCase()) ||
-      transaction.customer?.name.toLowerCase().includes(searchTerm.toLowerCase());
+      transaction.customer?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.invoiceNumber.toLowerCase().includes(invoiceNumber.toLowerCase());
 
     const matchesDate = dateFilter === 'all' ||
       (dateFilter === 'today' && new Date(transaction.createdAt).toDateString() === new Date().toDateString()) ||
@@ -88,15 +88,50 @@ const History = () => {
     setShowReceiptModal(true);
   };
 
-  const printReceipt = () => {
-    window.print();
-  };
+  // const printReceipt = () => {
+  //   window.print();
+  // };
 
-  // Summary stats
-  const totalSales = transactions.reduce((sum, txn) => sum + txn.total, 0);
-  const todaySales = transactions
-    .filter(txn => txn.date === '2024-01-20')
-    .reduce((sum, txn) => sum + txn.total, 0);
+  const printReceipt = () => {
+    const content = document.getElementById("receipt").innerHTML;
+    const printWindow = window.open("", "", "width=1000,height=1000");
+
+    printWindow.document.write(`
+    <html>
+      <head>
+        <title>Receipt</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          .text-center { text-align: center; }
+          .text-sm { font-size: 0.875rem; }
+          .font-bold { font-weight: bold; }
+          .border-t { border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px; }
+          .border-b { border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          .flex { display: flex; justify-content: space-between; margin-top: 5px; }
+          .font-semibold { font-weight: 600; }
+          .text-lg { font-size: 1.125rem; }
+          .text-red-600 { color: #dc2626; }
+          .text-green-600 { color: #16a34a; }
+          .top-print { display: flex; justify-content: space-between;flex-direction: row; }
+          .Right-side { text-align: right; }
+        </style>
+      </head>
+      <body>
+        ${content}
+        <script>
+          window.onload = function() {
+            window.print();
+            window.close();
+          }
+        </script>
+      </body>
+    </html>
+  `);
+
+    printWindow.document.close();
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -108,10 +143,36 @@ const History = () => {
           </h1>
           <p className="text-gray-600">View and manage sales transactions</p>
         </div>
-        <div className="text-right">
-          <div className="text-sm text-gray-600">Today's Sales</div>
-          <div className="text-2xl font-bold text-green-600">
-            Rs. {todaySales}
+        <div className="text-right space-y-2 flex flex-row">
+          <div className="mx-3 text-start mt-2">
+            <div className="text-sm text-gray-600">Sales</div>
+            <div className="text-2xl font-bold text-green-600">
+              Rs.
+              {transactions
+                .reduce((sum, txn) => sum + txn.grandTotal, 0)
+                .toLocaleString()}
+            </div>
+          </div>
+          <div className="ms-3 text-start">
+            <div className="text-sm text-gray-600">Total Paid</div>
+            <div className="text-2xl font-bold text-blue-600">
+              Rs.
+              {transactions
+                .reduce((sum, txn) => sum + txn.paidAmount, 0)
+                .toLocaleString()}
+            </div>
+          </div>
+          <div className="ms-3 text-start">
+            <div className="text-sm text-gray-600">Total Due</div>
+            <div className="text-2xl font-bold text-red-600">
+              Rs.
+              {transactions
+                .reduce(
+                  (sum, txn) => sum + (txn.totalAmount - txn.paidAmount),
+                  0
+                )
+                .toLocaleString()}
+            </div>
           </div>
         </div>
       </div>
@@ -121,9 +182,16 @@ const History = () => {
         <CardBody>
           <div className="flex flex-wrap gap-4">
             <Input
-              placeholder="Search by transaction ID or customer..."
+              placeholder="Search by customer name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              startContent={<FaSearch className="text-gray-400" />}
+              className="flex-1 min-w-64"
+            />
+            <Input
+              placeholder="Search by invoice number..."
+              value={invoiceNumber}
+              onChange={(e) => setInvoiceNumber(e.target.value)}
               startContent={<FaSearch className="text-gray-400" />}
               className="flex-1 min-w-64"
             />
@@ -170,7 +238,7 @@ const History = () => {
                       className="w-48"
                     />
                   </div>
-                    <div className="felx">
+                  <div className="felx">
                     <p>End Date</p>
                     <Input
                       type="date"
@@ -208,15 +276,20 @@ const History = () => {
       </Card>
 
       {/* Transactions Table */}
-      <div className="h-[400px] overflow-y-auto w-full overflow-scroll">
-        <Table aria-label="Transactions table" className="w-full">
+      <div className="h-[400px] overflow-y-auto w-full overflow-x-scroll">
+        <Table
+          aria-label="Transactions table"
+          className="w-full min-w-[1400px]"
+        >
           <TableHeader>
             <TableColumn>Sl No</TableColumn>
             <TableColumn>INVOICE NUMBER</TableColumn>
             <TableColumn>DATE & TIME</TableColumn>
             <TableColumn>CUSTOMER</TableColumn>
             <TableColumn>ITEMS</TableColumn>
+            <TableColumn>SUBTOTAL</TableColumn>
             <TableColumn>TOTAL</TableColumn>
+            <TableColumn>DUE AMOUNT</TableColumn>
             <TableColumn>PAID AMOUNT</TableColumn>
             <TableColumn>PAYMENT</TableColumn>
             <TableColumn>STATUS</TableColumn>
@@ -266,8 +339,15 @@ const History = () => {
                   Rs. {transaction.totalAmount}
                 </TableCell>
                 <TableCell className="font-semibold">
+                  Rs. {transaction.grandTotal}
+                </TableCell>
+                <TableCell className="font-semibold">
+                  Rs. {transaction.dueAmount}
+                </TableCell>
+                <TableCell className="font-semibold">
                   Rs. {transaction.paidAmount}
                 </TableCell>
+
                 <TableCell>
                   <Chip size="sm" variant="flat">
                     {transaction.paymentMethod}
@@ -295,7 +375,7 @@ const History = () => {
                       size="sm"
                       variant="light"
                       color="primary"
-                      onClick={() => viewReceipt(transaction)}
+                      onPress={() => viewReceipt(transaction)}
                     >
                       <FaEye />
                     </Button>
@@ -304,7 +384,7 @@ const History = () => {
                       size="sm"
                       variant="light"
                       color="secondary"
-                      onClick={() => {
+                      onPress={() => {
                         setSelectedTransaction(transaction);
                         setTimeout(printReceipt, 100);
                       }}
@@ -324,6 +404,11 @@ const History = () => {
         isOpen={showReceiptModal}
         onClose={() => setShowReceiptModal(false)}
         size="2xl"
+        scrollBehavior="inside"
+        backdrop="opaque"
+        isDismissable={false}
+        hideCloseButton={false}
+        className="max-h-[calc(100vh-1rem)]"
       >
         <ModalContent>
           <ModalHeader>Transaction Receipt</ModalHeader>
@@ -333,41 +418,44 @@ const History = () => {
                 {/* Shop Header */}
                 <div className="text-center border-b pb-4">
                   <h2 className="text-2xl font-bold">RK & Co</h2>
-                  <p className="text-sm text-gray-600">Point of Sales System</p>
+                  {/* <p className="text-sm text-gray-600">Point of Sales System</p> */}
                   <p className="text-sm">Contact: +92-XXX-XXXXXXX</p>
                 </div>
-
                 {/* Transaction Details */}
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-2 gap-4 text-sm top-print">
                   <div>
                     <p>
                       <strong>Invoice Number:</strong>{" "}
-                      {selectedTransaction.invoiceNumber}
+                      {selectedTransaction?.invoiceNumber || "N/A"}
                     </p>
                     <p>
                       <strong>Date:</strong>{" "}
                       {new Date(
-                        selectedTransaction.createdAt
+                        selectedTransaction?.createdAt
                       ).toLocaleDateString()}
                     </p>
                     <p>
-                      <strong>Time:</strong> {selectedTransaction.time}
+                      <strong>Time:</strong>{" "}
+                      {new Date(
+                        selectedTransaction?.createdAt
+                      ).toLocaleTimeString()}
                     </p>
                   </div>
-                  <div>
+                  <div className="Right-side">
                     <p>
-                      <strong>Customer:</strong> {selectedTransaction.customer}
+                      <strong>Customer:</strong>{" "}
+                      {selectedTransaction?.customer?.name || "N/A"}
                     </p>
                     <p>
-                      <strong>Cashier:</strong> {selectedTransaction.user}
+                      <strong>Payment Status:</strong>{" "}
+                      {selectedTransaction?.paymentStatus || "N/A"}
                     </p>
                     <p>
                       <strong>Payment:</strong>{" "}
-                      {selectedTransaction.paymentMethod}
+                      {selectedTransaction?.paymentMethod || "N/A"}
                     </p>
                   </div>
                 </div>
-
                 {/* Items */}
                 <div>
                   <h4 className="font-semibold mb-2">Items:</h4>
@@ -381,36 +469,36 @@ const History = () => {
                     <TableBody>
                       {selectedTransaction.items.map((item, index) => (
                         <TableRow key={index}>
-                          <TableCell>{item.name}</TableCell>
-                          <TableCell>{item.qty}</TableCell>
-                          <TableCell>Rs. {item.price}</TableCell>
-                          <TableCell>Rs. {item.qty * item.price}</TableCell>
+                          <TableCell>{item.product?.name || "N/A"}</TableCell>
+                          <TableCell>{item?.quantity || "N/A"}</TableCell>
+                          <TableCell>Rs. {item?.price || "N/A"}</TableCell>
+                          <TableCell>
+                            Rs. {item?.quantity * item?.price || "N/A"}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                 </div>
-
                 {/* Totals */}
                 <div className="border-t pt-4">
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
-                    <span>Rs. {selectedTransaction.subtotal}</span>
+                    <span>Rs. {selectedTransaction.totalAmount}</span>
                   </div>
                   <div className="flex justify-between text-green-600">
                     <span>Discount:</span>
-                    <span>-Rs. {selectedTransaction.discount}</span>
+                    <span>Rs. {selectedTransaction?.discount || "N/A"}</span>
                   </div>
                   <div className="flex justify-between text-red-600">
-                    <span>Tax:</span>
-                    <span>Rs. {selectedTransaction.tax}</span>
+                    <span>Direct Discount:</span>
+                    <span>Rs. {selectedTransaction?.tax || "N/A"}</span>
                   </div>
                   <div className="flex justify-between text-lg font-bold border-t mt-2 pt-2">
                     <span>TOTAL:</span>
-                    <span>Rs. {selectedTransaction.totalAmount}</span>
+                    <span>Rs. {selectedTransaction.grandTotal}</span>
                   </div>
                 </div>
-
                 <div className="text-center text-sm text-gray-600 border-t pt-4">
                   <p>Thank you for your business!</p>
                   <p>Visit us again soon</p>
