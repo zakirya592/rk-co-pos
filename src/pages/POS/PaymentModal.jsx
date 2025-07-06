@@ -69,17 +69,14 @@ const PaymentModal = ({
                     <SelectItem key="cash" value="cash">
                       Cash
                     </SelectItem>
-                    <SelectItem key="card" value="card">
-                      Card
+                    <SelectItem key="credit" value="credit">
+                      Credit
                     </SelectItem>
                     <SelectItem key="bank" value="bank">
                       Bank Transfer
                     </SelectItem>
-                    <SelectItem key="easypaisa" value="easypaisa">
-                      EasyPaisa
-                    </SelectItem>
-                    <SelectItem key="jazzcash" value="jazzcash">
-                      JazzCash
+                    <SelectItem key="online" value="online">
+                      Online
                     </SelectItem>
                   </Select>
                   <Input
@@ -139,7 +136,7 @@ const PaymentModal = ({
         <Button
           color="success"
           onPress={completeSale}
-          isDisabled={totalPaid < total}
+          // isDisabled={totalPaid < total}
         >
           Complete Sale
         </Button>

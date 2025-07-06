@@ -47,13 +47,13 @@ const CategoryName = ({ categoryId, label, color }) => {
 const CurrencyName = ({ currencyId, label, color }) => {
   const { data, isLoading } = useQuery(
     ["currency", currencyId],
-    () => userRequest.get(`/currencies/${currencyId}`).then(res => res.data),
+    () => userRequest.get(`/currencies/${currencyId}`).then((res) => res.data),
     { enabled: !!currencyId }
   );
 
   return (
     <Chip color={color} variant="flat" className="text-xs">
-      {isLoading ? "Loading..." : `${label}: ${data?.name || "N/A"}`}
+      {isLoading ? "Loading..." : `${label}: ${data?.data?.symbol || "N/A"}`}
     </Chip>
   );
 };
@@ -237,6 +237,20 @@ const ProductJourney = () => {
                                         <span className="text-gray-500">→</span>
                                         <CategoryName
                                           categoryId={change.newValue}
+                                          label="New"
+                                          color="success"
+                                        />
+                                      </>
+                                    ) : change.field === "currency" ? (
+                                      <>
+                                        <CurrencyName
+                                          currencyId={change.oldValue}
+                                          label="Old"
+                                          color="warning"
+                                        />
+                                        <span className="text-gray-500">→</span>
+                                        <CurrencyName
+                                          currencyId={change.newValue}
                                           label="New"
                                           color="success"
                                         />
@@ -462,22 +476,23 @@ const ProductJourney = () => {
                                             color="success"
                                           />
                                         </>
-                                      ) : //  : change.field === "currency" ? (
-                                      //   <>
-                                      //     <CurrencyName
-                                      //       currencyId={change.oldValue}
-                                      //       label="Old"
-                                      //       color="warning"
-                                      //     />
-                                      //     <span className="text-gray-500">→</span>
-                                      //     <CurrencyName
-                                      //       currencyId={change.newValue}
-                                      //       label="New"
-                                      //       color="success"
-                                      //     />
-                                      //   </>
-                                      // )
-                                      change.field === "supplier" ? (
+                                      ) : change.field === "currency" ? (
+                                        <>
+                                          <CurrencyName
+                                            currencyId={change.oldValue}
+                                            label="Old"
+                                            color="warning"
+                                          />
+                                          <span className="text-gray-500">
+                                            →
+                                          </span>
+                                          <CurrencyName
+                                            currencyId={change.newValue}
+                                            label="New"
+                                            color="success"
+                                          />
+                                        </>
+                                      ) : change.field === "supplier" ? (
                                         <>
                                           <SupplierName
                                             supplierId={change.oldValue}

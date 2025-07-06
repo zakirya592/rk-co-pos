@@ -135,18 +135,17 @@ const History = () => {
               startContent={<FaFilter />}
             >
               <SelectItem key="all" value="all">All Status</SelectItem>
-              <SelectItem key="completed" value="completed">Completed</SelectItem>
-              <SelectItem key="pending" value="pending">Pending</SelectItem>
-              <SelectItem key="cancelled" value="cancelled">Cancelled</SelectItem>
+              <SelectItem key="paid" value="paid">Paid</SelectItem>
+              <SelectItem key="unpaid" value="unpaid">Unpaid</SelectItem>
+              <SelectItem key="partial" value="partial">Partial</SelectItem>
             </Select>
           </div>
         </CardBody>
       </Card>
 
       {/* Transactions Table */}
-      <Card>
-        <CardBody>
-          <Table aria-label="Transactions table">
+     
+          <Table aria-label="Transactions table" >
             <TableHeader>
               <TableColumn>Sl No</TableColumn>
               <TableColumn>INVOICE NUMBER</TableColumn>
@@ -237,8 +236,6 @@ const History = () => {
               ))}
             </TableBody>
           </Table>
-        </CardBody>
-      </Card>
 
       {/* Receipt Modal */}
       <Modal isOpen={showReceiptModal} onClose={() => setShowReceiptModal(false)} size="2xl">

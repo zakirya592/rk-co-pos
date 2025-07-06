@@ -66,7 +66,6 @@ const POS = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [totalPaid, setTotalPaid] = useState(0);
-  const [categories, setCategories] = useState([]);
 
   // Fetch products using react-query
   const { data, isLoading } = useQuery(
@@ -160,14 +159,15 @@ const POS = () => {
           discount: 0,
           total: item.price * item.quantity - 0,
         })),
-        subtotal: subtotal,
-        directDiscount: directDiscountAmount,
-        discount: discountAmount,
+        totalAmount: subtotal,
+        tax: directDiscountAmount,
         grandTotal: total,
+        discount: discountAmount,
         paymentMethod: paymentMethods[0]?.method || "cash",
-        paymentStatus: "paid",
+        paymentStatus:totalPaid === total ? "paid" : totalPaid > 0 ? "partial" : "unpaid",
         paidAmount: totalPaid,
         notes: saleDataadd.description,
+        // subtotal: subtotal,
       };
 
       const response = await userRequest.post('/sales', saleData);
@@ -418,6 +418,7 @@ const POS = () => {
                       <span> {total}</span>
                     </div>
                   </div>
+                  
 
                   <Button
                     color="success"
