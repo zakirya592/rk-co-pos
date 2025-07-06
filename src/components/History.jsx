@@ -26,6 +26,9 @@ import {
 import { FaSearch, FaEye, FaPrint, FaCalendarAlt, FaFilter } from 'react-icons/fa';
 import { useQuery } from 'react-query';
 import userRequest from '../utils/userRequest';
+import * as XLSX from "xlsx";
+
+
 const History = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
@@ -133,17 +136,44 @@ const History = () => {
     printWindow.document.close();
   };
 
+  const exportToExcel = () => {
+    const ws = XLSX.utils.json_to_sheet(
+      filteredTransactions.map((t) => ({
+        Invoice: t.invoiceNumber,
+        Date: new Date(t.createdAt).toLocaleDateString(),
+        Time: new Date(t.createdAt).toLocaleTimeString(),
+        Customer: t.customer?.name || "N/A",
+        Total: t.grandTotal,
+        Paid: t.paidAmount,
+        Due: t.dueAmount,
+        Payment: t.paymentMethod,
+        Status: t.paymentStatus,
+      }))
+    );
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Transactions");
+    XLSX.writeFile(wb, "Transactions.xlsx");
+  };
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-1 sm:p-1 md:p-6 lg:p-6 space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">
             Transaction History
           </h1>
           <p className="text-gray-600">View and manage sales transactions</p>
         </div>
-        <div className="text-right space-y-2 flex flex-row">
+
+        <div className="text-right space-y-2 flex flex-row flex-wrap">
+          <div className="mt-7 me-3">
+            <Button color="success" onPress={exportToExcel}>
+              Export Excel
+            </Button>
+          </div>
+
           <div className="mx-3 text-start mt-2">
             <div className="text-sm text-gray-600">Sales</div>
             <div className="text-2xl font-bold text-green-600">
@@ -207,7 +237,7 @@ const History = () => {
                     setEndDate("");
                   }
                 }}
-                className="w-48"
+                className="w-64"
                 startContent={<FaCalendarAlt />}
               >
                 <SelectItem key="all" value="all">
@@ -235,7 +265,7 @@ const History = () => {
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="w-48"
+                      className="w-64"
                     />
                   </div>
                   <div className="felx">
@@ -244,7 +274,7 @@ const History = () => {
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="w-48"
+                      className="w-64"
                     />
                   </div>
                 </>
@@ -255,7 +285,7 @@ const History = () => {
               placeholder="Status Filter"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-48"
+              className="w-64"
               startContent={<FaFilter />}
             >
               <SelectItem key="all" value="all">
