@@ -393,6 +393,7 @@ const Products = () => {
         // className="min-h-[400px] overflow-auto"
       >
         <TableHeader>
+          <TableColumn>ID</TableColumn>
           <TableColumn>IMAGE</TableColumn>
           <TableColumn>NAME</TableColumn>
           <TableColumn>CATEGORY</TableColumn>
@@ -428,8 +429,11 @@ const Products = () => {
             </div>
           }
         >
-          {paginatedProducts.map((product) => (
+          {paginatedProducts.map((product, index) => (
             <TableRow key={product._id}>
+              <TableCell>
+                {index + 1}
+              </TableCell>
               <TableCell>
                 {product.image ? (
                   <img

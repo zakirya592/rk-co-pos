@@ -175,6 +175,7 @@ const User = () => {
 
             <Table aria-label="Users table" bottomContent={bottomContent}>
                 <TableHeader>
+                    <TableColumn>Sl No</TableColumn>
                     <TableColumn>NAME</TableColumn>
                     <TableColumn>EMAIL</TableColumn>
                     <TableColumn>ROLE</TableColumn>
@@ -192,8 +193,11 @@ const User = () => {
                             No User found
                         </div>
                     }>
-                    {filteredUsers.map((user) => (
+                    {filteredUsers.map((user, index) => (
                         <TableRow key={user._id}>
+                            <TableCell>
+                                {index + 1}
+                            </TableCell>
                             <TableCell>
                                 <div className="font-semibold">{user.name}</div>
                             </TableCell>

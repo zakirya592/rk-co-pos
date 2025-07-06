@@ -141,6 +141,7 @@ const Customers = () => {
         <CardBody>
           <Table aria-label="Customers table">
             <TableHeader>
+              <TableColumn>Sl No</TableColumn>
               <TableColumn>CUSTOMER</TableColumn>
               <TableColumn>CONTACT</TableColumn>
               <TableColumn>TYPE</TableColumn>
@@ -162,8 +163,11 @@ const Customers = () => {
                 </div>
               }
             >
-              {customers.map((customer) => (
-                <TableRow key={customer.id}>
+              {customers.map((customer, index) => (
+                <TableRow key={customer._id}>
+                  <TableCell>
+                    {index + 1}
+                  </TableCell>
                   <TableCell>
                     <div>
                       <div className="font-semibold">{customer.name}</div>

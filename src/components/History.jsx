@@ -148,6 +148,7 @@ const History = () => {
         <CardBody>
           <Table aria-label="Transactions table">
             <TableHeader>
+              <TableColumn>Sl No</TableColumn>
               <TableColumn>INVOICE NUMBER</TableColumn>
               <TableColumn>DATE & TIME</TableColumn>
               <TableColumn>CUSTOMER</TableColumn>
@@ -168,8 +169,9 @@ const History = () => {
                   No Transaction found
                 </div>
               }>
-              {filteredTransactions.map((transaction) => (
+              {filteredTransactions.map((transaction, index) => (
                 <TableRow key={transaction.invoiceNumber}>
+                  <TableCell>{index + 1}</TableCell>
                   <TableCell className="font-mono font-semibold">{transaction.invoiceNumber}</TableCell>
                   <TableCell>
                     <div>

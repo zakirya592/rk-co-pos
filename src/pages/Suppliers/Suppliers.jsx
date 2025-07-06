@@ -101,6 +101,7 @@ const Suppliers = () => {
             {/* Suppliers Grid */}
             <Table aria-label="Suppliers table" className="overflow-x-auto">
                 <TableHeader>
+                    <TableColumn>Sl No</TableColumn>
                     <TableColumn>Image</TableColumn>
                     <TableColumn>Name</TableColumn>
                     <TableColumn>Email</TableColumn>
@@ -121,8 +122,11 @@ const Suppliers = () => {
                         </div>
                     }
                 >
-                    {suppliers.map((supplier) => (
+                    {suppliers.map((supplier, index) => (
                         <TableRow key={supplier._id}>
+                            <TableCell>
+                                {index + 1}
+                            </TableCell>
                             <TableCell>
                                 {supplier.image ? (
                                     <img

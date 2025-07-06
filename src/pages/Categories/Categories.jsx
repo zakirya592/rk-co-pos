@@ -159,7 +159,7 @@ const Categories = () => {
           <Button
             className="bg-gradient-to-r ms-2 from-blue-500 to-purple-600 text-white font-semibold"
             startContent={<FaPlus />}
-            onClick={() => setShowAddModal(true)}
+            onPress={() => setShowAddModal(true)}
           >
             Add Category
           </Button>
@@ -195,6 +195,10 @@ const Categories = () => {
               key={category._id}
               className="hover:shadow-lg transition-shadow"
             >
+              <div className="px-3 pt-2 flex flex-row justify-between">
+                <h6 className="text-xl font-bold">Sl No</h6>
+                <p>{filteredCategories.indexOf(category) + 1}</p>
+              </div>
               <CardBody className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
