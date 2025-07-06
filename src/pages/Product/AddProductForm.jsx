@@ -5,7 +5,6 @@ import userRequest from "../../utils/userRequest";
 import { useQuery } from "react-query";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { currencies } from "./CountryData";
 
 const AddProductForm = () => {
     const [loading, setLoading] = useState(false);
@@ -13,45 +12,61 @@ const AddProductForm = () => {
     const [isCustomSize, setIsCustomSize] = useState(false);
     const navigate = useNavigate();
     const [newProduct, setNewProduct] = useState({
-        name: "",
-        price: "",
-        countInStock: "",
-        category: "",
-        purchaseRate: "",
-        saleRate: "",
-        wholesaleRate: "",
-        retailRate: "",
-        size: "",
-        color: "",
-        barcode: "",
-        availableQuantity: "",
-        soldOutQuantity: "",
-        packingUnit: "",
-        pouchesOrPieces: "",
-        additionalUnit: "",
-        isActive: "active",
-        description: "",
-        location:"",
-        supplier:"",
-        image: "",
+      name: "",
+      price: "",
+      countInStock: "",
+      category: "",
+      purchaseRate: "",
+      saleRate: "",
+      wholesaleRate: "",
+      retailRate: "",
+      size: "",
+      color: "",
+      barcode: "",
+      availableQuantity: "",
+      soldOutQuantity: "",
+      packingUnit: "",
+      pouchesOrPieces: "",
+      additionalUnit: "",
+      isActive: "active",
+      description: "",
+      location: "",
+      supplier: "",
+      currency: "",
+      image: "",
     });
-
-    const [selectedCurrency, setSelectedCurrency] = useState("₨");
-    const selectedCurrencySymbol = currencies.find(
-        (currency) => currency.code === selectedCurrency
-    )?.symbol;
-    const handleCurrencyChange = (e) => {
-        setSelectedCurrency(e.target.value);
-    };
+   
     // Add this fetch function
     const fetchCategories = async () => {
         const res = await userRequest.get("/categories");
         return res.data.data || [];
     };
 
+    // Add suppliers fetch function
+    const fetchSuppliers = async () => {
+        const res = await userRequest.get("/suppliers");
+        return res?.data || [];
+    };
+
+    // Add currencies fetch function
+    const fetchCurrencies = async () => {
+        const res = await userRequest.get("/currencies");
+        return res.data.data || [];
+    };
+
     const { data: categories = [], isLoading: isCategoriesLoading } = useQuery(
         ["categories"],
         fetchCategories
+    );
+
+    const { data: suppliers = [], isLoading: isSuppliersLoading } = useQuery(
+        ["suppliers"],
+        fetchSuppliers
+    );
+
+    const { data: currencies = [], isLoading: isCurrenciesLoading } = useQuery(
+        ["currencies"],
+        fetchCurrencies
     );
 
 
@@ -73,6 +88,8 @@ const AddProductForm = () => {
     //  Handle add product
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log(newProduct.currency, "newProduct.currency");
+        
         setLoading(true);
         try {
             const formData = new FormData();
@@ -93,6 +110,9 @@ const AddProductForm = () => {
             formData.append("description", newProduct.description);
             formData.append("category", newProduct.category);
             formData.append("countInStock", newProduct.countInStock);
+            formData.append("currency", newProduct.currency);
+            formData.append("supplier", newProduct.supplier);
+            formData.append("location", newProduct.location);
             formData.append("isActive", newProduct.isActive === "active");
             formData.append("image", newProduct.image);
 
@@ -349,8 +369,10 @@ const AddProductForm = () => {
                   label="Currency"
                   labelPlacement="outside"
                   placeholder="Select currency"
-                  selectedKeys={[selectedCurrency]}
-                  onChange={(e) => setSelectedCurrency(e.target.value)}
+                  value={newProduct.currency}
+                  onChange={(e) =>
+                    setNewProduct({ ...newProduct, currency: e.target.value })
+                  }
                   variant="bordered"
                   required
                   className="md:col-span-2"
@@ -358,11 +380,11 @@ const AddProductForm = () => {
                 >
                   {currencies.map((currency) => (
                     <SelectItem
-                      key={currency.code}
-                      value={currency.code}
-                      textValue={`${currency.country} ${currency.name}`}
+                      key={currency._id}
+                      value={currency._id}
+                      textValue={`${currency.name} ${currency.symbol}`}
                     >
-                      {currency.country}  {currency.symbol}
+                      {currency.name} {currency.symbol}
                     </SelectItem>
                   ))}
                 </Select>
@@ -376,7 +398,7 @@ const AddProductForm = () => {
                   onChange={(e) =>
                     setNewProduct({ ...newProduct, price: e.target.value })
                   }
-                  startContent={selectedCurrencySymbol}
+                  // startContent={selectedCurrencySymbol}
                   variant="bordered"
                 />
                 <Select
@@ -385,14 +407,16 @@ const AddProductForm = () => {
                   placeholder="Select Supplier"
                   //   selectedKeys={[selectedSupplier]}
                   value={newProduct.supplier}
-                  //   onChange={handleSupplierChange}
+                  onChange={(e) =>
+                    setNewProduct({ ...newProduct, supplier: e.target.value })
+                  }
                   variant="bordered"
                   required
                   className="md:col-span-2"
                 >
-                  {currencies.map((currency) => (
-                    <SelectItem key={currency.code} value={currency.code}>
-                      {currency.country}
+                  {suppliers.map((supplier) => (
+                    <SelectItem key={supplier._id} value={supplier._id}>
+                      {supplier.name}
                     </SelectItem>
                   ))}
                 </Select>
@@ -456,7 +480,7 @@ const AddProductForm = () => {
                       purchaseRate: e.target.value,
                     })
                   }
-                  startContent={selectedCurrencySymbol}
+                  // startContent={selectedCurrencySymbol}
                   variant="bordered"
                 />
                 <Input
@@ -468,7 +492,7 @@ const AddProductForm = () => {
                   onChange={(e) =>
                     setNewProduct({ ...newProduct, saleRate: e.target.value })
                   }
-                  startContent={selectedCurrencySymbol}
+                  // startContent={selectedCurrencySymbol}
                   variant="bordered"
                 />
                 <Input
@@ -483,7 +507,7 @@ const AddProductForm = () => {
                       wholesaleRate: e.target.value,
                     })
                   }
-                  startContent={selectedCurrencySymbol}
+                  // startContent={selectedCurrencySymbol}
                   variant="bordered"
                 />
                 <Input
@@ -495,7 +519,7 @@ const AddProductForm = () => {
                   onChange={(e) =>
                     setNewProduct({ ...newProduct, retailRate: e.target.value })
                   }
-                  startContent={selectedCurrencySymbol}
+                  // startContent={selectedCurrencySymbol}
                   variant="bordered"
                 />
 

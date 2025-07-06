@@ -5,7 +5,6 @@ import userRequest from "../../utils/userRequest";
 import { useQuery } from "react-query";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
-import { currencies } from "./CountryData";
 
 const UpdateProductForm = () => {
   const { id } = useParams();
@@ -13,13 +12,29 @@ const UpdateProductForm = () => {
   const [loading, setLoading] = useState(false);
   const [isCustomColor, setIsCustomColor] = useState(false);
   const [isCustomSize, setIsCustomSize] = useState(false);
-  const [selectedCurrency, setSelectedCurrency] = useState("₨");
   const [product, setProduct] = useState(null);
 
-  // const [selectedCurrency, setSelectedCurrency] = useState("₨");
-  const selectedCurrencySymbol = currencies.find(
-    (currency) => currency.code === selectedCurrency
-  )?.symbol;
+  // Add suppliers fetch function
+  const fetchSuppliers = async () => {
+    const res = await userRequest.get("/suppliers");
+    return res?.data || [];
+  };
+
+  // Add currencies fetch function
+  const fetchCurrencies = async () => {
+    const res = await userRequest.get("/currencies");
+    return res.data.data || [];
+  };
+
+  const { data: suppliers = [], isLoading: isSuppliersLoading } = useQuery(
+    ["suppliers"],
+    fetchSuppliers
+  );
+
+  const { data: currencies = [], isLoading: isCurrenciesLoading } = useQuery(
+    ["currencies"],
+    fetchCurrencies
+  );
 
   // Fetch product details
   useEffect(() => {
@@ -28,6 +43,11 @@ const UpdateProductForm = () => {
         const res = await userRequest.get(`/products/${id}`);
         const productData = res.data.data;
         setProduct(productData);
+        setProduct({
+          ...productData,
+          currency: productData.currency?._id || productData.currency,
+          supplier: productData.supplier?._id || productData.supplier,
+        });
         setIsCustomColor(!["white", "black"].includes(productData?.color?.toLowerCase()));
         setIsCustomSize(!["small", "medium", "large"].includes(productData?.size?.toLowerCase()));
         // setSelectedCurrency(res.data.data.currency || "₨");
@@ -77,28 +97,10 @@ const UpdateProductForm = () => {
     setLoading(true);
     try {
       const formData = new FormData();
-      // formData.append("name", product.name);
-      // formData.append("price", product.price);
-      // formData.append("purchaseRate", product.purchaseRate);
-      // formData.append("saleRate", product.saleRate);
-      // formData.append("wholesaleRate", product.wholesaleRate);
-      // formData.append("retailRate", product.retailRate);
-      // formData.append("size", product.size);
-      // formData.append("color", product.color);
-      // formData.append("barcode", product.barcode);
-      // formData.append("availableQuantity", product.availableQuantity);
-      // formData.append("soldOutQuantity", product.soldOutQuantity);
-      // formData.append("packingUnit", product.packingUnit);
-      // formData.append("additionalUnit", product.additionalUnit);
-      // formData.append("pouchesOrPieces", product.pouchesOrPieces);
-      // formData.append("description", product.description);
-      // formData.append("countInStock", product.countInStock);
-      // formData.append("isActive", product.isActive);
-      // formData.append("image", product.image);
-
+      console.log(formData, "formData");
+      
       // Handle category specially since it might be an object or string
       formData.append("category", typeof product.category === "object" && product.category !== null ? product.category._id : product.category);
-      
       // Append other fields
       Object.keys(product).forEach(key => {
         if (key !== "_id" && key !== "category") {
@@ -113,7 +115,11 @@ const UpdateProductForm = () => {
       toast.success("Product updated successfully!");
       navigate("/products");
     } catch (error) {
-      toast.error("Failed to update product");
+       toast.error(
+         error?.response?.data?.message ||
+           error.message ||
+           "Failed to update product."
+       );
     } finally {
       setLoading(false);
     }
@@ -221,10 +227,7 @@ const UpdateProductForm = () => {
 
                 <div className="flex flex-wrap gap-2 mt-5 ms-4">
                   {["Small", "Medium", "Large"].map((sizeOption) => (
-                    <label
-                      key={sizeOption}
-                      className="flex items-center gap-2"
-                    >
+                    <label key={sizeOption} className="flex items-center gap-2">
                       <input
                         type="checkbox"
                         checked={product.size === sizeOption}
@@ -292,28 +295,26 @@ const UpdateProductForm = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-2 mt-5 ms-4">
-                  {["Black", "White"].map(
-                    (colorOption) => (
-                      <label
-                        key={colorOption}
-                        className="flex items-center gap-2"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={product.color === colorOption}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setProduct({ ...product, color: colorOption });
-                            } else {
-                              setProduct({ ...product, color: "" });
-                            }
-                          }}
-                          disabled={isCustomColor}
-                        />
-                        <span className="text-sm">{colorOption}</span>
-                      </label>
-                    )
-                  )}
+                  {["Black", "White"].map((colorOption) => (
+                    <label
+                      key={colorOption}
+                      className="flex items-center gap-2"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={product.color === colorOption}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setProduct({ ...product, color: colorOption });
+                          } else {
+                            setProduct({ ...product, color: "" });
+                          }
+                        }}
+                        disabled={isCustomColor}
+                      />
+                      <span className="text-sm">{colorOption}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
             </div>
@@ -334,8 +335,17 @@ const UpdateProductForm = () => {
                 label="Currency"
                 labelPlacement="outside"
                 placeholder="Select currency"
-                selectedKeys={[product.currency || "₨"]}
-                onChange={(e) => setSelectedCurrency(e.target.value)}
+                selectedKeys={
+                  product.currency ? [product.currency] : []
+                }
+                value={product.currency}
+                // onChange={(e) => {
+                //   const selectedCurrency = currencies.find(c => c.code === e.target.value);
+                //   setProduct({ ...product, currency: selectedCurrency });
+                // }}
+                onChange={(e) =>
+                  setProduct({ ...product, currency: e.target.value })
+                }
                 variant="bordered"
                 required
                 className="md:col-span-2"
@@ -343,11 +353,11 @@ const UpdateProductForm = () => {
               >
                 {currencies.map((currency) => (
                   <SelectItem
-                    key={currency.code}
-                    value={currency.code}
-                    textValue={`${currency.country} ${currency.name}`}
+                    key={currency._id}
+                    value={currency._id}
+                    textValue={`${currency.name} ${currency.symbol}`}
                   >
-                    {currency.country} {currency.symbol}
+                    {currency.name} {currency.symbol}
                   </SelectItem>
                 ))}
               </Select>
@@ -361,23 +371,24 @@ const UpdateProductForm = () => {
                 onChange={(e) =>
                   setProduct({ ...product, price: e.target.value })
                 }
-                startContent={selectedCurrencySymbol}
                 variant="bordered"
               />
               <Select
                 label="Supplier"
                 labelPlacement="outside"
                 placeholder="Select Supplier"
-                //   selectedKeys={[selectedSupplier]}
+                selectedKeys={product.supplier ? [product.supplier] : []}
                 value={product.supplier}
-                //   onChange={handleSupplierChange}
+                onChange={(e) =>
+                  setProduct({ ...product, supplier: e.target.value })
+                }
                 variant="bordered"
                 required
                 className="md:col-span-2"
               >
-                {currencies.map((currency) => (
-                  <SelectItem key={currency.code} value={currency.code}>
-                    {currency.country}
+                {suppliers.map((supplier) => (
+                  <SelectItem key={supplier._id} value={supplier._id}>
+                    {supplier.name}
                   </SelectItem>
                 ))}
               </Select>
@@ -404,10 +415,11 @@ const UpdateProductForm = () => {
                 }
                 variant="bordered"
                 disabled={!isCustomSize}
-                className={`transition-colors ${!isCustomSize
+                className={`transition-colors ${
+                  !isCustomSize
                     ? "bg-gray-100 cursor-not-allowed text-gray-400 rounded-xl border border-gray-200"
                     : "bg-white "
-                  }`}
+                }`}
               />
               {/* Custom Color Input */}
               <Input
@@ -420,10 +432,11 @@ const UpdateProductForm = () => {
                 }
                 variant="bordered"
                 disabled={!isCustomColor}
-                className={`transition-colors ${!isCustomColor
+                className={`transition-colors ${
+                  !isCustomColor
                     ? "bg-gray-100 cursor-not-allowed text-gray-400 rounded-xl border border-gray-200"
                     : "bg-white "
-                  }`}
+                }`}
               />
 
               {/* Pricing */}
@@ -439,7 +452,6 @@ const UpdateProductForm = () => {
                     purchaseRate: e.target.value,
                   })
                 }
-                startContent={selectedCurrencySymbol}
                 variant="bordered"
               />
               <Input
@@ -451,7 +463,6 @@ const UpdateProductForm = () => {
                 onChange={(e) =>
                   setProduct({ ...product, saleRate: e.target.value })
                 }
-                startContent={selectedCurrencySymbol}
                 variant="bordered"
               />
               <Input
@@ -466,7 +477,6 @@ const UpdateProductForm = () => {
                     wholesaleRate: e.target.value,
                   })
                 }
-                startContent={selectedCurrencySymbol}
                 variant="bordered"
               />
               <Input
@@ -478,7 +488,6 @@ const UpdateProductForm = () => {
                 onChange={(e) =>
                   setProduct({ ...product, retailRate: e.target.value })
                 }
-                startContent={selectedCurrencySymbol}
                 variant="bordered"
               />
 
@@ -655,7 +664,7 @@ const UpdateProductForm = () => {
               </div>
             </div>
 
-            <div className="flex justify-end space-x-3">
+            {/* <div className="flex justify-end space-x-3">
               <Button
                 type="button"
                 variant="bordered"
@@ -663,7 +672,7 @@ const UpdateProductForm = () => {
               >
                 Cancel
               </Button>
-            </div>
+            </div> */}
           </form>
         </CardBody>
       </Card>

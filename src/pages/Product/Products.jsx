@@ -396,6 +396,8 @@ const Products = () => {
           <TableColumn>IMAGE</TableColumn>
           <TableColumn>NAME</TableColumn>
           <TableColumn>CATEGORY</TableColumn>
+          <TableColumn>SUPPLIERS</TableColumn>
+          <TableColumn>CURRENCE</TableColumn>
           <TableColumn>PRICE</TableColumn>
           <TableColumn>PURCHASE RATE</TableColumn>
           <TableColumn>SALE RATE</TableColumn>
@@ -431,8 +433,8 @@ const Products = () => {
               <TableCell>
                 {product.image ? (
                   <img
-                    src={product.image}
-                    alt={product.name}
+                    src={product?.image || ""}
+                    alt={product?.name || ""}
                     className="w-12 h-12 object-cover rounded"
                   />
                 ) : (
@@ -440,14 +442,15 @@ const Products = () => {
                 )}
               </TableCell>
 
-              <TableCell className="font-semibold">{product.name}</TableCell>
+              <TableCell className="font-semibold">{product?.name || ""}</TableCell>
 
               <TableCell>
                 <Chip size="sm" variant="flat" color="primary">
                   {product?.category?.name || ""}
                 </Chip>
               </TableCell>
-
+              <TableCell>{product?.supplier?.name || ""}</TableCell>
+              <TableCell>{product?.currency?.symbol || ""}</TableCell>
               <TableCell>{product?.price || "0"}</TableCell>
               <TableCell>{product?.purchaseRate || "0"}</TableCell>
               <TableCell>{product?.saleRate || "0"}</TableCell>
@@ -463,7 +466,10 @@ const Products = () => {
               <TableCell>{product?.additionalUnit || "-"}</TableCell>
 
               <TableCell>
-                <Chip size="sm" color={getStockColor(product.countInStock)}>
+                <Chip
+                  size="sm"
+                  color={getStockColor(product?.countInStock || "")}
+                >
                   {product?.countInStock || "0"} units
                 </Chip>
               </TableCell>
@@ -499,7 +505,9 @@ const Products = () => {
                       variant="light"
                       color="warning"
                       // onPress={() => setEditProduct(product)}
-                      onPress={() => navigator(`/products/update/${product._id}`)}
+                      onPress={() =>
+                        navigator(`/products/update/${product._id}`)
+                      }
                     >
                       <FaEdit />
                     </Button>

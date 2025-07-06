@@ -56,7 +56,7 @@ const Suppliers = () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    await userRequest.delete(`/suppliers/${supplier?._id || ""}`);
+                    await userRequest.delete(`/suppliers/${supplier?._id || ""}/permanent`);
                     toast.success("The supplier has been deleted.");
                     refetch();
                 } catch (error) {
