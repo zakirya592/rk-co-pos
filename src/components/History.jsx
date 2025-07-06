@@ -29,6 +29,8 @@ import userRequest from '../utils/userRequest';
 const History = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
@@ -38,8 +40,8 @@ const History = () => {
     const res = await userRequest.get("/sales", {
       params: {
         page: currentPage,
-        startDate: dateFilter === 'all' ? '' : dateFilter,
-        endDate: dateFilter === 'all' ? '' : dateFilter,
+        startDate: startDate,
+        endDate: endDate,
         paymentStatus: statusFilter === 'all' ? '' : statusFilter,
         invoiceNumber: searchTerm,
         customer: searchTerm
@@ -65,10 +67,18 @@ const History = () => {
       transaction.customer?.name.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesDate = dateFilter === 'all' ||
-      (dateFilter === 'today' && transaction.date === '2024-01-20') ||
-      (dateFilter === 'yesterday' && transaction.date === '2024-01-19');
+      (dateFilter === 'today' && new Date(transaction.createdAt).toDateString() === new Date().toDateString()) ||
+      (dateFilter === 'yesterday' && new Date(transaction.createdAt).toDateString() === new Date(Date.now() - 86400000).toDateString()) ||
+      (dateFilter === 'week' && new Date(transaction.createdAt) >= new Date(Date.now() - 604800000)) ||
+      (dateFilter === 'custom' && 
+        (startDate === '' || new Date(transaction.createdAt) >= new Date(startDate)) &&
+        (endDate === '' || new Date(transaction.createdAt) <= new Date(endDate))
+      );
 
-    const matchesStatus = statusFilter === 'all' || transaction.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' ||
+      (statusFilter === 'paid' && transaction.paidAmount >= transaction.totalAmount) ||
+      (statusFilter === 'unpaid' && transaction.paidAmount === 0) ||
+      (statusFilter === 'partial' && transaction.paidAmount > 0 && transaction.paidAmount < transaction.totalAmount);
 
     return matchesSearch && matchesDate && matchesStatus;
   });
@@ -93,12 +103,16 @@ const History = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Transaction History</h1>
+          <h1 className="text-3xl font-bold text-gray-800">
+            Transaction History
+          </h1>
           <p className="text-gray-600">View and manage sales transactions</p>
         </div>
         <div className="text-right">
           <div className="text-sm text-gray-600">Today's Sales</div>
-          <div className="text-2xl font-bold text-green-600">Rs. {todaySales}</div>
+          <div className="text-2xl font-bold text-green-600">
+            Rs. {todaySales}
+          </div>
         </div>
       </div>
 
@@ -114,18 +128,60 @@ const History = () => {
               className="flex-1 min-w-64"
             />
 
-            <Select
-              placeholder="Date Filter"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="w-48"
-              startContent={<FaCalendarAlt />}
-            >
-              <SelectItem key="all" value="all">All Dates</SelectItem>
-              <SelectItem key="today" value="today">Today</SelectItem>
-              <SelectItem key="yesterday" value="yesterday">Yesterday</SelectItem>
-              <SelectItem key="week" value="week">This Week</SelectItem>
-            </Select>
+            <div className="flex gap-2">
+              <Select
+                placeholder="Date Range"
+                value={dateFilter}
+                onChange={(e) => {
+                  setDateFilter(e.target.value);
+                  if (e.target.value === "custom") {
+                    setStartDate("");
+                    setEndDate("");
+                  }
+                }}
+                className="w-48"
+                startContent={<FaCalendarAlt />}
+              >
+                <SelectItem key="all" value="all">
+                  All Dates
+                </SelectItem>
+                <SelectItem key="today" value="today">
+                  Today
+                </SelectItem>
+                <SelectItem key="yesterday" value="yesterday">
+                  Yesterday
+                </SelectItem>
+                <SelectItem key="week" value="week">
+                  This Week
+                </SelectItem>
+                <SelectItem key="custom" value="custom">
+                  Custom Range
+                </SelectItem>
+              </Select>
+
+              {dateFilter === "custom" && (
+                <>
+                  <div className="felx">
+                    <p>Start Date</p>
+                    <Input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-48"
+                    />
+                  </div>
+                    <div className="felx">
+                    <p>End Date</p>
+                    <Input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="w-48"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
 
             <Select
               placeholder="Status Filter"
@@ -134,111 +190,141 @@ const History = () => {
               className="w-48"
               startContent={<FaFilter />}
             >
-              <SelectItem key="all" value="all">All Status</SelectItem>
-              <SelectItem key="paid" value="paid">Paid</SelectItem>
-              <SelectItem key="unpaid" value="unpaid">Unpaid</SelectItem>
-              <SelectItem key="partial" value="partial">Partial</SelectItem>
+              <SelectItem key="all" value="all">
+                All Status
+              </SelectItem>
+              <SelectItem key="paid" value="paid">
+                Paid
+              </SelectItem>
+              <SelectItem key="unpaid" value="unpaid">
+                Unpaid
+              </SelectItem>
+              <SelectItem key="partial" value="partial">
+                Partial
+              </SelectItem>
             </Select>
           </div>
         </CardBody>
       </Card>
 
       {/* Transactions Table */}
-     
-          <Table aria-label="Transactions table" >
-            <TableHeader>
-              <TableColumn>Sl No</TableColumn>
-              <TableColumn>INVOICE NUMBER</TableColumn>
-              <TableColumn>DATE & TIME</TableColumn>
-              <TableColumn>CUSTOMER</TableColumn>
-              <TableColumn>ITEMS</TableColumn>
-              <TableColumn>TOTAL</TableColumn>
-              <TableColumn>PAID AMOUNT</TableColumn>
-              <TableColumn>PAYMENT</TableColumn>
-              <TableColumn>STATUS</TableColumn>
-              <TableColumn>ACTIONS</TableColumn>
-            </TableHeader>
-            <TableBody isLoading={isLoading} loadingContent={
+      <div className="h-[400px] overflow-y-auto w-full overflow-scroll">
+        <Table aria-label="Transactions table" className="w-full">
+          <TableHeader>
+            <TableColumn>Sl No</TableColumn>
+            <TableColumn>INVOICE NUMBER</TableColumn>
+            <TableColumn>DATE & TIME</TableColumn>
+            <TableColumn>CUSTOMER</TableColumn>
+            <TableColumn>ITEMS</TableColumn>
+            <TableColumn>TOTAL</TableColumn>
+            <TableColumn>PAID AMOUNT</TableColumn>
+            <TableColumn>PAYMENT</TableColumn>
+            <TableColumn>STATUS</TableColumn>
+            <TableColumn>ACTIONS</TableColumn>
+          </TableHeader>
+          <TableBody
+            isLoading={isLoading}
+            loadingContent={
               <div className="flex justify-center items-center py-8">
                 <Spinner color="success" size="lg" />
               </div>
             }
-              emptyContent={
-                <div className="text-center text-gray-500 py-8">
-                  No Transaction found
-                </div>
-              }>
-              {filteredTransactions.map((transaction, index) => (
-                <TableRow key={transaction.invoiceNumber}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell className="font-mono font-semibold">{transaction.invoiceNumber}</TableCell>
-                  <TableCell>
+            emptyContent={
+              <div className="text-center text-gray-500 py-8">
+                No Transaction found
+              </div>
+            }
+          >
+            {filteredTransactions.map((transaction, index) => (
+              <TableRow key={transaction.invoiceNumber}>
+                <TableCell>{index + 1}</TableCell>
+                <TableCell className="font-mono font-semibold">
+                  {transaction.invoiceNumber}
+                </TableCell>
+                <TableCell>
+                  <div>
                     <div>
-                      <div>{new Date(transaction.createdAt).toLocaleString()}</div>
-                      <div className="text-sm text-gray-500">{transaction.time}</div>
+                      {new Date(transaction.createdAt).toLocaleString()}
                     </div>
-                  </TableCell>
-                  <TableCell>{transaction.customer?.name}</TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      {transaction?.items?.length} item(s)
-                      <div className="text-xs text-gray-500">
-                        {transaction?.items?.[0]?.product?.name || ""}
-                        {transaction?.items?.length > 1 && ` +${transaction?.items?.length - 1} more`}
-                      </div>
+                    <div className="text-sm text-gray-500">
+                      {transaction.time}
                     </div>
-                  </TableCell>
-                  <TableCell className="font-semibold">Rs. {transaction.totalAmount}</TableCell>
-                  <TableCell className="font-semibold">Rs. {transaction.paidAmount}</TableCell>
-                  <TableCell>
-                    <Chip size="sm" variant="flat">
-                      {transaction.paymentMethod}
-                    </Chip>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      size="sm"
-                      color={
-                        transaction.paymentStatus === 'paid' ? 'success' :
-                          transaction.paymentStatus === 'partial' ? 'warning' : 'danger'
-                      }
-                    >
-                      {transaction.paymentStatus}
-                    </Chip>
-                  </TableCell>
+                  </div>
+                </TableCell>
+                <TableCell>{transaction.customer?.name}</TableCell>
+                <TableCell>
+                  <div className="text-sm">
+                    {transaction?.items?.length} item(s)
+                    <div className="text-xs text-gray-500">
+                      {transaction?.items?.[0]?.product?.name || ""}
+                      {transaction?.items?.length > 1 &&
+                        ` +${transaction?.items?.length - 1} more`}
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell className="font-semibold">
+                  Rs. {transaction.totalAmount}
+                </TableCell>
+                <TableCell className="font-semibold">
+                  Rs. {transaction.paidAmount}
+                </TableCell>
+                <TableCell>
+                  <Chip size="sm" variant="flat">
+                    {transaction.paymentMethod}
+                  </Chip>
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    size="sm"
+                    color={
+                      transaction.paymentStatus === "paid"
+                        ? "success"
+                        : transaction.paymentStatus === "partial"
+                        ? "warning"
+                        : "danger"
+                    }
+                  >
+                    {transaction.paymentStatus}
+                  </Chip>
+                </TableCell>
 
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        color="primary"
-                        onClick={() => viewReceipt(transaction)}
-                      >
-                        <FaEye />
-                      </Button>
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        color="secondary"
-                        onClick={() => {
-                          setSelectedTransaction(transaction);
-                          setTimeout(printReceipt, 100);
-                        }}
-                      >
-                        <FaPrint />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      color="primary"
+                      onClick={() => viewReceipt(transaction)}
+                    >
+                      <FaEye />
+                    </Button>
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      color="secondary"
+                      onClick={() => {
+                        setSelectedTransaction(transaction);
+                        setTimeout(printReceipt, 100);
+                      }}
+                    >
+                      <FaPrint />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* Receipt Modal */}
-      <Modal isOpen={showReceiptModal} onClose={() => setShowReceiptModal(false)} size="2xl">
+      <Modal
+        isOpen={showReceiptModal}
+        onClose={() => setShowReceiptModal(false)}
+        size="2xl"
+      >
         <ModalContent>
           <ModalHeader>Transaction Receipt</ModalHeader>
           <ModalBody>
@@ -254,14 +340,31 @@ const History = () => {
                 {/* Transaction Details */}
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p><strong>Invoice Number:</strong> {selectedTransaction.invoiceNumber}</p>
-                    <p><strong>Date:</strong> {new Date(selectedTransaction.createdAt).toLocaleDateString()}</p>
-                    <p><strong>Time:</strong> {selectedTransaction.time}</p>
+                    <p>
+                      <strong>Invoice Number:</strong>{" "}
+                      {selectedTransaction.invoiceNumber}
+                    </p>
+                    <p>
+                      <strong>Date:</strong>{" "}
+                      {new Date(
+                        selectedTransaction.createdAt
+                      ).toLocaleDateString()}
+                    </p>
+                    <p>
+                      <strong>Time:</strong> {selectedTransaction.time}
+                    </p>
                   </div>
                   <div>
-                    <p><strong>Customer:</strong> {selectedTransaction.customer}</p>
-                    <p><strong>Cashier:</strong> {selectedTransaction.user}</p>
-                    <p><strong>Payment:</strong> {selectedTransaction.paymentMethod}</p>
+                    <p>
+                      <strong>Customer:</strong> {selectedTransaction.customer}
+                    </p>
+                    <p>
+                      <strong>Cashier:</strong> {selectedTransaction.user}
+                    </p>
+                    <p>
+                      <strong>Payment:</strong>{" "}
+                      {selectedTransaction.paymentMethod}
+                    </p>
                   </div>
                 </div>
 
@@ -281,7 +384,7 @@ const History = () => {
                           <TableCell>{item.name}</TableCell>
                           <TableCell>{item.qty}</TableCell>
                           <TableCell>Rs. {item.price}</TableCell>
-                          <TableCell>Rs. {(item.qty * item.price)}</TableCell>
+                          <TableCell>Rs. {item.qty * item.price}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -319,7 +422,11 @@ const History = () => {
             <Button variant="light" onPress={() => setShowReceiptModal(false)}>
               Close
             </Button>
-            <Button color="primary" startContent={<FaPrint />} onPress={printReceipt}>
+            <Button
+              color="primary"
+              startContent={<FaPrint />}
+              onPress={printReceipt}
+            >
               Print Receipt
             </Button>
           </ModalFooter>
