@@ -47,8 +47,9 @@ const ViewProductModal = ({ isOpen, onClose, viewProduct }) => (
 
             <div className="grid grid-cols-2 gap-4 w-full">
               <Info label="Name" value={viewProduct.name} />
-              <Info label="Category" value={viewProduct.category?.name} />
-              <Info label="Price" value={`Rs. ${viewProduct.price}`} />
+              <Info label="Category" value={viewProduct.category?.name || ""} />
+              <Info label="Supplier" value={viewProduct.supplier?.name || ""} />
+              <Info label="Price" value={`${viewProduct.currency?.symbol ||""} ${viewProduct.price}`} />
               <Info
                 label="Stock"
                 value={

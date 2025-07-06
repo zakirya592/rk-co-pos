@@ -43,6 +43,37 @@ const CategoryName = ({ categoryId, label, color }) => {
   );
 };
 
+// Reusable inline CurrencyName component
+const CurrencyName = ({ currencyId, label, color }) => {
+  const { data, isLoading } = useQuery(
+    ["currency", currencyId],
+    () => userRequest.get(`/currencies/${currencyId}`).then(res => res.data),
+    { enabled: !!currencyId }
+  );
+
+  return (
+    <Chip color={color} variant="flat" className="text-xs">
+      {isLoading ? "Loading..." : `${label}: ${data?.name || "N/A"}`}
+    </Chip>
+  );
+};
+
+// Reusable inline SupplierName component
+const SupplierName = ({ supplierId, label, color }) => {
+  const { data, isLoading } = useQuery(
+    ["supplier", supplierId],
+    () => userRequest.get(`/suppliers/${supplierId}`).then(res => res.data),
+    { enabled: !!supplierId }
+  );
+
+  return (
+    <Chip color={color} variant="flat" className="text-xs">
+      {isLoading ? "Loading..." : `${label}: ${data?.name || "N/A"}`}
+    </Chip>
+  );
+};
+
+
 
 const ProductJourney = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -206,6 +237,20 @@ const ProductJourney = () => {
                                         <span className="text-gray-500">→</span>
                                         <CategoryName
                                           categoryId={change.newValue}
+                                          label="New"
+                                          color="success"
+                                        />
+                                      </>
+                                    ) : change.field === "supplier" ? (
+                                      <>
+                                        <SupplierName
+                                          supplierId={change.oldValue}
+                                          label="Old"
+                                          color="warning"
+                                        />
+                                        <span className="text-gray-500">→</span>
+                                        <SupplierName
+                                          supplierId={change.newValue}
                                           label="New"
                                           color="success"
                                         />
@@ -402,20 +447,53 @@ const ProductJourney = () => {
                                           </div>
                                         </div>
                                       ) : change.field === "category" ? (
-                                      <>
-                                        <CategoryName
-                                          categoryId={change.oldValue}
-                                          label="Old"
-                                          color="warning"
-                                        />
-                                        <span className="text-gray-500">→</span>
-                                        <CategoryName
-                                          categoryId={change.newValue}
-                                          label="New"
-                                          color="success"
-                                        />
-                                      </>
-                                    ) : (
+                                        <>
+                                          <CategoryName
+                                            categoryId={change.oldValue}
+                                            label="Old"
+                                            color="warning"
+                                          />
+                                          <span className="text-gray-500">
+                                            →
+                                          </span>
+                                          <CategoryName
+                                            categoryId={change.newValue}
+                                            label="New"
+                                            color="success"
+                                          />
+                                        </>
+                                      ) : //  : change.field === "currency" ? (
+                                      //   <>
+                                      //     <CurrencyName
+                                      //       currencyId={change.oldValue}
+                                      //       label="Old"
+                                      //       color="warning"
+                                      //     />
+                                      //     <span className="text-gray-500">→</span>
+                                      //     <CurrencyName
+                                      //       currencyId={change.newValue}
+                                      //       label="New"
+                                      //       color="success"
+                                      //     />
+                                      //   </>
+                                      // )
+                                      change.field === "supplier" ? (
+                                        <>
+                                          <SupplierName
+                                            supplierId={change.oldValue}
+                                            label="Old"
+                                            color="warning"
+                                          />
+                                          <span className="text-gray-500">
+                                            →
+                                          </span>
+                                          <SupplierName
+                                            supplierId={change.newValue}
+                                            label="New"
+                                            color="success"
+                                          />
+                                        </>
+                                      ) : (
                                         <>
                                           <Chip
                                             color="warning"

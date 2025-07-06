@@ -347,7 +347,6 @@ const UpdateProductForm = () => {
                   setProduct({ ...product, currency: e.target.value })
                 }
                 variant="bordered"
-                required
                 className="md:col-span-2"
                 showSearch
               >
@@ -383,7 +382,6 @@ const UpdateProductForm = () => {
                   setProduct({ ...product, supplier: e.target.value })
                 }
                 variant="bordered"
-                required
                 className="md:col-span-2"
               >
                 {suppliers.map((supplier) => (

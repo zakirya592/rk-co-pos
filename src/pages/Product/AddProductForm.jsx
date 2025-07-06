@@ -374,7 +374,6 @@ const AddProductForm = () => {
                     setNewProduct({ ...newProduct, currency: e.target.value })
                   }
                   variant="bordered"
-                  required
                   className="md:col-span-2"
                   showSearch
                 >
@@ -411,7 +410,6 @@ const AddProductForm = () => {
                     setNewProduct({ ...newProduct, supplier: e.target.value })
                   }
                   variant="bordered"
-                  required
                   className="md:col-span-2"
                 >
                   {suppliers.map((supplier) => (
