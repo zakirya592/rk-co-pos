@@ -18,15 +18,16 @@ import {
   ModalFooter,
   Select,
   SelectItem,
-  Chip,
-  Tabs,
-  Tab,
-  Spinner
+  Spinner,
+  Tooltip
 } from '@nextui-org/react';
-import { FaSearch, FaEye, FaPrint, FaCalendarAlt, FaFilter } from 'react-icons/fa';
+import { FaSearch, FaEye, FaPrint, FaCalendarAlt } from 'react-icons/fa';
 import { useQuery } from 'react-query';
-import userRequest from '../utils/userRequest';
+import userRequest from '../../utils/userRequest';
 import * as XLSX from "xlsx";
+import { useNavigate } from 'react-router-dom';
+import { TbListDetails } from "react-icons/tb";
+
 
 
 const History = () => {
@@ -38,6 +39,7 @@ const History = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const navigate = useNavigate();
 
   const fetchSales = async (key, searchTerm,invoiceNumber) => {
     const res = await userRequest.get("/sales/by-customer", {
@@ -419,7 +421,7 @@ const History = () => {
 
                 <TableCell>
                   <div className="flex gap-2">
-                    <Button
+                    {/* <Button
                       isIconOnly
                       size="sm"
                       variant="light"
@@ -427,19 +429,18 @@ const History = () => {
                       onPress={() => viewReceipt(transaction)}
                     >
                       <FaEye />
-                    </Button>
+                    </Button> */}
+                    <Tooltip content="View Details">
                     <Button
                       isIconOnly
                       size="sm"
                       variant="light"
-                      color="secondary"
-                      onPress={() => {
-                        setSelectedTransaction(transaction);
-                        setTimeout(printReceipt, 100);
-                      }}
+                      color="primary"
+                      onPress={() => navigate(`/customers/${transaction._id}`)}
                     >
-                      <FaPrint />
+                      <TbListDetails />
                     </Button>
+                    </Tooltip>
                   </div>
                 </TableCell>
               </TableRow>

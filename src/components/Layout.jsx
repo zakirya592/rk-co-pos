@@ -4,7 +4,7 @@ import Sidebar from './Sidebar';
 import Products from '../pages/Product/Products';
 import Categories from '../pages/Categories/Categories';
 import Reports from './Reports';
-import History from './History';
+import History from '../pages/History/History';
 import POS from '../pages/POS/POS';
 import Customers from '../pages/Customers/Customers';
 import Settings from './Settings';
@@ -16,6 +16,7 @@ import Currency from '../pages/Currency/Currency';
 import Suppliers from '../pages/Suppliers/Suppliers';
 import AddSupplier from '../pages/Suppliers/AddSupplier';
 import UpdateSupplier from '../pages/Suppliers/UpdateSupplier';
+import CustomerHistory from '../pages/History/CustomerHistory';
 const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const location = useLocation();
@@ -47,6 +48,7 @@ const Layout = () => {
           <Route path="/pos" element={<POS />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/history" element={<History />} />
+          <Route path="/customers/:id" element={<CustomerHistory />} />
           <Route path="/customers" element={<Customers />} />
           <Route path="/settings" element={<Settings />} />
           {/* <Route path="*" element={<Products />} /> */}
