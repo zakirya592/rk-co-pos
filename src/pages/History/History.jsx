@@ -72,7 +72,6 @@ const History = () => {
   
   
   const filteredTransactions = transactions.filter(transaction => {
-    console.log(transaction?.customerName, "transactions");
 
      if (!searchTerm && !invoiceNumber && !startDate && !endDate && !statusFilter) {
       return true;
@@ -104,8 +103,6 @@ const History = () => {
 
     return matchesSearch && matchesDate ;
   });
-  
-    console.log(filteredTransactions, "filteredTransactionsss");
 
   const viewReceipt = (transaction) => {
     setSelectedTransaction(transaction);
