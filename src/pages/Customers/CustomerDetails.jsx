@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Modal,
   ModalContent,
@@ -8,10 +8,46 @@ import {
   Tabs,
   Tab,
   Button,
-  Chip
+  Chip,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableRow,
+  TableBody,
+  TableCell
 } from '@nextui-org/react';
+import userRequest from '../../utils/userRequest';
 
-const CustomerDetails = ({ isOpen, onClose, customer, purchaseHistory }) => {
+const CustomerDetails = ({ isOpen, onClose, customer }) => {
+
+   const [purchaseHistorys, setPurchaseHistory] = useState({ data: [] });
+   const [loading, setLoading] = useState(true);
+
+   useEffect(() => {
+     const fetchPurchaseHistory = async () => {
+       try {
+         const response = await userRequest.get(
+           `/sales/customer/${customer._id}`
+         );
+         setPurchaseHistory(response.data);
+       } catch (error) {
+         console.error("Error fetching purchase history:", error);
+       } finally {
+         setLoading(false);
+       }
+     };
+
+     if (customer?._id) {
+       fetchPurchaseHistory();
+     }
+   }, [customer]);
+
+   const { customerInfo, summary, data: transactions } = purchaseHistorys || {}; // Add null check
+
+   console.log(purchaseHistorys);
+   
+  
+  
   return (
     <Modal
       isOpen={isOpen}
@@ -20,7 +56,7 @@ const CustomerDetails = ({ isOpen, onClose, customer, purchaseHistory }) => {
       backdrop="opaque"
       isDismissable={false}
       hideCloseButton={false}
-      scrollBehavior='inside'
+      scrollBehavior="inside"
     >
       <ModalContent>
         <ModalHeader>Customer Details</ModalHeader>
@@ -61,7 +97,7 @@ const CustomerDetails = ({ isOpen, onClose, customer, purchaseHistory }) => {
                   </div>
                 </div>
               </Tab>
-              <Tab key="history" title="Purchase History">
+              {/* <Tab key="history" title="Purchase History">
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -99,44 +135,81 @@ const CustomerDetails = ({ isOpen, onClose, customer, purchaseHistory }) => {
                       Purchase History
                     </h4>
                     <div className="space-y-3">
-                      {purchaseHistory.map((purchase) => (
-                        <div
-                          key={purchase.id}
-                          className="grid grid-cols-1 md:grid-cols-4 gap-4"
-                        >
-                          <div>
-                            <h5 className="text-sm text-gray-500">Date</h5>
-                            <p>
-                              {new Date(purchase.date).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <div>
-                            <h5 className="text-sm text-gray-500">Items</h5>
-                            <p>{purchase.items}</p>
-                          </div>
-                          <div>
-                            <h5 className="text-sm text-gray-500">Amount</h5>
-                            <p>Rs. {purchase.amount}</p>
-                          </div>
-                          <div>
-                            <h5 className="text-sm text-gray-500">Status</h5>
-                            <Chip
-                              size="sm"
-                              color={
-                                purchase.payment === "paid"
-                                  ? "success"
-                                  : "warning"
-                              }
-                            >
-                              {purchase.payment}
-                            </Chip>
-                          </div>
-                        </div>
-                      ))}
+                      <div className="overflow-auto">
+                        <table className="min-w-full border border-gray-200 text-sm">
+                          <thead className="bg-gray-100">
+                            <tr>
+                              <th className="border px-4 py-2">#</th>
+                              <th className="border px-4 py-2">Date</th>
+                              <th className="border px-4 py-2">Items</th>
+                              <th className="border px-4 py-2">Quantity</th>
+                              <th className="border px-4 py-2">PRICE</th>
+                              <th className="border px-4 py-2">Total</th>
+                              <th className="border px-4 py-2">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {transactions?.length ? (
+                              transactions.map((purchase, index) => (
+                                <tr key={purchase._id} className="text-center">
+                                  <td className="border px-4 py-2">
+                                    {index + 1}
+                                  </td>
+                                  <td className="border px-4 py-2">
+                                    {new Date(
+                                      purchase.createdAt
+                                    ).toLocaleDateString()}
+                                  </td>
+                                  <td className="border px-4 py-2">
+                                    {purchase.items?.map((item, idx) => (
+                                      <div key={idx}>
+                                        {item?.product?.name || ""}
+                                      </div>
+                                    ))}
+                                  </td>
+                                  <td className="border px-4 py-2">
+                                    {purchase?.quantity || "0"}
+                                  </td>
+                                  <td className="border px-4 py-2">
+                                    Rs. {purchase.grandTotal}
+                                  </td>
+                                  <td>
+                                    {purchase?.quantity * purchase?.price ||
+                                      "N/A"}
+                                  </td>
+                                  <td className="border px-4 py-2">
+                                    <Chip
+                                      size="sm"
+                                      color={
+                                        purchase.paymentStatus === "paid"
+                                          ? "success"
+                                          : purchase.paymentStatus === "partial"
+                                          ? "warning"
+                                          : "danger"
+                                      }
+                                    >
+                                      {purchase.paymentStatus}
+                                    </Chip>
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td
+                                  className="border px-4 py-2 text-center"
+                                  colSpan="6"
+                                >
+                                  No transactions found.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </Tab>
+              </Tab> */}
             </Tabs>
           )}
         </ModalBody>
