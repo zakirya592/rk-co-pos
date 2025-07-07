@@ -38,18 +38,20 @@ const History = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
 
-  const fetchSales = async (key, searchTerm, currentPage) => {
-    const res = await userRequest.get("/sales", {
+  const fetchSales = async (key, searchTerm,invoiceNumber) => {
+    const res = await userRequest.get("/sales/by-customer", {
       params: {
-        page: currentPage,
         startDate: startDate,
         endDate: endDate,
-        paymentStatus: statusFilter === 'all' ? '' : statusFilter,
+        paymentStatus: statusFilter === "all" ? "" : statusFilter,
+        minTotalAmount: '',
+        maxTotalAmount: '',
+        minTotalDue: '',
+        maxTotalDue: '',
         invoiceNumber: invoiceNumber,
-        customer: searchTerm
-      }
+        customer: searchTerm,
+      },
     });
     return {
       transactions: res.data.data || [],
@@ -57,34 +59,51 @@ const History = () => {
     };
   };
 
+
   const { data, isLoading } = useQuery(
-    ["sales", searchTerm, currentPage,dateFilter,startDate,endDate,statusFilter,invoiceNumber],
-    () => fetchSales("sales", searchTerm, currentPage),
+    ["sales", searchTerm,dateFilter,startDate,endDate,statusFilter,invoiceNumber],
+    () => fetchSales("sales", searchTerm,invoiceNumber),
     { keepPreviousData: true }
   );
   const transactions = data?.transactions || [];
-
+  
+  
+  
   const filteredTransactions = transactions.filter(transaction => {
+    console.log(transaction?.customerName, "transactions");
+
+     if (!searchTerm && !invoiceNumber && !startDate && !endDate && !statusFilter) {
+      return true;
+    }
     const matchesSearch =
-      transaction.customer?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.invoiceNumber.toLowerCase().includes(invoiceNumber.toLowerCase());
+      transaction?.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (invoiceNumber && transaction.invoiceNumber?.toLowerCase().includes(invoiceNumber.toLowerCase()))
+    //    ||
+    //   (invoiceNumber && transaction.totalAmount?.toString().includes(invoiceNumber)) ||
+    // (invoiceNumber && transaction.dueAmount?.toString().includes(invoiceNumber)) ||
+    // (invoiceNumber && transaction.paidAmount?.toString().includes(invoiceNumber));
+
+    // console.log(matchesSearch, "matchesSearch");
+    
 
     const matchesDate = dateFilter === 'all' ||
-      (dateFilter === 'today' && new Date(transaction.createdAt).toDateString() === new Date().toDateString()) ||
-      (dateFilter === 'yesterday' && new Date(transaction.createdAt).toDateString() === new Date(Date.now() - 86400000).toDateString()) ||
-      (dateFilter === 'week' && new Date(transaction.createdAt) >= new Date(Date.now() - 604800000)) ||
+      (dateFilter === 'today' && new Date(transaction.lastPurchaseDate).toDateString() === new Date().toDateString()) ||
+      (dateFilter === 'yesterday' && new Date(transaction.lastPurchaseDate).toDateString() === new Date(Date.now() - 86400000).toDateString()) ||
+      (dateFilter === 'week' && new Date(transaction.lastPurchaseDate) >= new Date(Date.now() - 604800000)) ||
       (dateFilter === 'custom' && 
-        (startDate === '' || new Date(transaction.createdAt) >= new Date(startDate)) &&
-        (endDate === '' || new Date(transaction.createdAt) <= new Date(endDate))
+        (startDate === '' || new Date(transaction.lastPurchaseDate) >= new Date(startDate)) &&
+        (endDate === '' || new Date(transaction.lastPurchaseDate) <= new Date(endDate))
       );
 
-    const matchesStatus = statusFilter === 'all' ||
-      (statusFilter === 'paid' && transaction.paidAmount >= transaction.totalAmount) ||
-      (statusFilter === 'unpaid' && transaction.paidAmount === 0) ||
-      (statusFilter === 'partial' && transaction.paidAmount > 0 && transaction.paidAmount < transaction.totalAmount);
+    // const matchesStatus = statusFilter === 'all' ||
+    //   (statusFilter === 'paid' && transaction.paidAmount >= transaction.totalAmount) ||
+    //   (statusFilter === 'unpaid' && transaction.paidAmount === 0) ||
+    //   (statusFilter === 'partial' && transaction.paidAmount > 0 && transaction.paidAmount < transaction.totalAmount);
 
-    return matchesSearch && matchesDate && matchesStatus;
+    return matchesSearch && matchesDate ;
   });
+  
+    console.log(filteredTransactions, "filteredTransactionsss");
 
   const viewReceipt = (transaction) => {
     setSelectedTransaction(transaction);
@@ -139,15 +158,15 @@ const History = () => {
   const exportToExcel = () => {
     const ws = XLSX.utils.json_to_sheet(
       filteredTransactions.map((t) => ({
-        Invoice: t.invoiceNumber,
-        Date: new Date(t.createdAt).toLocaleDateString(),
-        Time: new Date(t.createdAt).toLocaleTimeString(),
-        Customer: t.customer?.name || "N/A",
-        Total: t.grandTotal,
-        Paid: t.paidAmount,
-        Due: t.dueAmount,
-        Payment: t.paymentMethod,
-        Status: t.paymentStatus,
+        Invoice: t.lastInvoice,
+        Date: new Date(t.lastPurchaseDate).toLocaleDateString(),
+        Time: new Date(t.lastPurchaseDate).toLocaleTimeString(),
+        Customer: t.customerName || "N/A",
+        Total: t.totalAmount,
+        Paid: t.totalPaid,
+        Due: t.totalDue,
+        // Payment: t.paymentMethod,
+        // Status: t.paymentStatus,
       }))
     );
 
@@ -179,7 +198,7 @@ const History = () => {
             <div className="text-2xl font-bold text-green-600">
               Rs.
               {transactions
-                .reduce((sum, txn) => sum + txn.grandTotal, 0)
+                .reduce((sum, txn) => sum + txn.totalAmount, 0)
                 .toLocaleString()}
             </div>
           </div>
@@ -188,7 +207,7 @@ const History = () => {
             <div className="text-2xl font-bold text-blue-600">
               Rs.
               {transactions
-                .reduce((sum, txn) => sum + txn.paidAmount, 0)
+                .reduce((sum, txn) => sum + txn.totalPaid, 0)
                 .toLocaleString()}
             </div>
           </div>
@@ -197,10 +216,7 @@ const History = () => {
             <div className="text-2xl font-bold text-red-600">
               Rs.
               {transactions
-                .reduce(
-                  (sum, txn) => sum + (txn.totalAmount - txn.paidAmount),
-                  0
-                )
+                .reduce((sum, txn) => sum + txn.totalDue, 0)
                 .toLocaleString()}
             </div>
           </div>
@@ -281,7 +297,7 @@ const History = () => {
               )}
             </div>
 
-            <Select
+            {/* <Select
               placeholder="Status Filter"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -300,7 +316,7 @@ const History = () => {
               <SelectItem key="partial" value="partial">
                 Partial
               </SelectItem>
-            </Select>
+            </Select> */}
           </div>
         </CardBody>
       </Card>
@@ -317,12 +333,12 @@ const History = () => {
             <TableColumn>DATE & TIME</TableColumn>
             <TableColumn>CUSTOMER</TableColumn>
             <TableColumn>ITEMS</TableColumn>
-            <TableColumn>SUBTOTAL</TableColumn>
+            {/* <TableColumn>SUBTOTAL</TableColumn> */}
             <TableColumn>TOTAL</TableColumn>
             <TableColumn>DUE AMOUNT</TableColumn>
             <TableColumn>PAID AMOUNT</TableColumn>
-            <TableColumn>PAYMENT</TableColumn>
-            <TableColumn>STATUS</TableColumn>
+            {/* <TableColumn>PAYMENT</TableColumn>
+            <TableColumn>STATUS</TableColumn> */}
             <TableColumn>ACTIONS</TableColumn>
           </TableHeader>
           <TableBody
@@ -339,23 +355,23 @@ const History = () => {
             }
           >
             {filteredTransactions.map((transaction, index) => (
-              <TableRow key={transaction.invoiceNumber}>
+              <TableRow key={transaction.lastInvoice}>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell className="font-mono font-semibold">
-                  {transaction.invoiceNumber}
+                  {transaction.lastInvoice}
                 </TableCell>
                 <TableCell>
                   <div>
                     <div>
-                      {new Date(transaction.createdAt).toLocaleString()}
+                      {new Date(transaction.lastPurchaseDate).toLocaleString()}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    {/* <div className="text-sm text-gray-500">
                       {transaction.time}
-                    </div>
+                    </div> */}
                   </div>
                 </TableCell>
-                <TableCell>{transaction.customer?.name}</TableCell>
-                <TableCell>
+                <TableCell>{transaction?.customerName}</TableCell>
+                {/* <TableCell>
                   <div className="text-sm">
                     {transaction?.items?.length} item(s)
                     <div className="text-xs text-gray-500">
@@ -364,21 +380,24 @@ const History = () => {
                         ` +${transaction?.items?.length - 1} more`}
                     </div>
                   </div>
+                </TableCell> */}
+                <TableCell className="font-semibold">
+                  {transaction.totalSales}
                 </TableCell>
                 <TableCell className="font-semibold">
                   Rs. {transaction.totalAmount}
                 </TableCell>
-                <TableCell className="font-semibold">
+                {/* <TableCell className="font-semibold">
                   Rs. {transaction.grandTotal}
+                </TableCell> */}
+                <TableCell className="font-semibold">
+                  Rs. {transaction.totalDue}
                 </TableCell>
                 <TableCell className="font-semibold">
-                  Rs. {transaction.dueAmount}
-                </TableCell>
-                <TableCell className="font-semibold">
-                  Rs. {transaction.paidAmount}
+                  Rs. {transaction.totalPaid}
                 </TableCell>
 
-                <TableCell>
+                {/* <TableCell>
                   <Chip size="sm" variant="flat">
                     {transaction.paymentMethod}
                   </Chip>
@@ -396,7 +415,7 @@ const History = () => {
                   >
                     {transaction.paymentStatus}
                   </Chip>
-                </TableCell>
+                </TableCell> */}
 
                 <TableCell>
                   <div className="flex gap-2">
