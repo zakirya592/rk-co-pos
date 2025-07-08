@@ -125,7 +125,16 @@ const UpdateProductForm = () => {
     }
   };
 
-  if (!product) return <div>Loading...</div>;
+  if (!product) return (
+    <>
+      <div className="flex items-center justify-center h-[50vh]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4">Loading Product data ...</p>
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <div className="p-2 sm:p-2 md:p-6 space-y-6">
