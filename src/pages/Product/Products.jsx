@@ -490,7 +490,7 @@ const Products = () => {
 
               <TableCell>
                 <div className="flex gap-2">
-                  <Tooltip content="View Product" placement="top">
+                  {/* <Tooltip content="View Product" placement="top">
                     <Button
                       isIconOnly
                       size="sm"
@@ -500,7 +500,7 @@ const Products = () => {
                     >
                       <FaEye />
                     </Button>
-                  </Tooltip>
+                  </Tooltip> */}
 
                   <Tooltip content="Edit Product" placement="top">
                     <Button
