@@ -27,9 +27,9 @@ const Sidebar = ({ currentPage, onPageChange, isCollapsed, onToggleCollapse }) =
     { id: "user", label: "User", icon: FaUser },
     { id: "pos", label: "Sales", icon: FaShoppingCart },
     { id: "customers", label: "Customers", icon: FaUsers },
-    { id: "reports", label: "Reports", icon: FaChartBar },
+    // { id: "reports", label: "Reports", icon: FaChartBar },
     { id: "history", label: "History", icon: FaHistory },
-    { id: "settings", label: "Settings", icon: FaCog },
+    // { id: "settings", label: "Settings", icon: FaCog },
   ];
 
   return (
