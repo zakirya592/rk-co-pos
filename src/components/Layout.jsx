@@ -17,6 +17,7 @@ import Suppliers from '../pages/Suppliers/Suppliers';
 import AddSupplier from '../pages/Suppliers/AddSupplier';
 import UpdateSupplier from '../pages/Suppliers/UpdateSupplier';
 import CustomerHistory from '../pages/History/CustomerHistory';
+import Navigation from './Navigation/Navigation';
 const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const location = useLocation();
@@ -27,14 +28,15 @@ const Layout = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar
+      {/* <Sidebar
         currentPage={currentPage}
         onPageChange={(page) => navigate(`/${page}`)}
         isCollapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-      />
+      /> */}
       <div className="flex-1 overflow-auto">
         <Routes>
+          <Route path="/Navigation" element={<Navigation />} />
           <Route path="/products" element={<Products />} />
           <Route path="/products/Add" element={<AddProductForm />} />
           <Route path="/products/update/:id" element={<UpdateProductForm />} />

@@ -21,7 +21,7 @@ const Login = () => {
     const success = await login(email, password);
     setLoading(false);
     if (success) {
-      navigator("/products");
+      navigator("/Navigation");
     } else {
       setError("Invalid email or password");
     }
@@ -38,7 +38,7 @@ const Login = () => {
               </div>
             </div>
             <h1 className="text-3xl font-bold text-gray-800 mb-2">RK & Co</h1>
-            <p className="text-gray-600">Point of Sales System</p>
+            {/* <p className="text-gray-600">Point of Sales System</p> */}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
