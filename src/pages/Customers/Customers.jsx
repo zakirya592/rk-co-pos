@@ -18,8 +18,7 @@ import { FaPlus, FaSearch, FaEdit, FaTrash, FaEye,  FaPhone, } from 'react-icons
 import { useQuery } from 'react-query';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
-import AddCustomer from './AddCustomer';
-import UpdateCustomer from './UpdateCustomer';
+import { Link, useNavigate } from 'react-router-dom';
 import CustomerDetails from './CustomerDetails';
 import userRequest from '../../utils/userRequest';
 
@@ -31,10 +30,9 @@ const fetchCustomers = async (search = '', page = 1) => {
 const Customers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const navigate = useNavigate();
 
   const {
     data: customersData = [],
@@ -117,7 +115,7 @@ const Customers = () => {
         <Button
           className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold mt-3 sm:mt-3 md:mt-0 lg:mt-0"
           startContent={<FaPlus />}
-          onPress={() => setShowAddModal(true)}
+          onPress={() => navigate("/customers/add")}
         >
           Add Customer
         </Button>
@@ -165,9 +163,7 @@ const Customers = () => {
             >
               {customers.map((customer, index) => (
                 <TableRow key={customer._id}>
-                  <TableCell>
-                    {index + 1}
-                  </TableCell>
+                  <TableCell>{index + 1}</TableCell>
                   <TableCell>
                     <div>
                       <div className="font-semibold">{customer.name}</div>
@@ -230,10 +226,7 @@ const Customers = () => {
                         size="sm"
                         variant="light"
                         color="warning"
-                        onPress={() => {
-                          setSelectedCustomer(customer);
-                          setShowEditModal(true);
-                        }}
+                        onPress={() => navigate(`/customers/edit/${customer._id}`)}
                       >
                         <FaEdit />
                       </Button>
@@ -254,19 +247,6 @@ const Customers = () => {
           </Table>
         </CardBody>
       </Card>
-
-      {/* Customer Form Modals */}
-      <AddCustomer
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        refetch={refetch}
-      />
-      <UpdateCustomer
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        onSubmit={refetch}
-        customer={selectedCustomer}
-      />
 
       {/* Customer Details Modal */}
       <CustomerDetails

@@ -18,6 +18,8 @@ import AddSupplier from '../pages/Suppliers/AddSupplier';
 import UpdateSupplier from '../pages/Suppliers/UpdateSupplier';
 import CustomerHistory from '../pages/History/CustomerHistory';
 import Navigation from './Navigation/Navigation';
+import AddCustomerPage from '../pages/Customers/AddCustomerPage';
+import UpdateCustomerPage from '../pages/Customers/UpdateCustomerPage';
 const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const location = useLocation();
@@ -52,6 +54,8 @@ const Layout = () => {
           <Route path="/history" element={<History />} />
           <Route path="/customers/:id" element={<CustomerHistory />} />
           <Route path="/customers" element={<Customers />} />
+          <Route path="/customers/add" element={<AddCustomerPage />} />
+          <Route path="/customers/edit/:id" element={<UpdateCustomerPage />} />
           <Route path="/settings" element={<Settings />} />
           {/* <Route path="*" element={<Products />} /> */}
         </Routes>

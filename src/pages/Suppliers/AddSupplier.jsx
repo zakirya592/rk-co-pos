@@ -58,14 +58,32 @@ const AddSupplier = () => {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <Button
+        {/* <Button
           variant="flat"
           startContent={<FaArrowLeft />}
-          onClick={() => navigate("/suppliers")}
+          onPress={() => navigate("/suppliers")}
         >
           Back
-        </Button>
+        </Button> */}
         <h1 className="text-2xl font-bold">Add New Supplier</h1>
+        <div className="flex justify-end gap-4">
+          <Button
+            variant="flat"
+            startContent={<FaArrowLeft />}
+            onPress={() => navigate("/suppliers")}
+            isDisabled={loading}
+          >
+            Back
+          </Button>
+          <Button
+            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+            onPress={handleAdd}
+            isDisabled={loading}
+            startContent={loading ? <Spinner /> : <FaSave />}
+          >
+            {loading ? "Saving..." : "Save"}
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -74,7 +92,7 @@ const AddSupplier = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mt-4">
               <Input
                 label="Name"
-                labelPlacement='outside'
+                labelPlacement="outside"
                 placeholder="Enter supplier name"
                 value={newSupplier.name}
                 onChange={(e) =>
@@ -155,7 +173,9 @@ const AddSupplier = () => {
                       <button
                         type="button"
                         className="absolute top-1 right-1 bg-white bg-opacity-80 rounded-full p-1 shadow hover:bg-red-100 transition-colors"
-                        onClick={() => setNewSupplier({ ...newSupplier, image: null })}
+                        onClick={() =>
+                          setNewSupplier({ ...newSupplier, image: null })
+                        }
                         title="Remove image"
                       >
                         <FaTrash className="text-red-500" />
@@ -164,24 +184,6 @@ const AddSupplier = () => {
                   )}
                 </div>
               </div>
-            </div>
-
-            <div className="flex justify-end gap-4">
-              <Button
-                variant="flat"
-                onClick={() => navigate("/suppliers")}
-                isDisabled={loading}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white"
-                onClick={handleAdd}
-                isDisabled={loading}
-                startContent={loading ? <Spinner /> : <FaSave />}
-              >
-                {loading ? "Saving..." : "Save"}
-              </Button>
             </div>
           </div>
         </CardBody>

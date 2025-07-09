@@ -74,14 +74,26 @@ const UpdateSupplier = () => {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <Button
-          variant="flat"
-          startContent={<FaArrowLeft />}
-          onClick={() => navigate("/suppliers")}
-        >
-          Back
-        </Button>
+       
         <h1 className="text-2xl font-bold">Update Supplier</h1>
+        <div className="flex justify-end gap-4">
+          <Button
+            variant="flat"
+            startContent={<FaArrowLeft />}
+            onPress={() => navigate("/suppliers")}
+            isDisabled={loading}
+          >
+            Back
+          </Button>
+          <Button
+            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+            onPress={handleUpdate}
+            isDisabled={loading}
+            startContent={loading ? <Spinner /> : <FaSave />}
+          >
+            {loading ? "Saving..." : "Save"}
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -175,24 +187,6 @@ const UpdateSupplier = () => {
                   )}
                 </div>
               </div>
-            </div>
-
-            <div className="flex justify-end gap-4">
-              <Button
-                variant="flat"
-                onClick={() => navigate("/suppliers")}
-                isDisabled={loading}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white"
-                onClick={handleUpdate}
-                isDisabled={loading}
-                startContent={loading ? <Spinner /> : <FaSave />}
-              >
-                {loading ? "Saving..." : "Save"}
-              </Button>
             </div>
           </div>
         </CardBody>
