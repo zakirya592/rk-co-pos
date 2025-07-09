@@ -9,17 +9,13 @@ import {
   Tab,
   Button,
   Chip,
-  Table,
-  TableHeader,
-  TableColumn,
-  TableRow,
-  TableBody,
-  TableCell
 } from '@nextui-org/react';
 import userRequest from '../../utils/userRequest';
+import { useNavigate } from 'react-router-dom';
 
 const CustomerDetails = ({ isOpen, onClose, customer }) => {
 
+   const navigator = useNavigate();
    const [purchaseHistorys, setPurchaseHistory] = useState({ data: [] });
    const [loading, setLoading] = useState(true);
 
@@ -42,12 +38,12 @@ const CustomerDetails = ({ isOpen, onClose, customer }) => {
      }
    }, [customer]);
 
-   const { customerInfo, summary, data: transactions } = purchaseHistorys || {}; // Add null check
-
-   console.log(purchaseHistorys);
-   
-  
-  
+   const { customerInfo, summary, data: transactions } = purchaseHistorys || {}; // Add null check   
+  const details = (customer) => {
+    console.log(customer?._id);
+    onClose()
+    navigator(`/customers/${customer?._id}`);
+  };
   return (
     <Modal
       isOpen={isOpen}
@@ -96,6 +92,14 @@ const CustomerDetails = ({ isOpen, onClose, customer }) => {
                     </div>
                   </div>
                 </div>
+              </Tab>
+              <Tab key="history" title="Purchase History">
+                <Button
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2"
+                  onPress={() => details(customer)}
+                >
+                  <span className="font-medium">Detail</span>
+                </Button>
               </Tab>
               {/* <Tab key="history" title="Purchase History">
                 <div className="space-y-4">

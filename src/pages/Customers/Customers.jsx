@@ -12,19 +12,21 @@ import {
   TableRow,
   TableCell,
   Chip,
-  Spinner
+  Spinner,
+  Tooltip
 } from '@nextui-org/react';
-import { FaPlus, FaSearch, FaEdit, FaTrash, FaEye,  FaPhone, } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaEdit, FaTrash, FaEye, FaPhone, } from 'react-icons/fa';
 import { useQuery } from 'react-query';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import { Link, useNavigate } from 'react-router-dom';
 import CustomerDetails from './CustomerDetails';
 import userRequest from '../../utils/userRequest';
+import { TbListDetails } from 'react-icons/tb';
 
 const fetchCustomers = async (search = '', page = 1) => {
-    const res = await userRequest.get(`/customers?search=${search}&page=${page}`);
-    return res.data;
+  const res = await userRequest.get(`/customers?search=${search}&page=${page}`);
+  return res.data;
 };
 
 const Customers = () => {
@@ -45,32 +47,32 @@ const Customers = () => {
   const customers = customersData?.data || [];
   const totalPages = customersData?.totalPages || 1;
 
-  
 
-    const handleDeleteCustomer = (Customer) => {
-      Swal.fire({
-        title: "Are you sure?",
-        text: `You will not be able to recover this ${Customer?.name || ""}`,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#d33",
-        cancelButtonColor: "#3085d6",
-        confirmButtonText: "Yes, delete it!",
-        cancelButtonText: "No, cancel!",
-      }).then(async (result) => {
-        if (result.isConfirmed) {
-          try {
-            await userRequest.delete(`/customers/${Customer?._id || ""}`);
-            toast.success("The Customer has been deleted.");
-            refetch();
-          } catch (error) {
-            toast.error(
-              error?.response?.data?.message || "Failed to delete the Customer."
-            );
-          }
+
+  const handleDeleteCustomer = (Customer) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: `You will not be able to recover this ${Customer?.name || ""}`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "No, cancel!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await userRequest.delete(`/customers/${Customer?._id || ""}`);
+          toast.success("The Customer has been deleted.");
+          refetch();
+        } catch (error) {
+          toast.error(
+            error?.response?.data?.message || "Failed to delete the Customer."
+          );
         }
-      });
-    };
+      }
+    });
+  };
 
   const viewCustomerDetails = (customer) => {
     setSelectedCustomer(customer);
@@ -212,7 +214,7 @@ const Customers = () => {
                   </TableCell> */}
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button
+                      {/* <Button
                         isIconOnly
                         size="sm"
                         variant="light"
@@ -220,16 +222,32 @@ const Customers = () => {
                         onPress={() => viewCustomerDetails(customer)}
                       >
                         <FaEye />
-                      </Button>
+                      </Button> */}
+                      <Tooltip content="View Details">
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="light"
+                          color="primary"
+                          onPress={() => navigate(`/customers/${customer._id}`)}
+                        >
+                          <TbListDetails />
+                        </Button>
+                      </Tooltip>
+                      <Tooltip content="Edit">
                       <Button
                         isIconOnly
                         size="sm"
                         variant="light"
                         color="warning"
-                        onPress={() => navigate(`/customers/edit/${customer._id}`)}
+                        onPress={() =>
+                          navigate(`/customers/edit/${customer._id}`)
+                        }
                       >
                         <FaEdit />
                       </Button>
+                      </Tooltip>
+                      <Tooltip content="Delete">
                       <Button
                         isIconOnly
                         size="sm"
@@ -239,6 +257,7 @@ const Customers = () => {
                       >
                         <FaTrash />
                       </Button>
+                      </Tooltip>
                     </div>
                   </TableCell>
                 </TableRow>
