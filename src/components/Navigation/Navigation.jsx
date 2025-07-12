@@ -72,6 +72,13 @@ const cardData = [
     desc: "Sale History",
     color: "red",
   },
+  {
+    to: "/reports",
+    icon: <FaChartBar />,
+    title: "Reports",
+    desc: "Sale Reports",
+    color: "red",
+  },
 ];
 
 const Navigation = () => {

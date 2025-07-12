@@ -3,7 +3,6 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Products from '../pages/Product/Products';
 import Categories from '../pages/Categories/Categories';
-import Reports from './Reports';
 import History from '../pages/History/History';
 import POS from '../pages/POS/POS';
 import Customers from '../pages/Customers/Customers';
@@ -20,6 +19,7 @@ import CustomerHistory from '../pages/History/CustomerHistory';
 import Navigation from './Navigation/Navigation';
 import AddCustomerPage from '../pages/Customers/AddCustomerPage';
 import UpdateCustomerPage from '../pages/Customers/UpdateCustomerPage';
+import Reports from '../pages/Reports/Reports';
 const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const location = useLocation();
