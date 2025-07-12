@@ -162,8 +162,8 @@ const History = () => {
         Time: new Date(t.lastPurchaseDate).toLocaleTimeString(),
         Customer: t.customerName || "N/A",
         Total: t.totalAmount,
-        Paid: t.totalPaid,
-        Due: t.totalDue,
+        // Paid: t.totalPaid,
+        // Due: t.totalDue,
         // Payment: t.paymentMethod,
         // Status: t.paymentStatus,
       }))
@@ -201,7 +201,7 @@ const History = () => {
                 .toLocaleString()}
             </div>
           </div>
-          <div className="ms-3 text-start">
+          {/* <div className="ms-3 text-start">
             <div className="text-sm text-gray-600">Total Paid</div>
             <div className="text-2xl font-bold text-blue-600">
               Rs.
@@ -209,16 +209,16 @@ const History = () => {
                 .reduce((sum, txn) => sum + txn.totalPaid, 0)
                 .toLocaleString()}
             </div>
-          </div>
-          <div className="ms-3 text-start">
+          </div> */}
+
+          {/* <div className="ms-3 text-start">
             <div className="text-sm text-gray-600">Total Due</div>
             <div className="text-2xl font-bold text-red-600">
               Rs.
-              {transactions
-                .reduce((sum, txn) => sum + txn.totalDue, 0)
-                .toLocaleString()}
-            </div>
-          </div>
+              {transactions.reduce((sum, txn) => sum + txn.totalDue, 0).toLocaleString()}
+            </div> */}
+          {/* </div> */}
+
         </div>
       </div>
 
@@ -334,8 +334,8 @@ const History = () => {
             <TableColumn>ITEMS</TableColumn>
             {/* <TableColumn>SUBTOTAL</TableColumn> */}
             <TableColumn>TOTAL</TableColumn>
-            <TableColumn>DUE AMOUNT</TableColumn>
-            <TableColumn>PAID AMOUNT</TableColumn>
+            {/* <TableColumn>DUE AMOUNT</TableColumn>
+            <TableColumn>PAID AMOUNT</TableColumn> */}
             {/* <TableColumn>PAYMENT</TableColumn>
             <TableColumn>STATUS</TableColumn> */}
             <TableColumn>ACTIONS</TableColumn>
@@ -389,12 +389,12 @@ const History = () => {
                 {/* <TableCell className="font-semibold">
                   Rs. {transaction.grandTotal}
                 </TableCell> */}
-                <TableCell className="font-semibold">
+                {/* <TableCell className="font-semibold">
                   Rs. {transaction.totalDue}
                 </TableCell>
                 <TableCell className="font-semibold">
                   Rs. {transaction.totalPaid}
-                </TableCell>
+                </TableCell> */}
 
                 {/* <TableCell>
                   <Chip size="sm" variant="flat">

@@ -8,6 +8,7 @@ import {
   viewPdfInNewTab,
 } from "../../utils/exportUtils";
 import userRequest from "../../utils/userRequest";
+import SalesReport from "../../components/SalesReport";
 
 const Reports = () => {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ const Reports = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [showProducts, setShowProducts] = useState(false);
+  const [salesView, setSalesView] = useState(null);
 
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({
@@ -114,6 +116,10 @@ const Reports = () => {
               variant="flat"
               color="primary"
               className="ms-10 mt-3 w-36"
+              onClick={() => {
+                setShowProducts(false);
+                setSalesView('month');
+              }}
             >
               Sales By Month
             </Button>
@@ -121,6 +127,10 @@ const Reports = () => {
               variant="flat"
               color="primary"
               className="ms-10 mt-3 w-36"
+              onClick={() => {
+                setShowProducts(false);
+                setSalesView('year');
+              }}
             >
               Sales By Year
             </Button>
@@ -128,6 +138,10 @@ const Reports = () => {
               variant="flat"
               color="primary"
               className="ms-10 mt-3  w-36"
+              onClick={() => {
+                setShowProducts(false);
+                setSalesView('day');
+              }}
             >
               Sales By Day
             </Button>
@@ -167,7 +181,12 @@ const Reports = () => {
           </div>
         </div>
 
-        <Card className="bg-white p-5 rounded mb-5 shadow-sm">
+        
+
+        <div className="bg-white p-5 rounded shadow-sm">
+          {showProducts ? (
+            <>
+            <Card className="bg-white p-5 rounded mb-5 shadow-sm">
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             <div>
               <label className="block mb-1 text-sm text-gray-600">Search</label>
@@ -178,10 +197,6 @@ const Reports = () => {
             </div>
           </div>
         </Card>
-
-        <div className="bg-white p-5 rounded shadow-sm">
-          {showProducts ? (
-            <>
               {loading ? (
                 <div className="flex items-center justify-center h-64">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
@@ -240,9 +255,55 @@ const Reports = () => {
               )}
             </>
           ) : (
-            <div className="flex items-center justify-center h-64">
-              <p className="text-gray-500">Click view report</p>
-            </div>
+            <>
+              {salesView ? (
+                <SalesReport />
+              ) : (
+                showProducts ? (
+                  <>
+                    {loading ? (
+                      <div className="flex items-center justify-center h-64">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                      </div>
+                    ) : (
+                      <>
+                        <Table aria-label="Products Report" className="min-w-full">
+                          <TableHeader>
+                            <TableColumn>Product Name</TableColumn>
+                            <TableColumn>Category</TableColumn>
+                            <TableColumn>Quantity</TableColumn>
+                            <TableColumn>Price</TableColumn>
+                            <TableColumn>Sale Rate</TableColumn>
+                            <TableColumn>Available Quantity</TableColumn>
+                            <TableColumn>Additional Unit</TableColumn>
+                            <TableColumn>Packing Unit</TableColumn>
+                          </TableHeader>
+                          <TableBody>
+                            {products.map((product) => (
+                              <TableRow key={product.id}>
+                                <TableCell>{product.name}</TableCell>
+                                <TableCell>{product.category?.name || "-"}</TableCell>
+                                <TableCell>{product.countInStock}</TableCell>
+                                <TableCell>{product.price}</TableCell>
+                                <TableCell>{product.saleRate}</TableCell>
+                                <TableCell>{product.availableQuantity}</TableCell>
+                                <TableCell>{product.additionalUnit}</TableCell>
+                                <TableCell>{product.packingUnit}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                       
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex items-center justify-center h-64">
+                    <p className="text-gray-500">Click view report</p>
+                  </div>
+                )
+              )}
+            </>
           )}
         </div>
       </div>

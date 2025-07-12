@@ -30,8 +30,8 @@ const fetchProducts = async (key, searchTerm, currentPage) => {
 };
 
 const fetchCustomers = async (search = '', page = 1) => {
-    const res = await userRequest.get(`/customers?search=${search}&page=${page}`);
-    return res.data;
+  const res = await userRequest.get(`/customers?search=${search}&page=${page}`);
+  return res.data;
 };
 
 const POS = () => {
@@ -41,6 +41,7 @@ const POS = () => {
   const [saleDataadd, setSaleDataadd] = useState({
     note: "",
     description: "",
+    currency: "",
   });
   // Fetch customers using react-query
   const { data: customerData, isLoading: customersLoading } = useQuery(
@@ -78,7 +79,7 @@ const POS = () => {
   const totalProducts = data?.total || 0;
 
   const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) 
+    product.name.toLowerCase().includes(searchTerm.toLowerCase())
     // ||
     // product.barcode.includes(searchTerm)
   );
@@ -89,8 +90,8 @@ const POS = () => {
       selectedCustomer.customerType === "wholesale"
         ? product.wholesalePrice ?? product.wholesaleRate
         : selectedCustomer.customerType === "retail"
-        ? product.retailRate ?? product.retailRate
-        : product.price;
+          ? product.retailRate ?? product.retailRate
+          : product.price;
 
     const existingItem = cart.find(item => item._id === product._id);
 
@@ -148,6 +149,24 @@ const POS = () => {
     setTotalPaid(updated.reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0));
   };
 
+  const handleSalepaymets = () => {
+    try {
+      userRequest.post("/payments/customer", {
+        customerId: selectedCustomer?._id,
+        amount: totalPaid,
+        paymentMethod: paymentMethods[0]?.method || "cash",
+        status:
+          totalPaid === total ? "completed" : totalPaid > 0 ? "partial" : "pending",
+        currency: saleDataadd.currency,
+        notes: saleDataadd.description,
+        distributionStrategy: "oldest-first",
+      });
+      toast.success("Sale completed successfully!");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || error.message || "Failed to add customer.");
+    }
+  };
+
   const completeSale = async () => {
     try {
       const saleData = {
@@ -163,24 +182,25 @@ const POS = () => {
         tax: directDiscountAmount,
         grandTotal: total,
         discount: discountAmount,
-        paymentMethod: paymentMethods[0]?.method || "cash",
-        paymentStatus:totalPaid === total ? "paid" : totalPaid > 0 ? "partial" : "unpaid",
-        paidAmount: totalPaid,
-        notes: saleDataadd.description,
+        // paymentMethod: paymentMethods[0]?.method || "cash",
+        // paymentStatus: totalPaid === total ? "paid" : totalPaid > 0 ? "partial" : "unpaid",
+        // paidAmount: totalPaid,
+        // notes: saleDataadd.description,
         // subtotal: subtotal,
       };
 
       const response = await userRequest.post('/sales', saleData);
 
-     setCart([]);
+       // Call handleSalepaymets after successful sale
+      await handleSalepaymets();
+
+      setCart([]);
       setDiscount(0);
       setPaymentMethods([]);
       setTotalPaid(0);
       setShowPaymentModal(false);
-      toast.success("Sale completed successfully!");
       console.log(response.data);
-      } catch (error) {
-      console.log(error,'erroe');
+    } catch (error) {
       toast.error(error?.response?.data?.message || error.message || "Failed to complete sale. Please try again.");
     }
   };
@@ -263,8 +283,8 @@ const POS = () => {
                               product.countInStock <= 5
                                 ? "danger"
                                 : product.countInStock <= 10
-                                ? "warning"
-                                : "success"
+                                  ? "warning"
+                                  : "success"
                             }
                           >
                             {product.countInStock}
@@ -418,7 +438,7 @@ const POS = () => {
                       <span> {total}</span>
                     </div>
                   </div>
-                  
+
 
                   <Button
                     color="success"

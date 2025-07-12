@@ -29,6 +29,7 @@ import userRequest from '../../utils/userRequest';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import UpdateSaleModal from './UpdateSaleModal';
+import Updatepayment from './Updatepayment';
 
 const CustomerHistory = () => {
 
@@ -36,7 +37,9 @@ const CustomerHistory = () => {
   const [customerData, setCustomerData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [showUpdatepaymentModal, setshowUpdatepaymentModal] = useState(false);
   const [selectedSale, setSelectedSale] = useState(null);
+  const [selectedPayment, setSelectedPayment] = useState(null);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [Dueamout, setDueamout] = useState(0);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
@@ -53,6 +56,10 @@ const CustomerHistory = () => {
     setSelectedSale(sale);
     setShowUpdateModal(true);
   };
+    const handleshowUpdatepaymentModal = (payment) => {
+      setSelectedPayment(payment);
+      setshowUpdatepaymentModal(true);
+    };
 
 
   const fetchCustomerHistory = async () => {
@@ -63,21 +70,38 @@ const CustomerHistory = () => {
       setTotalRevenue(total);
       const due = response.data?.data?.reduce((sum, transaction) => sum + (transaction.dueAmount || 0), 0) || 0;
       setDueamout(due);
-      setTotalSales(response.data?.totalSales || 0);
+      // setTotalSales(response.data?.totalSales || 0);
       const totalSalesAmount = response.data?.data?.reduce((sum, transaction) => sum + (transaction.grandTotal || 0), 0) || 0;
       setGrandTotal(totalSalesAmount);
-
-
-
     } catch (error) {
       console.error('Error fetching customer history:', error);
     } finally {
       setLoading(false);
     }
   };
+
+
+   const fetchCustomerPaymentHistory = async () => {
+    try {
+      const response = await userRequest.get(`/payments/customer/${id}/journey`);
+      const datas = response?.data?.data || "";
+      setTotalSales(datas);
+      console.log(datas);
+    } catch (error) {
+      console.error('Error fetching customer history:', error);
+    } 
+  };
+
+  const fetchbothgetapi=()=>{
+    fetchCustomerHistory();
+    fetchCustomerPaymentHistory();
+  }
+
+
   useEffect(() => {
     if (id) {
       fetchCustomerHistory();
+      fetchCustomerPaymentHistory()
     }
   }, [id]);
 
@@ -115,6 +139,7 @@ const CustomerHistory = () => {
         try {
           await userRequest.delete(`/sales/${transaction?._id}`);
           fetchCustomerHistory();
+          fetchCustomerPaymentHistory();
           toast.success("The customer has been deleted.");
         } catch (error) {
           toast.error(error?.response?.data?.message || "Failed to delete the customer.");
@@ -208,12 +233,12 @@ const CustomerHistory = () => {
         <div class="summary">
           <h3>Summary</h3>
            <div class="topprint">
-          <div><strong>Total Item Sales:</strong> ${totalSales}</div>
+          <div><strong>Total Item Sales:</strong> ${totalSales?.summary?.totalSales || "0"}</div>
           <div><strong>Total Sales Amount:</strong> ${grandTotal.toFixed(2)}</div>
           </div>
           <div class="topprint">
-          <div><strong>Total Paid:</strong> ${totalRevenue.toFixed(2)}</div>
-          <div><strong>Due Amount:</strong> ${Dueamout.toFixed(2)}</div>
+          <div><strong>Total Paid:</strong> ${totalSales?.summary?.totalPaid || "0"}</div>
+          <div><strong>Due Amount:</strong> ${Math.max(totalSales?.summary?.currentOutstandingBalance || 0, 0)}</div>
           </div>
          
         </div>
@@ -317,9 +342,27 @@ const CustomerHistory = () => {
             <CardBody>
               <div className="flex flex-col items-center">
                 <FaShoppingCart className="text-4xl text-blue-500 mb-2" />
-                <p className="text-xl font-bold">{totalSales}</p>
+                <p className="text-xl font-bold">
+                  {totalSales?.summary?.totalSales || "0"}
+                </p>
                 <p color="$text" size="$sm">
-                  Total Sales
+                  Total Item Sales
+                </p>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+
+        <div>
+          <Card>
+            <CardBody>
+              <div className="flex flex-col items-center">
+                <FaMoneyBill className="text-4xl text-yellow-500 mb-2" />
+                <p className="text-xl font-bold">
+                  {totalSales?.summary?.totalInvoiced || "0"}
+                </p>
+                <p color="$text" size="$sm">
+                  Total Invoiced
                 </p>
               </div>
             </CardBody>
@@ -330,9 +373,11 @@ const CustomerHistory = () => {
             <CardBody>
               <div className="flex flex-col items-center">
                 <FaMoneyBill className="text-4xl text-green-500 mb-2" />
-                <p className="text-xl font-bold">{totalRevenue.toFixed(2)}</p>
+                <p className="text-xl font-bold">
+                  {totalSales?.summary?.totalPaid || "0"}
+                </p>
                 <p color="$text" size="$sm">
-                  Total Revenue
+                  Total Paid
                 </p>
               </div>
             </CardBody>
@@ -343,7 +388,12 @@ const CustomerHistory = () => {
             <CardBody>
               <div className="flex flex-col items-center">
                 <FaClock className="text-4xl text-red-500 mb-2" />
-                <p className="text-xl font-bold">{Dueamout.toFixed(2)}</p>
+                <p className="text-xl font-bold">
+                  {Math.max(
+                    totalSales?.summary?.currentOutstandingBalance || 0,
+                    0
+                  )}
+                </p>
                 <p color="$text" size="$sm">
                   Due Amount
                 </p>
@@ -355,22 +405,24 @@ const CustomerHistory = () => {
           <Card>
             <CardBody>
               <div className="flex flex-col items-center">
-                <FaChartLine className="text-4xl text-yellow-500 mb-2" />
-                <p className="text-xl font-bold">{summary.purchaseFrequency}</p>
+                <FaMoneyBill className="text-4xl text-orange-500 mb-2" />
+                <p className="text-xl font-bold">
+                  {totalSales?.summary?.totalAdvanceAmount || "0"}
+                </p>
                 <p color="$text" size="$sm">
-                  Purchase Frequency
+                  Total Advance Amount
                 </p>
               </div>
             </CardBody>
           </Card>
         </div>
-        <div>
+
+        {/* <div>
           <Card>
             <CardBody>
               <div className="flex flex-col items-center">
                 <FaClock className="text-4xl text-purple-500 mb-2" />
                 <p className="text-xl font-bold">
-                  {/* {summary.daysSinceLastPurchase} days */}
                   {new Date(
                     customerData?.data[0]?.createdAt
                   ).toLocaleDateString()}
@@ -381,7 +433,7 @@ const CustomerHistory = () => {
               </div>
             </CardBody>
           </Card>
-        </div>
+        </div> */}
       </div>
 
       {/* Transaction History */}
@@ -390,6 +442,13 @@ const CustomerHistory = () => {
           <div className="flex justify-between items-center w-full">
             <h3 className="text-lg font-bold">Purchase History</h3>
             <div className="flex flex-row gap-2">
+              <Button
+                color="primary"
+                variant="flat"
+                onPress={() => handleshowUpdatepaymentModal(totalSales)}
+              >
+                Payment
+              </Button>
               <Button
                 color="primary"
                 variant="flat"
@@ -411,10 +470,10 @@ const CustomerHistory = () => {
               <TableColumn>Date</TableColumn>
               <TableColumn>Items</TableColumn>
               <TableColumn>Total</TableColumn>
-              <TableColumn>Paid Amount</TableColumn>
-              <TableColumn>Due Amount</TableColumn>
+              {/* <TableColumn>Paid Amount</TableColumn>
+              <TableColumn>Due Amount</TableColumn> */}
               <TableColumn>Payment Status</TableColumn>
-              <TableColumn>Payment Method</TableColumn>
+              {/* <TableColumn>Payment Method</TableColumn> */}
               <TableColumn>Actions</TableColumn>
             </TableHeader>
             <TableBody>
@@ -436,8 +495,8 @@ const CustomerHistory = () => {
                     </div>
                   </TableCell>
                   <TableCell>{transaction?.grandTotal || ""}</TableCell>
-                  <TableCell>{transaction?.paidAmount || ""}</TableCell>
-                  <TableCell>{transaction?.dueAmount || ""}</TableCell>
+                  {/* <TableCell>{transaction?.paidAmount || ""}</TableCell> */}
+                  {/* <TableCell>{transaction?.dueAmount || ""}</TableCell> */}
                   <TableCell>
                     <Chip
                       size="sm"
@@ -452,7 +511,7 @@ const CustomerHistory = () => {
                       {transaction.paymentStatus}
                     </Chip>
                   </TableCell>
-                  <TableCell>{transaction.paymentMethod}</TableCell>
+                  {/* <TableCell>{transaction.paymentMethod}</TableCell> */}
                   <TableCell>
                     <Tooltip content="View Receipt">
                       <Button
@@ -465,7 +524,7 @@ const CustomerHistory = () => {
                         <FaPrint />
                       </Button>
                     </Tooltip>
-                    <Tooltip content="Update Sale">
+                    {/* <Tooltip content="Update Sale">
                       <Button
                         isIconOnly
                         size="sm"
@@ -475,7 +534,7 @@ const CustomerHistory = () => {
                       >
                         <FaEdit />
                       </Button>
-                    </Tooltip>
+                    </Tooltip> */}
                     <Tooltip content="Delete Customer" placement="top">
                       <Button
                         isIconOnly
@@ -623,6 +682,14 @@ const CustomerHistory = () => {
         saleId={selectedSale?._id}
         saleData={selectedSale}
         refetch={fetchCustomerHistory}
+      />
+
+      <Updatepayment
+        isOpen={showUpdatepaymentModal}
+        onClose={() => setshowUpdatepaymentModal(false)}
+        // saleId={selectedSale?._id}
+        selectedPayment={selectedPayment}
+        refetch={fetchbothgetapi}
       />
     </div>
   );
