@@ -49,6 +49,8 @@ const CustomerHistory = () => {
 
 
   const viewReceipt = (transaction) => {
+    console.log(transaction);
+    
     setSelectedTransaction(transaction);
     setShowReceiptModal(true);
   };
@@ -605,10 +607,10 @@ const CustomerHistory = () => {
                       <strong>Payment Status:</strong>{" "}
                       {selectedTransaction?.paymentStatus || "N/A"}
                     </p>
-                    <p>
+                    {/* <p>
                       <strong>Payment:</strong>{" "}
                       {selectedTransaction?.paymentMethod || "0"}
-                    </p>
+                    </p> */}
                   </div>
                 </div>
                 {/* Items */}
