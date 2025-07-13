@@ -30,6 +30,7 @@ import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import UpdateSaleModal from './UpdateSaleModal';
 import Updatepayment from './Updatepayment';
+import Transactionshistory from './Transactionshistory';
 
 const CustomerHistory = () => {
 
@@ -565,6 +566,8 @@ const CustomerHistory = () => {
           </Table>
         </CardBody>
       </Card>
+
+      <Transactionshistory />
 
       {/* Receipt Modal */}
       <Modal
