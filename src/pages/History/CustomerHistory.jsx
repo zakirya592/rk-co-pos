@@ -24,7 +24,7 @@ import {
 } from '@nextui-org/react';
 import * as XLSX from "xlsx";
 import { FaUser, FaShoppingCart, FaMoneyBill, FaChartLine, FaClock, FaPhone, FaMapMarkerAlt, FaPrint, FaTrash, FaEdit } from 'react-icons/fa';
-import { useParams } from 'react-router-dom';
+import { useParams ,useNavigate} from 'react-router-dom';
 import userRequest from '../../utils/userRequest';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
@@ -34,6 +34,7 @@ import Updatepayment from './Updatepayment';
 const CustomerHistory = () => {
 
   const { id } = useParams();
+  const navigate=useNavigate()
   const [customerData, setCustomerData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -119,7 +120,16 @@ const CustomerHistory = () => {
   }
 
   if (!customerData) {
-    return <div>No customer data available</div>;
+    return (
+      <div>
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="mb-4">No customer data available</div>
+            <Button onPress={() => navigate(-1)}>Back</Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const { customerInfo, summary, data: transactions } = customerData;
