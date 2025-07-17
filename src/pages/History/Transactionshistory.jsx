@@ -29,8 +29,9 @@ function Transactionshistory() {
                             <TableColumn>Date</TableColumn>
                             <TableColumn>Payment Method</TableColumn>
                             <TableColumn>Amount</TableColumn>
-                            <TableColumn>Status</TableColumn>
-                            <TableColumn>Balance After</TableColumn>
+                            {/* <TableColumn>Status</TableColumn>
+                            <TableColumn>Balance After</TableColumn> */}
+                            <TableColumn>Remaining Balance</TableColumn>
                             <TableColumn>Notes</TableColumn>
                         </TableHeader>
                         <TableBody  isLoading={isCategoriesLoading}
@@ -51,7 +52,7 @@ function Transactionshistory() {
                                     <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
                                     <TableCell>{transaction.paymentMethod}</TableCell>
                                     <TableCell>{transaction.amount}</TableCell>
-                                    <TableCell>
+                                    {/* <TableCell>
                                         <Chip
                                             size="sm"
                                             color={transaction.status === 'overdue' ? 'danger' : transaction.status === 'paid' ? 'success' : 'warning'}
@@ -60,7 +61,8 @@ function Transactionshistory() {
                                             {transaction.status}
                                         </Chip>
                                     </TableCell>
-                                    <TableCell>{transaction.balanceAfter}</TableCell>
+                                    <TableCell>{transaction.balanceAfter}</TableCell> */}
+                                    <TableCell>{transaction.remainingBalance}</TableCell>
                                     <TableCell>{transaction.notes}</TableCell>
                                 </TableRow>
                             ))}
