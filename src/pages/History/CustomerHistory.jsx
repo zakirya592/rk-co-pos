@@ -428,7 +428,8 @@ const CustomerHistory = () => {
               <div className="flex flex-col items-center">
                 <FaClock className="text-4xl text-red-500 mb-2" />
                 <p className="text-xl font-bold">
-                  {Math.max(totalRevenuetop?.totalOverdue || 0, 0)}
+                  {/* {Math.max(totalRevenuetop?.totalOverdue || 0, 0)} */}
+                  {Math.max(totalSales?.summary?.currentOutstandingBalance || 0, 0)}
                 </p>
                 <p color="$text" size="$sm">
                   Due Amount
