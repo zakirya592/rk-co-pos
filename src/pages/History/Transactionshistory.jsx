@@ -13,8 +13,7 @@ function Transactionshistory() {
       return res.data.data.transactions || [];
     };
 
-      const { data: transactionss = [], isLoading: isCategoriesLoading } =
-        useQuery(["customer-transactions"], fetchCategories);
+      const { data: transactionss = [], isLoading: isCategoriesLoading } = useQuery(["customer-transactions", id], fetchCategories);
 
 
     return (

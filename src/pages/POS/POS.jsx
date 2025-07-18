@@ -11,7 +11,7 @@ import {
 import { FaSearch, FaPlus, FaMinus, FaTrash, FaPrint, FaUser, FaPercent, FaCalculator } from 'react-icons/fa';
 import CustomerSelectionModal from './CustomerSelectionModal';
 import PaymentModal from "./PaymentModal";
-import { useQuery } from "react-query";// Adjust the import based on your file structure
+import { useQuery } from "react-query";
 import userRequest from '../../utils/userRequest';
 import toast from 'react-hot-toast';
 
@@ -283,8 +283,8 @@ const POS = () => {
                               product.countInStock <= 5
                                 ? "danger"
                                 : product.countInStock <= 10
-                                  ? "warning"
-                                  : "success"
+                                ? "warning"
+                                : "success"
                             }
                           >
                             {product.countInStock}
@@ -439,7 +439,6 @@ const POS = () => {
                     </div>
                   </div>
 
-
                   <Button
                     color="success"
                     size="lg"
@@ -477,6 +476,7 @@ const POS = () => {
         completeSale={completeSale}
         saleData={saleDataadd}
         updateSaleData={setSaleDataadd}
+        selectedCustomer={selectedCustomer}
       />
     </div>
   );

@@ -14,6 +14,8 @@ import {
 import { FaPlus } from "react-icons/fa";
 import userRequest from "../../utils/userRequest";
 import { useQuery } from "react-query";
+import Swal from "sweetalert2";
+import toast from "react-hot-toast";
 
 const PaymentModal = ({
   isOpen,
@@ -26,7 +28,10 @@ const PaymentModal = ({
   completeSale,
   saleData,
   updateSaleData,
+  selectedCustomer,
 }) => {
+  console.log(selectedCustomer, "selectedCustomer");
+
   const fetchCurrencies = async () => {
     const res = await userRequest.get("/currencies");
     return res.data.data || [];
@@ -35,6 +40,39 @@ const PaymentModal = ({
     ["currencies"],
     fetchCurrencies
   );
+
+  const handleAdvancePayment = async () => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: `You will apply advance payment for this ${
+        selectedCustomer?.name || ""
+      }`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, apply it!",
+      cancelButtonText: "No, cancel!",
+      customClass: {
+        container: "z-1000",
+      },
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await userRequest.post(`/payments/apply-customer-advance`, {
+            customerId: selectedCustomer?._id,
+          });
+          onClose()
+          toast.success("Advance payment applied successfully!");
+        } catch (error) {
+          toast.error(
+            error?.response?.data?.message || "Failed to apply advance payment."
+          );
+        }
+      }
+    });
+  };
+
   return (
     <>
       <Modal
@@ -48,7 +86,19 @@ const PaymentModal = ({
         className="max-h-[calc(100vh-1rem)]"
       >
         <ModalContent>
-          <ModalHeader>Payment Details</ModalHeader>
+          <ModalHeader>
+            <span className="flex items-center gap-2 me-4">
+              Payment Details
+            </span>
+            {/* <Button
+              color="primary"
+              variant="flat"
+              onPress={handleAdvancePayment}
+            >
+              Advance Payment
+            </Button> */}
+          </ModalHeader>
+
           <ModalBody>
             <div className="space-y-4">
               <div className="bg-gray-100 p-4 rounded">
@@ -190,6 +240,6 @@ const PaymentModal = ({
       </Modal>
     </>
   );
-}
+};
 
 export default PaymentModal;

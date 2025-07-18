@@ -24,56 +24,49 @@ import {
 } from '@nextui-org/react';
 import * as XLSX from "xlsx";
 import { FaUser, FaShoppingCart, FaMoneyBill, FaChartLine, FaClock, FaPhone, FaMapMarkerAlt, FaPrint, FaTrash, FaEdit } from 'react-icons/fa';
-import { useParams ,useNavigate} from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import userRequest from '../../utils/userRequest';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import UpdateSaleModal from './UpdateSaleModal';
 import Updatepayment from './Updatepayment';
 import Transactionshistory from './Transactionshistory';
+import { useQuery } from 'react-query';
 
 const CustomerHistory = () => {
 
   const { id } = useParams();
-  const navigate=useNavigate()
+  const navigate = useNavigate()
   const [customerData, setCustomerData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showUpdatepaymentModal, setshowUpdatepaymentModal] = useState(false);
   const [selectedSale, setSelectedSale] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState(null);
-  const [totalRevenue, setTotalRevenue] = useState(0);
-  const [Dueamout, setDueamout] = useState(0);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [totalSales, setTotalSales] = useState(0);
   const [grandTotal, setGrandTotal] = useState(0);
-
+  const [totalRevenuetop, settotalRevenuetop] = useState(0);
 
   const viewReceipt = (transaction) => {
-    console.log(transaction);
-    
     setSelectedTransaction(transaction);
     setShowReceiptModal(true);
   };
-  const handleUpdateSale = (sale) => {
-    setSelectedSale(sale);
-    setShowUpdateModal(true);
-  };
-    const handleshowUpdatepaymentModal = (payment) => {
-      setSelectedPayment(payment);
-      setshowUpdatepaymentModal(true);
-    };
 
+  const handleshowUpdatepaymentModal = (payment) => {
+    setSelectedPayment(payment);
+    setshowUpdatepaymentModal(true);
+  };
 
   const fetchCustomerHistory = async () => {
     try {
       const response = await userRequest.get(`/sales/customer/${id}`);
       setCustomerData(response.data);
       const total = response.data?.data?.reduce((sum, transaction) => sum + (transaction.paidAmount || 0), 0) || 0;
-      setTotalRevenue(total);
+      // setTotalRevenue(total);
       const due = response.data?.data?.reduce((sum, transaction) => sum + (transaction.dueAmount || 0), 0) || 0;
-      setDueamout(due);
+      // setDueamout(due);
       // setTotalSales(response.data?.totalSales || 0);
       const totalSalesAmount = response.data?.data?.reduce((sum, transaction) => sum + (transaction.grandTotal || 0), 0) || 0;
       setGrandTotal(totalSalesAmount);
@@ -84,28 +77,65 @@ const CustomerHistory = () => {
     }
   };
 
-
-   const fetchCustomerPaymentHistory = async () => {
+  const fetchCustomerPaymentHistory = async () => {
     try {
       const response = await userRequest.get(`/payments/customer/${id}/journey`);
       const datas = response?.data?.data || "";
       setTotalSales(datas);
-      console.log(datas);
     } catch (error) {
       console.error('Error fetching customer history:', error);
-    } 
+    }
   };
 
-  const fetchbothgetapi=()=>{
+  const fetchCustomerTransactionsss = async () => {
+    try {
+      const response = await userRequest.get(`/payments/customer/${id}/transactions`);
+      const datas = response?.data?.data || "";
+      console.log(datas.financialSummary, "datas");
+      settotalRevenuetop(datas.financialSummary)
+    } catch (error) {
+      console.error('Error fetching customer history:', error);
+    }
+  };
+
+  const fetchbothgetapi = () => {
     fetchCustomerHistory();
     fetchCustomerPaymentHistory();
+    fetchCustomerTransactionsss();
   }
 
+  const handleAdvancePayment = async () => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: `You will apply advance payment for this ${id || ""}`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, apply it!",
+      cancelButtonText: "No, cancel!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await userRequest.post(`/payments/apply-customer-advance`, {
+            customerId: id,
+          });
+          fetchbothgetapi();
+          toast.success("Advance payment applied successfully!");
+        } catch (error) {
+          fetchbothgetapi();
+          toast.error(error?.response?.data?.message || "Failed to apply advance payment.");
+        }
+      }
+    });
+
+
+
+  };
 
   useEffect(() => {
     if (id) {
-      fetchCustomerHistory();
-      fetchCustomerPaymentHistory()
+      fetchbothgetapi()
     }
   }, [id]);
 
@@ -135,9 +165,8 @@ const CustomerHistory = () => {
 
   const { customerInfo, summary, data: transactions } = customerData;
 
-  // Delete 
+  // Delete customer
   const handleDeletecustomer = (transaction) => {
-
     Swal.fire({
       title: "Are you sure?",
       text: `You will not be able to recover this ${transaction?.customer?.name || ""}`,
@@ -151,8 +180,7 @@ const CustomerHistory = () => {
       if (result.isConfirmed) {
         try {
           await userRequest.delete(`/sales/${transaction?._id}`);
-          fetchCustomerHistory();
-          fetchCustomerPaymentHistory();
+          fetchbothgetapi();
           toast.success("The customer has been deleted.");
         } catch (error) {
           toast.error(error?.response?.data?.message || "Failed to delete the customer.");
@@ -308,9 +336,6 @@ const CustomerHistory = () => {
     };
   };
 
-
-
-
   return (
     <div className="p-1 sm:p-1 md:p-5 lg:p-5 space-y-6">
       {/* Customer Information Header */}
@@ -387,7 +412,8 @@ const CustomerHistory = () => {
               <div className="flex flex-col items-center">
                 <FaMoneyBill className="text-4xl text-green-500 mb-2" />
                 <p className="text-xl font-bold">
-                  {totalSales?.summary?.totalPaid || "0"}
+                  {/* {totalSales?.summary?.totalPaid || "0"} */}
+                  {totalRevenuetop?.totalPaid || "0"}
                 </p>
                 <p color="$text" size="$sm">
                   Total Paid
@@ -402,10 +428,7 @@ const CustomerHistory = () => {
               <div className="flex flex-col items-center">
                 <FaClock className="text-4xl text-red-500 mb-2" />
                 <p className="text-xl font-bold">
-                  {Math.max(
-                    totalSales?.summary?.currentOutstandingBalance || 0,
-                    0
-                  )}
+                  {Math.max(totalRevenuetop?.totalOverdue || 0, 0)}
                 </p>
                 <p color="$text" size="$sm">
                   Due Amount
@@ -420,7 +443,8 @@ const CustomerHistory = () => {
               <div className="flex flex-col items-center">
                 <FaMoneyBill className="text-4xl text-orange-500 mb-2" />
                 <p className="text-xl font-bold">
-                  {totalSales?.summary?.totalAdvanceAmount || "0"}
+                  {/* {totalSales?.summary?.totalAdvanceAmount || "0"} */}
+                  {totalRevenuetop?.currentAdvanceBalance || "0"}
                 </p>
                 <p color="$text" size="$sm">
                   Total Advance Amount
@@ -455,6 +479,29 @@ const CustomerHistory = () => {
           <div className="flex justify-between items-center w-full">
             <h3 className="text-lg font-bold">Purchase History</h3>
             <div className="flex flex-row gap-2">
+              <Button
+                color="primary"
+                variant="flat"
+                disabled={totalRevenuetop.currentAdvanceBalance === 0}
+                // onPress={handleAdvancePayment}
+                onPress={
+                  totalRevenuetop.currentAdvanceBalance !== 0
+                    ? handleAdvancePayment
+                    : undefined
+                }
+                title={
+                  totalRevenuetop.currentAdvanceBalance === 0
+                    ? "Current advance balance is 0"
+                    : ""
+                }
+                className={
+                  totalRevenuetop.currentAdvanceBalance === 0
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }
+              >
+                Advance Payment
+              </Button>
               <Button
                 color="primary"
                 variant="flat"
