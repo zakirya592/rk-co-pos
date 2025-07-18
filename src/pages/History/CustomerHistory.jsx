@@ -412,8 +412,8 @@ const CustomerHistory = () => {
               <div className="flex flex-col items-center">
                 <FaMoneyBill className="text-4xl text-green-500 mb-2" />
                 <p className="text-xl font-bold">
-                  {/* {totalSales?.summary?.totalPaid || "0"} */}
-                  {totalRevenuetop?.totalPaid || "0"}
+                  {totalSales?.summary?.totalPaid || "0"}
+                  {/* {totalRevenuetop?.totalPaid || "0"} */}
                 </p>
                 <p color="$text" size="$sm">
                   Total Paid
