@@ -133,52 +133,6 @@ const Products = () => {
     currentPage * rowsPerPage
   );
 
-  //  Handle add product
-  const handleAddProduct = async () => {
-    try {
-      const formData = new FormData();
-      formData.append("name", newProduct.name);
-      formData.append("price", newProduct.price);
-      formData.append("purchaseRate", newProduct.purchaseRate);
-      formData.append("saleRate", newProduct.saleRate);
-      formData.append("wholesaleRate", newProduct.wholesaleRate);
-      formData.append("retailRate", newProduct.retailRate);
-      formData.append("size", newProduct.size);
-      formData.append("color", newProduct.color);
-      formData.append("barcode", newProduct.barcode);
-      formData.append("availableQuantity", newProduct.availableQuantity);
-      formData.append("soldOutQuantity", newProduct.soldOutQuantity);
-      formData.append("packingUnit", newProduct.packingUnit);
-      formData.append("additionalUnit", newProduct.additionalUnit);
-      formData.append("pouchesOrPieces", newProduct.pouchesOrPieces);
-      formData.append("description", newProduct.description);
-      formData.append("category", newProduct.category);
-      formData.append("countInStock", newProduct.countInStock);
-      formData.append("isActive", newProduct.isActive === "active");
-      formData.append("image", newProduct.image);
-
-      await userRequest.post("/products", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      setShowAddModal(false);
-      setCurrentPage(1);
-      setNewProduct({
-        name: "",
-        category: "",
-        price: "",
-        countInStock: "",
-        description: "",
-        image: "",
-      });
-      toast.success("Product added successfully!");
-      queryClient.invalidateQueries(["products"]); // Refetch products
-    } catch (error) {
-      console.log(error,'reer');
-      
-      toast.error(error?.response?.data?.message || error.message ||"Failed to add product.");
-    }
-  };
 
   // Handle update product
   const handleUpdateProduct = async () => {

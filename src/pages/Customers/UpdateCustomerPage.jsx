@@ -23,6 +23,10 @@ const UpdateCustomerPage = () => {
     contact: "",
     email: "",
     address: "",
+    country: "",
+    state: "",
+    city: "",
+    Deliveryaddress: "",
     type: "retail",
   });
 
@@ -32,13 +36,13 @@ const UpdateCustomerPage = () => {
         const response = await userRequest.get(`/customers/${id}`);
         // setCustomer(response.data.data);
         console.log(response.data.data);
-         setCustomer({
-           name: response.data.data.name || "",
-           contact: response.data.data.phoneNumber || "",
-           email: response.data.data.email || "",
-           address: response.data.data.address || "",
-           type: response.data.data.customerType || "retail",
-         });
+        setCustomer({
+          name: response.data.data.name || "",
+          contact: response.data.data.phoneNumber || "",
+          email: response.data.data.email || "",
+          address: response.data.data.address || "",
+          type: response.data.data.customerType || "retail",
+        });
       } catch (error) {
         toast.error("Failed to fetch customer details");
         navigate('/customers');
@@ -55,15 +59,15 @@ const UpdateCustomerPage = () => {
     }));
   };
 
-  const handleSubmit = async() => {
+  const handleSubmit = async () => {
     setLoading(true)
     try {
       await userRequest.put(`/customers/${id}`, {
-         name: customer.name,
-         email: customer.email,
-         phoneNumber: customer.contact,
-         address: customer.address,
-         customerType: customer.type,
+        name: customer.name,
+        email: customer.email,
+        phoneNumber: customer.contact,
+        address: customer.address,
+        customerType: customer.type,
       });
       toast.success("Customer updated successfully!");
       navigate('/customers');
@@ -94,7 +98,7 @@ const UpdateCustomerPage = () => {
 
       <Card>
         <CardBody>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Input
               label="Customer Name"
               placeholder="Enter customer name"
@@ -127,7 +131,7 @@ const UpdateCustomerPage = () => {
               variant="bordered"
             />
 
-            <Input
+            {/* <Input
               label="Address"
               placeholder="Enter address"
               value={customer.address}
@@ -135,7 +139,7 @@ const UpdateCustomerPage = () => {
               name="address"
               startContent={<FaMapMarkerAlt />}
               variant="bordered"
-            />
+            /> */}
 
             <Select
               label="Customer Type"
@@ -153,6 +157,71 @@ const UpdateCustomerPage = () => {
                 Wholesale
               </SelectItem>
             </Select>
+          </div>
+          <div className="flex gap-2 mt-3">
+            <Select
+              label="Manager"
+              placeholder="Select the Party Manager"
+              value={customer.manager || ""}
+              onChange={handleInputChange}
+              className="w-64"
+              // startContent={<FaCalendarAlt />}
+            >
+              <SelectItem key="Customer" value="Customer">
+                Customer
+              </SelectItem>
+              <SelectItem key="active" value="active">
+                Active
+              </SelectItem>
+              <SelectItem key="Internal" value="Internal">
+                Internal
+              </SelectItem>
+            </Select>
+          </div>
+          <div className="mt-8">
+            <div className="mb-2 rounded-lg px-4 py-2 bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100">
+              <h2 className="text-lg font-semibold text-purple-700">Address</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Input
+                label="Country"
+                placeholder="Enter country"
+                value={customer.country}
+                onChange={handleInputChange}
+                variant="bordered"
+              />
+              <Input
+                label="State"
+                placeholder="Enter state"
+                value={customer.state}
+                onChange={handleInputChange}
+                variant="bordered"
+              />
+              <Input
+                label="City"
+                placeholder="Enter city"
+                value={customer.city}
+                onChange={handleInputChange}
+                variant="bordered"
+              />
+            </div>
+            <Input
+              className="mt-7"
+              label="Address"
+              placeholder="Enter full address"
+              value={customer.address}
+              onChange={handleInputChange}
+              variant="bordered"
+            />
+            <div className="mt-10">
+              <Input
+                label="Delivery Address"
+                placeholder="Enter Delivery full address"
+                value={customer.Deliveryaddress}
+                onChange={handleInputChange}
+                variant="bordered"
+              />
+            </div>
           </div>
         </CardBody>
       </Card>

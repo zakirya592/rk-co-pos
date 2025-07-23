@@ -156,7 +156,12 @@ const UpdateProductForm = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Product Name"
+                label={
+                  <span>
+                    Product Name{" "}
+                    <span className="text-red-500 font-bold">*</span>
+                  </span>
+                }
                 labelPlacement="outside"
                 placeholder="Enter product name"
                 value={product.name}
@@ -168,7 +173,12 @@ const UpdateProductForm = () => {
               />
 
               <Select
-                label="Category"
+                label={
+                  <span>
+                    Category
+                    <span className="text-red-500 font-bold ms-1">*</span>
+                  </span>
+                }
                 labelPlacement="outside"
                 placeholder="Select category"
                 selectedKeys={getCategoryId() ? [getCategoryId()] : []}
@@ -329,7 +339,7 @@ const UpdateProductForm = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-7 gap-4 mt-10">
-              <Input
+              {/* <Input
                 label="Barcode"
                 labelPlacement="outside"
                 placeholder="Enter barcode"
@@ -338,15 +348,18 @@ const UpdateProductForm = () => {
                   setProduct({ ...product, barcode: e.target.value })
                 }
                 variant="bordered"
-              />
+              /> */}
 
               <Select
-                label="Currency"
+                label={
+                  <span>
+                    Currency
+                    <span className="text-red-500 font-bold ms-1">*</span>
+                  </span>
+                }
                 labelPlacement="outside"
                 placeholder="Select currency"
-                selectedKeys={
-                  product.currency ? [product.currency] : []
-                }
+                selectedKeys={product.currency ? [product.currency] : []}
                 value={product.currency}
                 // onChange={(e) => {
                 //   const selectedCurrency = currencies.find(c => c.code === e.target.value);
@@ -370,7 +383,7 @@ const UpdateProductForm = () => {
                 ))}
               </Select>
 
-              <Input
+              {/* <Input
                 label="Price"
                 labelPlacement="outside"
                 placeholder="0.00"
@@ -380,9 +393,14 @@ const UpdateProductForm = () => {
                   setProduct({ ...product, price: e.target.value })
                 }
                 variant="bordered"
-              />
+              /> */}
               <Select
-                label="Supplier"
+                label={
+                  <span>
+                    Supplier
+                    <span className="text-red-500 font-bold ms-1">*</span>
+                  </span>
+                }
                 labelPlacement="outside"
                 placeholder="Select Supplier"
                 selectedKeys={product.supplier ? [product.supplier] : []}
@@ -400,7 +418,7 @@ const UpdateProductForm = () => {
                 ))}
               </Select>
 
-              <Input
+              {/* <Input
                 label="Location"
                 labelPlacement="outside"
                 placeholder="Your Location"
@@ -410,7 +428,7 @@ const UpdateProductForm = () => {
                   setProduct({ ...product, location: e.target.value })
                 }
                 variant="bordered"
-              />
+              /> */}
               {/* Size Selection */}
               <Input
                 label="Custom Size"
@@ -448,7 +466,12 @@ const UpdateProductForm = () => {
 
               {/* Pricing */}
               <Input
-                label="Purchase Rate"
+                label={
+                  <span>
+                    purchase Rate
+                    <span className="text-red-500 font-bold ms-1">*</span>
+                  </span>
+                }
                 labelPlacement="outside"
                 placeholder="0.00"
                 type="number"
@@ -462,7 +485,12 @@ const UpdateProductForm = () => {
                 variant="bordered"
               />
               <Input
-                label="Sale Rate"
+                label={
+                  <span>
+                    Sale Rate
+                    <span className="text-red-500 font-bold ms-1">*</span>
+                  </span>
+                }
                 labelPlacement="outside"
                 placeholder="0.00"
                 type="number"
@@ -473,7 +501,12 @@ const UpdateProductForm = () => {
                 variant="bordered"
               />
               <Input
-                label="Whole Sale Rate"
+                label={
+                  <span>
+                    Whole Sale Rate
+                    <span className="text-red-500 font-bold ms-1">*</span>
+                  </span>
+                }
                 labelPlacement="outside"
                 placeholder="0.00"
                 type="number"
@@ -487,7 +520,12 @@ const UpdateProductForm = () => {
                 variant="bordered"
               />
               <Input
-                label="Retail Rate"
+                label={
+                  <span>
+                    Retail Rate
+                    <span className="text-red-500 font-bold ms-1">*</span>
+                  </span>
+                }
                 labelPlacement="outside"
                 placeholder="0.00"
                 type="number"
@@ -498,7 +536,7 @@ const UpdateProductForm = () => {
                 variant="bordered"
               />
 
-              <Input
+              {/* <Input
                 label="Available Quantity"
                 labelPlacement="outside"
                 placeholder="0"
@@ -511,10 +549,15 @@ const UpdateProductForm = () => {
                   })
                 }
                 variant="bordered"
-              />
+              /> */}
 
               <Input
-                label="Stock Quantity"
+                label={
+                  <span>
+                    Stock Quantity
+                    <span className="text-red-500 font-bold ms-1">*</span>
+                  </span>
+                }
                 labelPlacement="outside"
                 placeholder="0"
                 type="number"
@@ -608,7 +651,12 @@ const UpdateProductForm = () => {
                 </div>
               </div>
               <Textarea
-                label="Description"
+                label={
+                  <span>
+                    Description
+                    <span className="text-red-500 font-bold ms-1">*</span>
+                  </span>
+                }
                 labelPlacement="outside"
                 placeholder="Enter product description"
                 value={product.description}

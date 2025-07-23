@@ -22,6 +22,10 @@ const AddCustomerPage = () => {
     contact: "",
     email: "",
     address: "",
+    country: "",
+    state: "",
+    city: "",
+    Deliveryaddress: "",
     type: "retail",
   });
 
@@ -33,17 +37,17 @@ const AddCustomerPage = () => {
     }));
   };
 
-  const handleSubmit = async() => {
+  const handleSubmit = async () => {
     setLoading(true)
     try {
       await userRequest.post("/customers", {
-         name: newCustomer.name,
-         email: newCustomer.email,
-         phoneNumber: newCustomer.contact,
-         address: newCustomer.address,
-         customerType: newCustomer.type,
+        name: newCustomer.name,
+        email: newCustomer.email,
+        phoneNumber: newCustomer.contact,
+        address: newCustomer.address,
+        customerType: newCustomer.type,
       });
-      
+
       setnewCustomer({
         name: "",
         contact: "",
@@ -83,7 +87,7 @@ const AddCustomerPage = () => {
 
       <Card>
         <CardBody>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Input
               label="Customer Name"
               placeholder="Enter customer name"
@@ -116,7 +120,7 @@ const AddCustomerPage = () => {
               variant="bordered"
             />
 
-            <Input
+            {/* <Input
               label="Address"
               placeholder="Enter address"
               value={newCustomer.address}
@@ -124,7 +128,7 @@ const AddCustomerPage = () => {
               name="address"
               startContent={<FaMapMarkerAlt />}
               variant="bordered"
-            />
+            /> */}
 
             <Select
               label="Customer Type"
@@ -141,6 +145,94 @@ const AddCustomerPage = () => {
                 Wholesale
               </SelectItem>
             </Select>
+          </div>
+          <div className="flex gap-2 mt-3">
+            <Select
+              label="Manager"
+
+              placeholder="Select the Party Manager"
+              value={newCustomer.manager || ""}
+              onValueChange={(value) =>
+                setnewCustomer({ ...newCustomer, manager: value })
+              }
+              className="w-64"
+            // startContent={<FaCalendarAlt />}
+            >
+              <SelectItem key="Customer" value="Customer">
+                Customer
+              </SelectItem>
+              <SelectItem key="active" value="active">
+                Active
+              </SelectItem>
+              <SelectItem key="Internal" value="Internal">
+                Internal
+              </SelectItem>
+            </Select>
+          </div>
+          <div className="mt-8">
+            <div className="mb-2 rounded-lg px-4 py-2 bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100">
+              <h2 className="text-lg font-semibold text-purple-700">
+                Address
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Input
+                label="Country"
+
+                placeholder="Enter country"
+                value={newCustomer.country}
+                onChange={(e) =>
+                  setnewCustomer({ ...newCustomer, country: e.target.value })
+                }
+                variant="bordered"
+              />
+              <Input
+                label="State"
+
+                placeholder="Enter state"
+                value={newCustomer.state}
+                onChange={(e) =>
+                  setnewCustomer({ ...newCustomer, state: e.target.value })
+                }
+                variant="bordered"
+              />
+              <Input
+                label="City"
+
+                placeholder="Enter city"
+                value={newCustomer.city}
+                onChange={(e) =>
+                  setnewCustomer({ ...newCustomer, city: e.target.value })
+                }
+                variant="bordered"
+              />
+            </div>
+            <Input
+              className="mt-7"
+              label="Address"
+
+              placeholder="Enter full address"
+              value={newCustomer.address}
+              onChange={(e) =>
+                setnewCustomer({ ...newCustomer, address: e.target.value })
+              }
+              variant="bordered"
+            />
+            <div className="mt-10">
+              <Input
+                label="Delivery Address"
+
+                placeholder="Enter Delivery full address"
+                value={newCustomer.Deliveryaddress}
+                onChange={(e) =>
+                  setnewCustomer({
+                    ...newCustomer,
+                    Deliveryaddress: e.target.value,
+                  })
+                }
+                variant="bordered"
+              />
+            </div>
           </div>
 
           {/* <div className="flex justify-end gap-4 mt-6">

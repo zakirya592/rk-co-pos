@@ -79,6 +79,20 @@ const cardData = [
     desc: "Sale Reports",
     color: "red",
   },
+  {
+    to: "/Purchase",
+    icon: <FaShoppingCart />, // You can choose a different icon if you prefer
+    title: "Purchase",
+    desc: "Manage purchases",
+    color: "teal",
+  },
+  {
+    to: "/warehouse",
+    icon: <FaStore />,
+    title: "Warehouse",
+    desc: "Warehouse management",
+    color: "cyan",
+  },
 ];
 
 const Navigation = () => {

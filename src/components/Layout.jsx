@@ -20,6 +20,8 @@ import Navigation from './Navigation/Navigation';
 import AddCustomerPage from '../pages/Customers/AddCustomerPage';
 import UpdateCustomerPage from '../pages/Customers/UpdateCustomerPage';
 import Reports from '../pages/Reports/Reports';
+import Purchase from '../pages/Purchase/Purchase';
+import Warehouse from '../pages/WareHHouse/Wherehouse';
 const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const location = useLocation();
@@ -56,6 +58,8 @@ const Layout = () => {
           <Route path="/customers" element={<Customers />} />
           <Route path="/customers/add" element={<AddCustomerPage />} />
           <Route path="/customers/edit/:id" element={<UpdateCustomerPage />} />
+          <Route path="/Purchase" element={<Purchase />} />
+          <Route path="/warehouse" element={<Warehouse />} />
           <Route path="/settings" element={<Settings />} />
           {/* <Route path="*" element={<Products />} /> */}
         </Routes>
