@@ -1,105 +1,202 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardBody, Button, Input, Spinner } from "@nextui-org/react";
-import { FaPlus, FaTrash } from "react-icons/fa";
-import userRequest from "../../utils/userRequest";
-import toast from "react-hot-toast";
+import React, { useMemo, useState } from 'react';
+import {
+    Card,
+    CardBody,
+    Button,
+    Input,
+    Table,
+    TableHeader,
+    TableColumn,
+    TableBody,
+    TableRow,
+    TableCell,
+    Chip,
+    Tooltip,
+    Spinner,
+} from '@nextui-org/react';
+import { FaPlus, FaSearch, FaEdit, FaTrash, FaEye } from 'react-icons/fa';
+import { useQuery } from 'react-query';
+import userRequest from '../../utils/userRequest';
+import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
+import { Link, useNavigate } from "react-router-dom";
 
-const fetchInventory = async () => {
-  const res = await userRequest.get("/inventory");
-  return res.data || [];
+const fetchUsers = async () => {
+    const res = await userRequest.get("/users");
+    return res.data.data;
 };
 
 const Warehouse = () => {
-  const [inventory, setInventory] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [newProduct, setNewProduct] = useState({ name: "", quantity: 0 });
+  const navigate = useNavigate();
+    const [searchTerm, setSearchTerm] = useState('');
+   
+    const { data: users = [], isLoading, isError, refetch } = useQuery({
+        queryKey: ['users'],
+        queryFn: fetchUsers
+    });
 
-  useEffect(() => {
-    const loadInventory = async () => {
-      try {
-        const data = await fetchInventory();
-        setInventory(data);
-      } catch (error) {
-        toast.error("Failed to fetch inventory.");
-      } finally {
-        setLoading(false);
-      }
+    const filteredUsers = Array.isArray(users)
+        ? users.filter(user =>
+            user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            user.email.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        : [];
+
+
+    const handleDeleteProduct = (user) => {
+      Swal.fire({
+        title: "Are you sure?",
+        text: `You will not be able to recover this ${user?.name || ""}`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it!",
+        cancelButtonText: "No, cancel!",
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            await userRequest.delete(`/users/${user?._id || ""}`);
+            toast.success("The user has been deleted.");
+            refetch();
+          } catch (error) {
+            toast.error(error?.response?.data?.message ||  "Failed to delete the User.");
+          }
+        }
+      });
     };
 
-    loadInventory();
-  }, []);
-
-  const addProduct = async () => {
-    try {
-      const res = await userRequest.post("/inventory", newProduct);
-      setInventory([...inventory, res.data]);
-      setNewProduct({ name: "", quantity: 0 });
-      toast.success("Product added successfully!");
-    } catch (error) {
-      toast.error("Failed to add product.");
-    }
-  };
-
-  const removeProduct = async (id) => {
-    try {
-      await userRequest.delete(`/inventory/${id}`);
-      setInventory(inventory.filter((item) => item._id !== id));
-      toast.success("Product removed successfully!");
-    } catch (error) {
-      toast.error("Failed to remove product.");
-    }
-  };
-
-  return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Warehouse Management</h1>
-      <Card>
-        <CardBody>
-          <h2 className="text-lg font-semibold mb-2">Add New Product</h2>
-          <div className="flex gap-2 mb-4">
-            <Input
-              placeholder="Product Name"
-              value={newProduct.name}
-              onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-            />
-            <Input
-              type="number"
-              placeholder="Quantity"
-              value={newProduct.quantity}
-              onChange={(e) => setNewProduct({ ...newProduct, quantity: parseInt(e.target.value) || 0 })}
-            />
-            <Button onPress={addProduct} startContent={<FaPlus />}>
-              Add
-            </Button>
-          </div>
-          {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <Spinner color="success" size="lg" />
+    const bottomContent = useMemo(
+        () => (
+            <div className="flex justify-between items-center mt-4">
+                <span className="text-small text-default-400">
+                    Total: {filteredUsers.length} User
+                </span>
             </div>
-          ) : (
-            <div>
-              <h2 className="text-lg font-semibold mb-2">Current Inventory</h2>
-              <ul>
-                {inventory.map((item) => (
-                  <li key={item._id} className="flex justify-between items-center p-2 border-b">
-                    <span>{item.name} - {item.quantity}</span>
-                    <Button
-                      color="danger"
-                      onPress={() => removeProduct(item._id)}
-                      isIconOnly
-                      size="sm"
-                    >
-                      <FaTrash />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
+        ),
+        [filteredUsers.length,]
+    );
+
+    return (
+        <div className="p-6 space-y-6">
+            {/* Header */}
+            <div className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-800">Warehouse Management</h1>
+                </div>
+                <Button
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold"
+                    startContent={<FaPlus />}
+                    onPress={() => navigate('/add-warehouse')}
+                >
+                    Add Warehouse
+                </Button>
             </div>
-          )}
-        </CardBody>
-      </Card>
-    </div>
-  );
+
+            {/* Search */}
+            <Card>
+                <CardBody>
+                    <Input
+                        placeholder="Search users by name or email..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        startContent={<FaSearch className="text-gray-400" />}
+                        variant="bordered"
+                    />
+                </CardBody>
+            </Card>
+
+
+            <Table aria-label="Users table" bottomContent={bottomContent}>
+                <TableHeader>
+                    <TableColumn>Sl No</TableColumn>
+                    <TableColumn>NAME</TableColumn>
+                    <TableColumn>EMAIL</TableColumn>
+                    <TableColumn>ROLE</TableColumn>
+                    <TableColumn>ACTIONS</TableColumn>
+                </TableHeader>
+                <TableBody
+                    isLoading={isLoading}
+                    loadingContent={
+                        <div className="flex justify-center items-center py-8">
+                            <Spinner color="success" size="lg" />
+                        </div>
+                    }
+                    emptyContent={
+                        <div className="text-center text-gray-500 py-8">
+                            No User found
+                        </div>
+                    }>
+                    {filteredUsers.map((user, index) => (
+                        <TableRow key={user._id}>
+                            <TableCell>
+                                {index + 1}
+                            </TableCell>
+                            <TableCell>
+                                <div className="font-semibold">{user.name}</div>
+                            </TableCell>
+                            <TableCell>
+                                <div className="text-sm text-gray-500">{user.email}</div>
+                            </TableCell>
+                            <TableCell>
+                                <Chip
+                                    size="sm"
+                                    color={user.role === "admin" ? "secondary" : "primary"}
+                                >
+                                    {user.role}
+                                </Chip>
+                            </TableCell>
+                            <TableCell>
+                                <div className="flex gap-2">
+                                    <Tooltip content="View">
+                                        <Button
+                                            isIconOnly
+                                            size="sm"
+                                            variant="light"
+                                            color="primary"
+                                            // onClick={() => {
+                                            //     setSelectedUser(user);
+                                            //     setShowDetailsModal(true);
+                                            // }}
+                                        >
+                                            <FaEye />
+                                        </Button>
+                                    </Tooltip>
+                                    <Tooltip content="Update">
+                                        <Button
+                                            isIconOnly
+                                            size="sm"
+                                            variant="light"
+                                            color="warning"
+                                            // onClick={() => {
+                                            //     handleEditUser(user);
+                                            // }}
+                                        >
+                                            <FaEdit />
+                                        </Button>
+                                    </Tooltip>
+                                    <Tooltip content="Delete">
+                                        <Button
+                                            isIconOnly
+                                            size="sm"
+                                            variant="light"
+                                            color="danger"
+                                            // onClick={() => {
+                                            //     handleDeleteProduct(user);
+                                            // }}
+                                        >
+                                            <FaTrash />
+                                        </Button>
+                                    </Tooltip>
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        
+        </div>
+    );
 };
 
 export default Warehouse;

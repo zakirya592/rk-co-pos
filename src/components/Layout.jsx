@@ -22,7 +22,9 @@ import UpdateCustomerPage from '../pages/Customers/UpdateCustomerPage';
 import Reports from '../pages/Reports/Reports';
 import Purchase from '../pages/Purchase/Purchase';
 import Warehouse from '../pages/WareHHouse/Wherehouse';
+import Addwarahouse from '../pages/WareHHouse/Addwarahouse';
 const Layout = () => {
+  
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -60,6 +62,7 @@ const Layout = () => {
           <Route path="/customers/edit/:id" element={<UpdateCustomerPage />} />
           <Route path="/Purchase" element={<Purchase />} />
           <Route path="/warehouse" element={<Warehouse />} />
+          <Route path="/add-warehouse" element={<Addwarahouse />} />
           <Route path="/settings" element={<Settings />} />
           {/* <Route path="*" element={<Products />} /> */}
         </Routes>
