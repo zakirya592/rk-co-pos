@@ -142,9 +142,9 @@ const AddSupplier = () => {
                 variant="bordered"
               />
               <Input
-                label="CNCN"
+                label="CNIC"
                 labelPlacement="outside"
-                placeholder="Enter CNCN"
+                placeholder="Enter CNIC "
                 value={newSupplier.cncn}
                 onChange={(e) =>
                   setNewSupplier({ ...newSupplier, cncn: e.target.value })
@@ -157,7 +157,7 @@ const AddSupplier = () => {
                 label="Manager"
                 labelPlacement="outside"
                 placeholder="Select the Party Manager"
-                value={newSupplier.manager || ''}
+                value={newSupplier.manager || ""}
                 onValueChange={(value) =>
                   setNewSupplier({ ...newSupplier, manager: value })
                 }
