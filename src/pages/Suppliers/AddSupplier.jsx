@@ -23,17 +23,21 @@ const AddSupplier = () => {
   });
 
   const handleAdd = async () => {
+    console.log("Adding new supplier:", newSupplier);
+    
     setLoading(true);
     try {
       const formData = new FormData();
       formData.append("name", newSupplier.name);
       formData.append("email", newSupplier.email);
       formData.append("phoneNumber", newSupplier.phoneNumber);
-      // formData.append("cncn", newSupplier.cncn);
-      // formData.append("address", newSupplier.address);
-      // formData.append("country", newSupplier.country);
-      // formData.append("state", newSupplier.state);
-      // formData.append("city", newSupplier.city);
+      formData.append("address", newSupplier.address);
+      formData.append("cnicNumber", newSupplier.cncn);
+      formData.append("country", newSupplier.country);
+      formData.append("state", newSupplier.state);
+      formData.append("city", newSupplier.city);
+      formData.append("deliveryAddress", newSupplier.Deliveryaddress);
+      formData.append("manager", newSupplier.manager);
       if (newSupplier.image) {
         formData.append("image", newSupplier.image);
       }
@@ -153,11 +157,11 @@ const AddSupplier = () => {
               />
             </div>
             <div className="flex gap-2">
-              <Select
+              {/* <Select
                 label="Manager"
                 labelPlacement="outside"
                 placeholder="Select the Party Manager"
-                value={newSupplier.manager || ""}
+                value={newSupplier.manager}
                 onValueChange={(value) =>
                   setNewSupplier({ ...newSupplier, manager: value })
                 }
@@ -173,7 +177,17 @@ const AddSupplier = () => {
                 <SelectItem key="Internal" value="Internal">
                   Internal
                 </SelectItem>
-              </Select>
+              </Select> */}
+              <Input
+                label="Manager Name"
+                labelPlacement="outside"
+                placeholder="Enter manager name"
+                value={newSupplier.manager}
+                onChange={(e) =>
+                  setNewSupplier({ ...newSupplier, manager: e.target.value })
+                }
+                variant="bordered"
+              />
             </div>
             <div className="mt-8">
               <div className="mb-2 rounded-lg px-4 py-2 bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100">

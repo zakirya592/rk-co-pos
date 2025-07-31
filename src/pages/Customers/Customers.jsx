@@ -145,9 +145,10 @@ const Customers = () => {
               <TableColumn>CUSTOMER</TableColumn>
               <TableColumn>CONTACT</TableColumn>
               <TableColumn>TYPE</TableColumn>
-              {/* <TableColumn>BALANCE</TableColumn> */}
-              {/* <TableColumn>TOTAL PURCHASES</TableColumn>
-              <TableColumn>LAST PURCHASE</TableColumn> */}
+              <TableColumn>MANAGER</TableColumn>
+              <TableColumn>CNIC</TableColumn>
+              <TableColumn>ADDRESS</TableColumn>
+              <TableColumn>DELIVERY ADDRESS</TableColumn>
               <TableColumn>ACTIONS</TableColumn>
             </TableHeader>
             <TableBody
@@ -192,26 +193,11 @@ const Customers = () => {
                       {customer.customerType}
                     </Chip>
                   </TableCell>
-                  {/* <TableCell>
-                    <span
-                      className={
-                        customer.balance >= 0
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }
-                    >
-                      Rs. {Math.abs(customer.balance).toLocaleString()}
-                      {customer.balance < 0 && " (Due)"}
-                    </span>
-                  </TableCell> */}
-                  {/* <TableCell>
-                    Rs. {customer.totalPurchases.toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    {customer.lastPurchase
-                      ? new Date(customer.lastPurchase).toLocaleDateString()
-                      : "Never"}
-                  </TableCell> */}
+
+                  <TableCell>{customer.manager}</TableCell>
+                  <TableCell>{customer.cnicNumber}</TableCell>
+                  <TableCell>{customer.address}</TableCell>
+                  <TableCell>{customer.deliveryAddress}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       {/* <Button
@@ -235,28 +221,28 @@ const Customers = () => {
                         </Button>
                       </Tooltip>
                       <Tooltip content="Edit">
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        color="warning"
-                        onPress={() =>
-                          navigate(`/customers/edit/${customer._id}`)
-                        }
-                      >
-                        <FaEdit />
-                      </Button>
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="light"
+                          color="warning"
+                          onPress={() =>
+                            navigate(`/customers/edit/${customer._id}`)
+                          }
+                        >
+                          <FaEdit />
+                        </Button>
                       </Tooltip>
                       <Tooltip content="Delete">
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        color="danger"
-                        onPress={() => handleDeleteCustomer(customer)}
-                      >
-                        <FaTrash />
-                      </Button>
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="light"
+                          color="danger"
+                          onPress={() => handleDeleteCustomer(customer)}
+                        >
+                          <FaTrash />
+                        </Button>
                       </Tooltip>
                     </div>
                   </TableCell>

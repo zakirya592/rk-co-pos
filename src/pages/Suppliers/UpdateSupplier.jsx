@@ -14,12 +14,12 @@ const UpdateSupplier = () => {
     email: "",
     phoneNumber: "",
     address: "",
-    cncn: "",
+    cnicNumber: "",
     address: "",
     country: "",
     state: "",
     city: "",
-    Deliveryaddress: "",
+    deliveryAddress: "",
     image: null,
   });
 
@@ -46,11 +46,12 @@ const UpdateSupplier = () => {
       formData.append("email", supplier.email);
       formData.append("phoneNumber", supplier.phoneNumber);
       formData.append("address", supplier.address);
-      // formData.append("cncn", supplier.cncn);
-      // formData.append("address", supplier.address);
-      // formData.append("country", supplier.country);
-      // formData.append("state", supplier.state);
-      // formData.append("city", supplier.city);
+      formData.append("cnicNumber", supplier.cnicNumber);
+      formData.append("country", supplier.country);
+      formData.append("state", supplier.state);
+      formData.append("city", supplier.city);
+      formData.append("deliveryAddress", supplier.deliveryAddress);
+      formData.append("manager", supplier.manager);
       if (supplier.image) {
         formData.append("image", supplier.image);
       }
@@ -151,18 +152,28 @@ const UpdateSupplier = () => {
                 required
               />
               <Input
-                label="CNCN"
+                label="CNIC"
                 labelPlacement="outside"
-                placeholder="Enter CNCN"
-                value={supplier.cncn}
+                placeholder="Enter CNIC"
+                value={supplier.cnicNumber}
                 onChange={(e) =>
-                  setSupplier({ ...supplier, cncn: e.target.value })
+                  setSupplier({ ...supplier, cnicNumber: e.target.value })
                 }
                 variant="bordered"
               />
             </div>
             <div className="flex gap-2">
-              <Select
+              <Input
+                label="Manager Name"
+                labelPlacement="outside"
+                placeholder="Enter manager name"
+                value={supplier.manager}
+                onChange={(e) =>
+                  setSupplier({ ...supplier, manager: e.target.value })
+                }
+                variant="bordered"
+              />
+              {/* <Select
                 label="Manager"
                 labelPlacement="outside"
                 placeholder="Select the Party Manager"
@@ -182,7 +193,7 @@ const UpdateSupplier = () => {
                 <SelectItem key="Internal" value="Internal">
                   Internal
                 </SelectItem>
-              </Select>
+              </Select> */}
             </div>
             <div className="mt-8">
               <div className="mb-2 rounded-lg px-4 py-2 bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100">
@@ -238,11 +249,11 @@ const UpdateSupplier = () => {
                   label="Delivery Address"
                   labelPlacement="outside"
                   placeholder="Enter Delivery full address"
-                  value={supplier.Deliveryaddress}
+                  value={supplier.deliveryAddress}
                   onChange={(e) =>
                     setSupplier({
                       ...supplier,
-                      Deliveryaddress: e.target.value,
+                      deliveryAddress: e.target.value,
                     })
                   }
                   variant="bordered"

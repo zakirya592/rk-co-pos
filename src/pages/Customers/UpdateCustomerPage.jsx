@@ -26,23 +26,29 @@ const UpdateCustomerPage = () => {
     country: "",
     state: "",
     city: "",
-    Deliveryaddress: "",
+    deliveryAddress: "",
     type: "retail",
+    cnicNumber: "",
   });
 
   useEffect(() => {
     const fetchCustomer = async () => {
       try {
         const response = await userRequest.get(`/customers/${id}`);
-        // setCustomer(response.data.data);
-        console.log(response.data.data);
         setCustomer({
           name: response.data.data.name || "",
           contact: response.data.data.phoneNumber || "",
           email: response.data.data.email || "",
           address: response.data.data.address || "",
           type: response.data.data.customerType || "retail",
+          cnicNumber: response.data.data.cnicNumber || "",
+          country: response.data.data.country || "",
+          state: response.data.data.state || "",
+          city: response.data.data.city || "",
+          deliveryAddress: response.data.data.deliveryAddress || "",
+          manager: response.data.data.manager || "",
         });
+        
       } catch (error) {
         toast.error("Failed to fetch customer details");
         navigate('/customers');
@@ -68,6 +74,12 @@ const UpdateCustomerPage = () => {
         phoneNumber: customer.contact,
         address: customer.address,
         customerType: customer.type,
+        cnicNumber: customer.cnicNumber,
+        country: customer.country,
+        state: customer.state,
+        city: customer.city,
+        deliveryAddress: customer.deliveryAddress,
+        manager: customer.manager,
       });
       toast.success("Customer updated successfully!");
       navigate('/customers');
@@ -159,24 +171,24 @@ const UpdateCustomerPage = () => {
             </Select>
           </div>
           <div className="flex gap-2 mt-3">
-            <Select
-              label="Manager"
-              placeholder="Select the Party Manager"
-              value={customer.manager || ""}
+            <Input
+              label="CNIC"
+              labelPlacement="outside"
+              name="cnicNumber"
+              placeholder="Enter CNIC "
+              value={customer.cnicNumber}
               onChange={handleInputChange}
-              className="w-64"
-              // startContent={<FaCalendarAlt />}
-            >
-              <SelectItem key="Customer" value="Customer">
-                Customer
-              </SelectItem>
-              <SelectItem key="active" value="active">
-                Active
-              </SelectItem>
-              <SelectItem key="Internal" value="Internal">
-                Internal
-              </SelectItem>
-            </Select>
+              variant="bordered"
+            />
+            <Input
+              label="Manager Name"
+              labelPlacement="outside"
+              name='manager'
+              placeholder="Enter manager name"
+              value={customer.manager}
+              onChange={handleInputChange}
+              variant="bordered"
+            />
           </div>
           <div className="mt-8">
             <div className="mb-2 rounded-lg px-4 py-2 bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100">
@@ -188,6 +200,7 @@ const UpdateCustomerPage = () => {
                 placeholder="Enter country"
                 value={customer.country}
                 onChange={handleInputChange}
+                name="country"
                 variant="bordered"
               />
               <Input
@@ -195,12 +208,14 @@ const UpdateCustomerPage = () => {
                 placeholder="Enter state"
                 value={customer.state}
                 onChange={handleInputChange}
+                name="state"
                 variant="bordered"
               />
               <Input
                 label="City"
                 placeholder="Enter city"
                 value={customer.city}
+                name='city'
                 onChange={handleInputChange}
                 variant="bordered"
               />
@@ -208,6 +223,7 @@ const UpdateCustomerPage = () => {
             <Input
               className="mt-7"
               label="Address"
+              name="address"
               placeholder="Enter full address"
               value={customer.address}
               onChange={handleInputChange}
@@ -217,7 +233,8 @@ const UpdateCustomerPage = () => {
               <Input
                 label="Delivery Address"
                 placeholder="Enter Delivery full address"
-                value={customer.Deliveryaddress}
+                name="deliveryAddress"
+                value={customer.deliveryAddress}
                 onChange={handleInputChange}
                 variant="bordered"
               />

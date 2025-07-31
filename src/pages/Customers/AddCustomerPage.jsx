@@ -25,8 +25,10 @@ const AddCustomerPage = () => {
     country: "",
     state: "",
     city: "",
-    Deliveryaddress: "",
+    deliveryAddress: "",
+    manager: "",
     type: "retail",
+    cnicNumber: ""
   });
 
   const handleInputChange = (e) => {
@@ -46,6 +48,12 @@ const AddCustomerPage = () => {
         phoneNumber: newCustomer.contact,
         address: newCustomer.address,
         customerType: newCustomer.type,
+        cnicNumber: newCustomer.cnicNumber,
+        country: newCustomer.country,
+        state: newCustomer.state,
+        city: newCustomer.city,
+        deliveryAddress: newCustomer.deliveryAddress,
+        manager: newCustomer.manager,
       });
 
       setnewCustomer({
@@ -147,7 +155,27 @@ const AddCustomerPage = () => {
             </Select>
           </div>
           <div className="flex gap-2 mt-3">
-            <Select
+            <Input
+              label="CNIC"
+              labelPlacement="outside"
+              placeholder="Enter CNIC "
+              value={newCustomer.cnicNumber}
+              onChange={(e) =>
+                setnewCustomer({ ...newCustomer, cnicNumber: e.target.value })
+              }
+              variant="bordered"
+            />
+            <Input
+              label="Manager Name"
+              labelPlacement="outside"
+              placeholder="Enter manager name"
+              value={newCustomer.manager}
+              onChange={(e) =>
+                setnewCustomer({ ...newCustomer, manager: e.target.value })
+              }
+              variant="bordered"
+            />
+            {/* <Select
               label="Manager"
 
               placeholder="Select the Party Manager"
@@ -167,18 +195,15 @@ const AddCustomerPage = () => {
               <SelectItem key="Internal" value="Internal">
                 Internal
               </SelectItem>
-            </Select>
+            </Select> */}
           </div>
           <div className="mt-8">
             <div className="mb-2 rounded-lg px-4 py-2 bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100">
-              <h2 className="text-lg font-semibold text-purple-700">
-                Address
-              </h2>
+              <h2 className="text-lg font-semibold text-purple-700">Address</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Input
                 label="Country"
-
                 placeholder="Enter country"
                 value={newCustomer.country}
                 onChange={(e) =>
@@ -188,7 +213,6 @@ const AddCustomerPage = () => {
               />
               <Input
                 label="State"
-
                 placeholder="Enter state"
                 value={newCustomer.state}
                 onChange={(e) =>
@@ -198,7 +222,6 @@ const AddCustomerPage = () => {
               />
               <Input
                 label="City"
-
                 placeholder="Enter city"
                 value={newCustomer.city}
                 onChange={(e) =>
@@ -210,7 +233,6 @@ const AddCustomerPage = () => {
             <Input
               className="mt-7"
               label="Address"
-
               placeholder="Enter full address"
               value={newCustomer.address}
               onChange={(e) =>
@@ -221,13 +243,12 @@ const AddCustomerPage = () => {
             <div className="mt-10">
               <Input
                 label="Delivery Address"
-
                 placeholder="Enter Delivery full address"
-                value={newCustomer.Deliveryaddress}
+                value={newCustomer.deliveryAddress}
                 onChange={(e) =>
                   setnewCustomer({
                     ...newCustomer,
-                    Deliveryaddress: e.target.value,
+                    deliveryAddress: e.target.value,
                   })
                 }
                 variant="bordered"
