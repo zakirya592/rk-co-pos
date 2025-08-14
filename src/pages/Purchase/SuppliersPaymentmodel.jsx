@@ -29,8 +29,8 @@ const SuppliersPaymentmodel = ({
   saleData,
   updateSaleData,
   selectedCustomer,
+  isLoading,
 }) => {
-  console.log(selectedCustomer, "selectedCustomer");
 
   const fetchCurrencies = async () => {
     const res = await userRequest.get("/currencies");
@@ -62,7 +62,7 @@ const SuppliersPaymentmodel = ({
           await userRequest.post(`/payments/apply-customer-advance`, {
             customerId: selectedCustomer?._id,
           });
-          onClose()
+          onClose();
           toast.success("Advance payment applied successfully!");
         } catch (error) {
           toast.error(
@@ -231,6 +231,8 @@ const SuppliersPaymentmodel = ({
             <Button
               color="success"
               onPress={completeSale}
+              isLoading={isLoading}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold"
               // isDisabled={totalPaid < total}
             >
               Complete Sale

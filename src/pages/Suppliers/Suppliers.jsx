@@ -21,6 +21,7 @@ import Swal from 'sweetalert2';
 import { useQuery, useQueryClient } from 'react-query';
 import userRequest from '../../utils/userRequest';
 import { useNavigate } from 'react-router-dom';
+import { TbListDetails } from 'react-icons/tb';
 
 const fetchSuppliers = async () => {
     const res = await userRequest.get("/suppliers");
@@ -146,6 +147,17 @@ const Suppliers = () => {
                 <TableCell>{supplier.address}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
+                    <Tooltip content="View Details">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        color="primary"
+                        onPress={() => navigate(`/suppliers/details/${supplier._id}`)}
+                      >
+                        <TbListDetails />
+                      </Button>
+                    </Tooltip>
                     <Tooltip content="Edit Supplier" placement="top">
                       <Button
                         isIconOnly

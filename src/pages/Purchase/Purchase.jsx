@@ -46,6 +46,7 @@ const Purchase = () => {
   const [customers, setCustomers] = useState([]);
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
   const [customerPage, setCustomerPage] = useState(1);
+  const [paymentMethodslosding, setpaymentMethodslosding] = useState(false);
   const [saleDataadd, setSaleDataadd] = useState({
     note: "",
     description: "",
@@ -168,10 +169,19 @@ const Purchase = () => {
     );
   };
 
-  const handleSalepaymets = () => {
+  const completeSale = async() => {
+    setpaymentMethodslosding(true);
+    //handleSalepaymets
     try {
-      userRequest.post("/payments/customer", {
-        customerId: selectedCustomer?._id,
+      await userRequest.post("/supplier-payments", {
+        supplier: selectedCustomer?._id,
+        products: cart.map((item) => ({
+          product: item._id,
+          quantity: item.quantity,
+          // price: item.price,
+          // discount: 0,
+          amount: item.price * item.quantity - 0,
+        })),
         amount: totalPaid,
         paymentMethod: paymentMethods[0]?.method || "cash",
         status:
@@ -180,12 +190,18 @@ const Purchase = () => {
             : totalPaid > 0
             ? "partial"
             : "pending",
-        currency: saleDataadd.currency,
+        currency: saleDataadd.currency || "",
         notes: saleDataadd.description,
-        distributionStrategy: "oldest-first",
       });
+      setCart([]);
+          setDiscount(0);
+          setPaymentMethods([]);
+          setTotalPaid(0);
+          setShowSuppliersPaymentmodel(false);
+          setpaymentMethodslosding(false);
       toast.success("Sale completed successfully!");
     } catch (error) {
+       setpaymentMethodslosding(false);
       toast.error(
         error?.response?.data?.message ||
           error.message ||
@@ -194,47 +210,47 @@ const Purchase = () => {
     }
   };
 
-  const completeSale = async () => {
-    try {
-      const saleData = {
-        customer: selectedCustomer?._id,
-        items: cart.map((item) => ({
-          product: item._id,
-          quantity: item.quantity,
-          price: item.price,
-          discount: 0,
-          total: item.price * item.quantity - 0,
-        })),
-        totalAmount: subtotal,
-        tax: directDiscountAmount,
-        grandTotal: total,
-        discount: discountAmount,
-        // paymentMethod: paymentMethods[0]?.method || "cash",
-        // paymentStatus: totalPaid === total ? "paid" : totalPaid > 0 ? "partial" : "unpaid",
-        // paidAmount: totalPaid,
-        // notes: saleDataadd.description,
-        // subtotal: subtotal,
-      };
+  // const completeSale = async () => {
+  //   try {
+  //     const saleData = {
+  //       customer: selectedCustomer?._id,
+  //       items: cart.map((item) => ({
+  //         product: item._id,
+  //         quantity: item.quantity,
+  //         price: item.price,
+  //         discount: 0,
+  //         total: item.price * item.quantity - 0,
+  //       })),
+  //       totalAmount: subtotal,
+  //       tax: directDiscountAmount,
+  //       grandTotal: total,
+  //       discount: discountAmount,
+  //       // paymentMethod: paymentMethods[0]?.method || "cash",
+  //       // paymentStatus: totalPaid === total ? "paid" : totalPaid > 0 ? "partial" : "unpaid",
+  //       // paidAmount: totalPaid,
+  //       // notes: saleDataadd.description,
+  //       // subtotal: subtotal,
+  //     };
 
-      const response = await userRequest.post("/sales", saleData);
+  //     // const response = await userRequest.post("/sales", saleData);
 
-      // Call handleSalepaymets after successful sale
-      await handleSalepaymets();
+  //     // Call handleSalepaymets after successful sale
+  //     await handleSalepaymets();
 
-      setCart([]);
-      setDiscount(0);
-      setPaymentMethods([]);
-      setTotalPaid(0);
-      setShowSuppliersPaymentmodel(false);
-      console.log(response.data);
-    } catch (error) {
-      toast.error(
-        error?.response?.data?.message ||
-          error.message ||
-          "Failed to complete sale. Please try again."
-      );
-    }
-  };
+  //     setCart([]);
+  //     setDiscount(0);
+  //     setPaymentMethods([]);
+  //     setTotalPaid(0);
+  //     setShowSuppliersPaymentmodel(false);
+  //     // console.log(response.data);
+  //   } catch (error) {
+  //     toast.error(
+  //       error?.response?.data?.message ||
+  //         error.message ||
+  //         "Failed to complete sale. Please try again."
+  //     );
+  //   }
+  // };
 
   return (
     <div className="p-4 h-screen overflow-hidden">
@@ -426,7 +442,7 @@ const Purchase = () => {
                   <Divider />
 
                   {/* Discount & Tax */}
-                  <div className="flex gap-2">
+                  {/* <div className="flex gap-2">
                     <Input
                       type="number"
                       label="Discount %"
@@ -447,7 +463,7 @@ const Purchase = () => {
                       startContent={<FaCalculator />}
                       size="sm"
                     />
-                  </div>
+                  </div> */}
 
                   {/* Bill Summary */}
                   <div className="space-y-1 text-sm">
@@ -505,6 +521,7 @@ const Purchase = () => {
         updatePaymentMethod={updatePaymentMethod}
         totalPaid={totalPaid}
         completeSale={completeSale}
+        isLoading={paymentMethodslosding}
         saleData={saleDataadd}
         updateSaleData={setSaleDataadd}
         selectedCustomer={selectedCustomer}

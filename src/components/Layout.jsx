@@ -23,6 +23,7 @@ import Reports from '../pages/Reports/Reports';
 import Purchase from '../pages/Purchase/Purchase';
 import Warehouse from '../pages/WareHHouse/Wherehouse';
 import Addwarahouse from '../pages/WareHHouse/Addwarahouse';
+import SuppliersDetails from '../pages/Suppliers/SuppliersDetails';
 const Layout = () => {
   
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
@@ -52,6 +53,7 @@ const Layout = () => {
           <Route path="/suppliers" element={<Suppliers />} />
           <Route path="/suppliers/add" element={<AddSupplier />} />
           <Route path="/suppliers/:id/edit" element={<UpdateSupplier />} />
+          <Route path="/suppliers/details/:id" element={<SuppliersDetails />} />
           <Route path="/user" element={<User />} />
           <Route path="/pos" element={<POS />} />
           <Route path="/reports" element={<Reports />} />
