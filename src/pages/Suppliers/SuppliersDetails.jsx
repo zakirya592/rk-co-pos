@@ -378,24 +378,24 @@ const SuppliersDetails = () => {
             <Avatar
               size="xl"
               src="https://via.placeholder.com/150"
-              alt={supplierInfo.name}
+              alt={supplierInfo?.name || ""}
             />
             <div>
-              <p className="text-2xl font-bold">{supplierInfo.name}</p>
+              <p className="text-2xl font-bold">{supplierInfo?.name || ""}</p>
               <p className="text-sm text-gray-600">
-                Supplier ID: {supplierInfo.id}
+                Supplier ID: {supplierInfo?.id || ""}
               </p>
             </div>
           </div>
           <div className="flex gap-4 flex-wrap">
             <div className="flex items-center gap-2 px-3 py-1 bg-[#CFD1D4] text-[#236FC7] rounded-lg">
               <FaUser />
-              <span>{supplierInfo.email}</span>
+              <span>{supplierInfo?.email || ""}</span>
             </div>
 
             <div className="flex items-center gap-2 px-3 py-1 bg-[#CFD1D4] text-[#236FC7] rounded-lg">
               <FaPhone />
-              <span>{supplierInfo.phoneNumber}</span>
+              <span>{supplierInfo?.phoneNumber || ""}</span>
             </div>
 
             {/* <div className="flex items-center gap-2 px-3 py-1 bg-[#CFD1D4] text-[#236FC7] rounded-lg">
