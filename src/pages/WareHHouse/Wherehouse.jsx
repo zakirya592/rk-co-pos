@@ -144,9 +144,9 @@ const Warehouse = () => {
         </CardBody>
       </Card>
 
-      <Table aria-label="Users table" bottomContent={bottomContent}>
+      <Table aria-label="Users table" bottomContent={bottomContent} className='w-full overflow-x-scroll'>
         <TableHeader>
-          <TableColumn>Sl No</TableColumn>
+          <TableColumn>S.No</TableColumn>
           <TableColumn>NAME</TableColumn>
           <TableColumn>EMAIL</TableColumn>
           <TableColumn>CODE</TableColumn>
