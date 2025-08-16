@@ -253,7 +253,7 @@ const Purchase = () => {
   // };
 
   return (
-    <div className="p-4 h-screen overflow-hidden">
+    <div className="p-4 h-screen ">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
         {/* Product Search & Selection */}
         <div className="lg:col-span-2 space-y-4 ">

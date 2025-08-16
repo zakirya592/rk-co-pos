@@ -34,6 +34,11 @@ import {
   FaPrint,
   FaTrash,
   FaEdit,
+  FaBox,
+  FaMoneyBillAlt,
+  FaShoppingBag,
+  FaMoneyBillWave,
+  FaBalanceScale,
 } from "react-icons/fa";
 import { useParams, useNavigate } from "react-router-dom";
 import userRequest from "../../utils/userRequest";
@@ -59,7 +64,11 @@ const SuppliersDetails = () => {
   const [totalSales, setTotalSales] = useState(0);
   const [grandTotal, setGrandTotal] = useState(0);
   const [totalRevenuetop, settotalRevenuetop] = useState(0);
-  const [PurchaseHistory, setPurchaseHistory] = useState([])
+ const [PurchaseHistory, setPurchaseHistory] = useState({
+   products: [],
+   summary: {},
+ });
+
 
   const viewReceipt = (transaction) => {
     console.log(transaction,'ta');
@@ -92,11 +101,9 @@ const SuppliersDetails = () => {
 
   const fetchCustomerPaymentHistory = async () => {
     try {
-      const response = await userRequest.get(
-        `/supplier-payments/supplier/${id}`
-      );
-      const datas = response?.data || "";
-      console.log(datas, "datas");
+      const response = await userRequest.get(`/supplier-journey/${id}`);
+      const datas = response?.data || [];
+      console.log(datas?.products, "datas");
       
       setPurchaseHistory(datas)
     } catch (error) {
@@ -219,14 +226,15 @@ const SuppliersDetails = () => {
 
   const exportToExcel = () => {
     const ws = XLSX.utils.json_to_sheet(
-      PurchaseHistory.payments.map((t) => ({
-        Invoice: t.transactionId,
-        Date: new Date(t.paymentDate).toLocaleDateString(),
-        Time: new Date(t.paymentDate).toLocaleTimeString(),
-        // Customer: t.customer.name || "N/A",
-        Total:`${t?.currency?.symbol || "Rs"}. ${t.amount}`,
-        Payment: t.paymentMethod,
-        Status: t.status,
+      PurchaseHistory.products.map((t) => ({
+        Name: t?.name || "",
+        Category: t?.category || "",
+        AvailableQuantity: t?.availableQuantity || "",
+        soldQuantity: t?.soldQuantity || "N/A",
+        Total: t?.totalValue || "",
+        purchaseRate: t?.purchaseRate || "",
+        soldValue: t?.soldValue || "",
+        packingUnit: t?.packingUnit || "",
       }))
     );
 
@@ -300,11 +308,19 @@ const SuppliersDetails = () => {
         <div class="summary">
           <h3>Summary</h3>
            <div class="topprint">
-          <div><strong>Total Item Sales:</strong> ${
-            PurchaseHistory?.count || "0"
+          <div><strong>Total Item Sales:</strong>  ${
+            PurchaseHistory?.summary?.productCount || "0"
           }</div>
            <div><strong>Total :</strong> ${
-             PurchaseHistory?.totalPayments || "0"
+             PurchaseHistory?.summary?.totalAmount?.toLocaleString() || "0"
+           }</div>
+          </div>
+            <div class="topprint">
+          <div><strong>Total Quantity:</strong>  ${
+            PurchaseHistory?.summary?.totalQuantity || "0"
+          }</div>
+           <div><strong>Sold Quantity :</strong> ${
+             PurchaseHistory?.summary?.soldQuantity?.toLocaleString() || "0"
            }</div>
           </div>
          
@@ -316,24 +332,30 @@ const SuppliersDetails = () => {
           <thead>
             <tr>
               <th>#</th>
-              <th>Invoice</th>
-              <th>Date</th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Available Quantity</th>
               <th>Total</th>
-              <th>Status</th>
-              <th>Method</th>
+              <th>Sold Quantity</th>
+              <th>Purchase Rate</th>
+              <th>Sold Value</th>
+              <th>Packing Unit</th>
             </tr>
           </thead>
           <tbody>
-            ${PurchaseHistory.payments
+            ${PurchaseHistory.products
               .map(
                 (t, i) => `
               <tr>
                 <td>${i + 1}</td>
-                <td>${t.transactionId}</td>
-                <td>${new Date(t.paymentDate).toLocaleDateString()}</td>
-                <td>${t?.currency?.symbol || "Rs"}. ${t.amount}</td>
-                <td>${t.status}</td>
-                <td>${t.paymentMethod}</td>
+                <td>${t.name}</td>
+                <td>${t.category}</td>
+                <td>${t.availableQuantity}</td>
+                <td>${t.totalValue}</td>
+                <td>${t.soldQuantity}</td>
+                <td>${t.purchaseRate}</td>
+                <td>${t.soldValue}</td>
+                <td>${t.packingUnit}</td>
               </tr>
             `
               )
@@ -412,13 +434,11 @@ const SuppliersDetails = () => {
           <Card>
             <CardBody>
               <div className="flex flex-col items-center">
-                <FaShoppingCart className="text-4xl text-blue-500 mb-2" />
-                <p className="text-xl font-bold">
-                  {PurchaseHistory?.count || "0"}
+                <FaShoppingCart className="text-3xl text-blue-500 mb-1" />
+                <p className="text-lg font-bold">
+                  {PurchaseHistory?.summary?.productCount || "0"}
                 </p>
-                <p color="$text" size="$sm">
-                  Total Item Sales
-                </p>
+                <p className="text-sm text-gray-600">Products</p>
               </div>
             </CardBody>
           </Card>
@@ -428,61 +448,56 @@ const SuppliersDetails = () => {
           <Card>
             <CardBody>
               <div className="flex flex-col items-center">
-                <FaMoneyBill className="text-4xl text-yellow-500 mb-2" />
-                <p className="text-xl font-bold">
-                  {PurchaseHistory?.totalPayments || "0"}
+                <FaBox className="text-3xl text-purple-500 mb-1" />
+                <p className="text-lg font-bold">
+                  {PurchaseHistory?.summary?.totalQuantity || "0"}
                 </p>
-                <p color="$text" size="$sm">
-                  Total Invoiced
-                </p>
+                <p className="text-sm text-gray-600">Total Quantity</p>
               </div>
             </CardBody>
           </Card>
         </div>
+
         <div>
           <Card>
             <CardBody>
               <div className="flex flex-col items-center">
-                <FaMoneyBill className="text-4xl text-green-500 mb-2" />
-                <p className="text-xl font-bold">
-                  {/* {totalSales?.summary?.totalPaid || "0"} */}
-                  {totalRevenuetop?.totalPaid || "0"}
+                <FaMoneyBillAlt className="text-3xl text-green-500 mb-1" />
+                <p className="text-lg font-bold">
+                  {PurchaseHistory?.summary?.totalAmount?.toLocaleString() ||
+                    "0"}
                 </p>
-                <p color="$text" size="$sm">
-                  Total Paid
-                </p>
+                <p className="text-sm text-gray-600">Total Amount</p>
               </div>
             </CardBody>
           </Card>
         </div>
+
         <div>
           <Card>
             <CardBody>
               <div className="flex flex-col items-center">
-                <FaClock className="text-4xl text-red-500 mb-2" />
-                <p className="text-xl font-bold">
-                  {Math.max(totalRevenuetop?.totalRemaining || 0, 0)}
-                  {/* {Math.max(totalSales?.summary?.currentOutstandingBalance || 0, 0)} */}
+                <FaShoppingBag className="text-3xl text-yellow-500 mb-1" />
+                <p className="text-lg font-bold">
+                  {PurchaseHistory?.summary?.soldQuantity?.toLocaleString() ||
+                    "0"}
                 </p>
-                <p color="$text" size="$sm">
-                  Due Amount
-                </p>
+                <p className="text-sm text-gray-600">Sold Quantity</p>
               </div>
             </CardBody>
           </Card>
         </div>
+
         <div>
           <Card>
             <CardBody>
               <div className="flex flex-col items-center">
-                <FaMoneyBill className="text-4xl text-orange-500 mb-2" />
-                <p className="text-xl font-bold">
-                  {/* {totalSales?.summary?.totalAdvanceAmount || "0"} */}
-                  {totalRevenuetop?.currentAdvanceBalance || "0"}
+                <FaMoneyBillWave className="text-3xl text-red-500 mb-1" />
+                <p className="text-lg font-bold">
+                  {PurchaseHistory?.summary?.soldAmount?.toLocaleString() ||
+                    "0"}
                 </p>
-                <p color="$text" size="$sm">
-                  Total Advance Amount
-                </p>
+                <p className="text-sm text-gray-600">Sold Amount</p>
               </div>
             </CardBody>
           </Card>
@@ -542,74 +557,46 @@ const SuppliersDetails = () => {
           <Table aria-label="suppliers Transaction History">
             <TableHeader>
               <TableColumn>ID</TableColumn>
-              <TableColumn>Invoice #</TableColumn>
-              <TableColumn>Date</TableColumn>
-              <TableColumn>Items</TableColumn>
+              <TableColumn>Name </TableColumn>
+              <TableColumn>Category</TableColumn>
+              <TableColumn>Available Quantity</TableColumn>
               <TableColumn>Total</TableColumn>
-              <TableColumn>User</TableColumn>
-              {/* <TableColumn>Paid Amount</TableColumn>
-              <TableColumn>Due Amount</TableColumn> */}
-              <TableColumn>Payment Status</TableColumn>
-              {/* <TableColumn>Payment Method</TableColumn> */}
-              <TableColumn>Actions</TableColumn>
+              <TableColumn>Sold Quantity</TableColumn>
+              <TableColumn>Purchase Rate</TableColumn>
+              <TableColumn>Sold Value</TableColumn>
+              <TableColumn>Packing Unit</TableColumn>
+              {/* <TableColumn>Actions</TableColumn> */}
             </TableHeader>
             <TableBody>
-              {PurchaseHistory.payments.map((transaction, index) => {
-                const isPayment = !!transaction.payment;
-                const userdata = !!transaction.user || transaction.user;
-
+              {PurchaseHistory?.products?.map((transaction, index) => {
                 return (
                   <TableRow key={index + 1}>
                     {/* Index */}
                     <TableCell>{index + 1}</TableCell>
 
                     {/* Invoice or Transaction ID */}
-                    <TableCell>{transaction?.transactionId || "-"}</TableCell>
+                    <TableCell>{transaction?.name || "-"}</TableCell>
 
-                    {/* Date */}
-                    <TableCell>
-                      {new Date(transaction.paymentDate).toLocaleDateString() ||
-                        "-"}
-                    </TableCell>
+                    {/* Category */}
+                    <TableCell>{transaction?.category || ""}</TableCell>
 
                     <TableCell>
-                      <div className="text-sm">
-                        {transaction?.products?.length} item(s)
-                        <div className="text-xs text-gray-500">
-                          {transaction?.products?.[0]?.product?.name || ""}
-                          {transaction?.products?.length > 1 &&
-                            ` +${transaction?.products?.length - 1} more`}
-                        </div>
-                      </div>
+                      {transaction?.availableQuantity || "0"}
                     </TableCell>
 
                     {/* Amount */}
-                    <TableCell>{transaction?.amount || "0"}</TableCell>
+                    <TableCell>{transaction?.totalValue || "0"}</TableCell>
                     {/* user */}
-                    <TableCell>
-                      {userdata
-                        ? transaction.user.name
-                        : transaction?.grandTotal || ""}
-                    </TableCell>
+                    <TableCell>{transaction?.soldQuantity || "0"}</TableCell>
 
                     {/* Status */}
                     <TableCell>
-                      <Chip
-                        size="sm"
-                        color={
-                          transaction.status === "completed"
-                            ? "success"
-                            : transaction.status === "pending"
-                            ? "warning"
-                            : "danger"
-                        }
-                      >
-                        {transaction.status}
-                      </Chip>
+                      <Chip size="sm">{transaction.purchaseRate}</Chip>
                     </TableCell>
-
+                    <TableCell>{transaction?.soldValue || "0"}</TableCell>
+                    <TableCell>{transaction?.packingUnit || ""}</TableCell>
                     {/* Actions */}
-                    <TableCell>
+                    {/* <TableCell>
                       <Tooltip content="View Receipt">
                         <Button
                           isIconOnly
@@ -621,19 +608,7 @@ const SuppliersDetails = () => {
                           <FaPrint />
                         </Button>
                       </Tooltip>
-
-                      {/* <Tooltip content="Delete">
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          variant="light"
-                          color="danger"
-                          onPress={() => handleDeletesuppliers(transaction)}
-                        >
-                          <FaTrash />
-                        </Button>
-                      </Tooltip> */}
-                    </TableCell>
+                    </TableCell> */}
                   </TableRow>
                 );
               })}
