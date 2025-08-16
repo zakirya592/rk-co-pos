@@ -361,9 +361,17 @@ const POS = () => {
                           >
                             <FaMinus />
                           </Button>
-                          <span className="w-8 text-center">
-                            {item.quantity}
-                          </span>
+                          <input
+                            type="number"
+                            min="1"
+                            className="w-24 h-8 text-center border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const newQuantity = parseInt(e.target.value) || 1;
+                              updateQuantity(item._id, newQuantity);
+                            }}
+                            onFocus={(e) => e.target.select()}
+                          />
                           <Button
                             isIconOnly
                             size="sm"
