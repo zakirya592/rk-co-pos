@@ -25,6 +25,11 @@ const UpdateProductForm = () => {
     const res = await userRequest.get("/currencies");
     return res.data.data || [];
   };
+  //Add warehouse fetch function
+  const fetchWarehouses = async () => {
+    const res = await userRequest.get("/warehouses");
+    return res.data.data || [];
+  };
 
   const { data: suppliers = [], isLoading: isSuppliersLoading } = useQuery(
     ["suppliers"],
@@ -35,6 +40,9 @@ const UpdateProductForm = () => {
     ["currencies"],
     fetchCurrencies
   );
+
+  const { data: Warehouses = [], isLoading: isfetchWarehousesLoading } =
+    useQuery(["Warehouses"], fetchWarehouses);
 
   // Fetch product details
   useEffect(() => {
@@ -47,10 +55,10 @@ const UpdateProductForm = () => {
           ...productData,
           currency: productData.currency?._id || productData.currency,
           supplier: productData.supplier?._id || productData.supplier,
+          warehouse: productData.warehouse?._id || productData.warehouse,
         });
         setIsCustomColor(!["white", "black"].includes(productData?.color?.toLowerCase()));
         setIsCustomSize(!["small", "medium", "large"].includes(productData?.size?.toLowerCase()));
-        // setSelectedCurrency(res.data.data.currency || "₨");
       } catch (error) {
         toast.error("Failed to fetch product details");
         navigate("/products");
@@ -97,8 +105,6 @@ const UpdateProductForm = () => {
     setLoading(true);
     try {
       const formData = new FormData();
-      console.log(formData, "formData");
-      
       // Handle category specially since it might be an object or string
       formData.append("category", typeof product.category === "object" && product.category !== null ? product.category._id : product.category);
       // Append other fields
@@ -108,6 +114,7 @@ const UpdateProductForm = () => {
         }
       });
 
+      console.log(formData, "formData");
       await userRequest.put(`/products/${id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -115,11 +122,11 @@ const UpdateProductForm = () => {
       toast.success("Product updated successfully!");
       navigate("/products");
     } catch (error) {
-       toast.error(
-         error?.response?.data?.message ||
-           error.message ||
-           "Failed to update product."
-       );
+      toast.error(
+        error?.response?.data?.message ||
+        error.message ||
+        "Failed to update product."
+      );
     } finally {
       setLoading(false);
     }
@@ -339,17 +346,6 @@ const UpdateProductForm = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-7 gap-4 mt-10">
-              {/* <Input
-                label="Barcode"
-                labelPlacement="outside"
-                placeholder="Enter barcode"
-                value={product.barcode}
-                onChange={(e) =>
-                  setProduct({ ...product, barcode: e.target.value })
-                }
-                variant="bordered"
-              /> */}
-
               <Select
                 label={
                   <span>
@@ -361,10 +357,6 @@ const UpdateProductForm = () => {
                 placeholder="Select currency"
                 selectedKeys={product.currency ? [product.currency] : []}
                 value={product.currency}
-                // onChange={(e) => {
-                //   const selectedCurrency = currencies.find(c => c.code === e.target.value);
-                //   setProduct({ ...product, currency: selectedCurrency });
-                // }}
                 onChange={(e) =>
                   setProduct({ ...product, currency: e.target.value })
                 }
@@ -383,17 +375,6 @@ const UpdateProductForm = () => {
                 ))}
               </Select>
 
-              {/* <Input
-                label="Price"
-                labelPlacement="outside"
-                placeholder="0.00"
-                type="number"
-                value={product.price}
-                onChange={(e) =>
-                  setProduct({ ...product, price: e.target.value })
-                }
-                variant="bordered"
-              /> */}
               <Select
                 label={
                   <span>
@@ -418,17 +399,30 @@ const UpdateProductForm = () => {
                 ))}
               </Select>
 
-              {/* <Input
-                label="Location"
+              <Select
+                label={
+                  <span>
+                    Warehouses
+                    <span className="text-red-500 font-bold ms-1">*</span>
+                  </span>
+                }
                 labelPlacement="outside"
-                placeholder="Your Location"
-                type="text"
-                value={product.location}
+                placeholder="Select Warehouses"
+                selectedKeys={product.warehouse ? [product.warehouse] : []}
+                value={product.warehouse}
                 onChange={(e) =>
-                  setProduct({ ...product, location: e.target.value })
+                  setProduct({ ...product, warehouse: e.target.value })
                 }
                 variant="bordered"
-              /> */}
+                className="md:col-span-2"
+              >
+                {Warehouses.map((warehouse) => (
+                  <SelectItem key={warehouse._id} value={warehouse._id}>
+                    {warehouse?.name || ""}
+                  </SelectItem>
+                ))}
+              </Select>
+
               {/* Size Selection */}
               <Input
                 label="Custom Size"

@@ -353,7 +353,7 @@ const Products = () => {
           <TableColumn>CATEGORY</TableColumn>
           <TableColumn>SUPPLIERS</TableColumn>
           <TableColumn>CURRENCE</TableColumn>
-          <TableColumn>PRICE</TableColumn>
+          <TableColumn>WAREHOUSE</TableColumn>
           <TableColumn>PURCHASE RATE</TableColumn>
           <TableColumn>SALE RATE</TableColumn>
           <TableColumn>WHOLESALE RATE</TableColumn>
@@ -385,9 +385,7 @@ const Products = () => {
         >
           {paginatedProducts.map((product, index) => (
             <TableRow key={product._id}>
-              <TableCell>
-                {index + 1}
-              </TableCell>
+              <TableCell>{index + 1}</TableCell>
               <TableCell>
                 {product.image ? (
                   <img
@@ -400,7 +398,9 @@ const Products = () => {
                 )}
               </TableCell>
 
-              <TableCell className="font-semibold">{product?.name || ""}</TableCell>
+              <TableCell className="font-semibold">
+                {product?.name || ""}
+              </TableCell>
 
               <TableCell>
                 <Chip size="sm" variant="flat" color="primary">
@@ -409,7 +409,7 @@ const Products = () => {
               </TableCell>
               <TableCell>{product?.supplier?.name || ""}</TableCell>
               <TableCell>{product?.currency?.symbol || ""}</TableCell>
-              <TableCell>{product?.price || "0"}</TableCell>
+              <TableCell>{product?.warehouse?.name || "0"}</TableCell>
               <TableCell>{product?.purchaseRate || "0"}</TableCell>
               <TableCell>{product?.saleRate || "0"}</TableCell>
               <TableCell>{product?.wholesaleRate || "0"}</TableCell>

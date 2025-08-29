@@ -13,10 +13,10 @@ const AddProductForm = () => {
   const navigate = useNavigate();
   const [newProduct, setNewProduct] = useState({
     name: "",
-    price: "",
     countInStock: "",
     category: "",
     purchaseRate: "",
+    Warehouses: "",
     saleRate: "",
     wholesaleRate: "",
     retailRate: "",
@@ -54,6 +54,11 @@ const AddProductForm = () => {
     return res.data.data || [];
   };
 
+    const fetchWarehouses = async () => {
+      const res = await userRequest.get("/warehouses");
+      return res.data.data || [];
+    };
+
   const { data: categories = [], isLoading: isCategoriesLoading } = useQuery(
     ["categories"],
     fetchCategories
@@ -68,6 +73,9 @@ const AddProductForm = () => {
     ["currencies"],
     fetchCurrencies
   );
+
+    const { data: Warehouses = [], isLoading: isfetchWarehousesLoading } =
+      useQuery(["Warehouses"], fetchWarehouses);
 
 
   // Handle image upload
@@ -94,7 +102,6 @@ const AddProductForm = () => {
     try {
       const formData = new FormData();
       formData.append("name", newProduct.name);
-      formData.append("price", newProduct.price);
       formData.append("purchaseRate", newProduct.purchaseRate);
       formData.append("saleRate", newProduct.saleRate);
       formData.append("wholesaleRate", newProduct.wholesaleRate);
@@ -112,6 +119,7 @@ const AddProductForm = () => {
       formData.append("countInStock", newProduct.countInStock);
       formData.append("currency", newProduct.currency);
       formData.append("supplier", newProduct.supplier);
+      formData.append("warehouse", newProduct.Warehouses);
       formData.append("location", newProduct.location);
       formData.append("isActive", newProduct.isActive === "active");
       formData.append("image", newProduct.image);
@@ -121,7 +129,7 @@ const AddProductForm = () => {
       });
       setNewProduct({
         name: "",
-        price: "",
+        Warehouses:"",
         countInStock: "",
         category: "",
         purchaseRate: "",
@@ -390,18 +398,6 @@ const AddProductForm = () => {
                   </SelectItem>
                 ))}
               </Select>
-
-              {/* <Input
-                  label="Price"
-                  labelPlacement="outside"
-                  placeholder="0.00"
-                  type="number"
-                  value={newProduct.price}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, price: e.target.value })
-                  }
-                  variant="bordered"
-                /> */}
               <Select
                 label={
                   <span>
@@ -426,17 +422,28 @@ const AddProductForm = () => {
                 ))}
               </Select>
 
-              {/* <Input
-                  label="Location"
-                  labelPlacement="outside"
-                  placeholder="Your Location"
-                  type="text"
-                  value={newProduct.location}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, location: e.target.value })
-                  }
-                  variant="bordered"
-                /> */}
+              <Select
+                label={
+                  <span>
+                    Warehouses
+                    <span className="text-red-500 font-bold ms-1">*</span>
+                  </span>
+                }
+                labelPlacement="outside"
+                placeholder="Select Warehouses"
+                value={newProduct.Warehouses}
+                onChange={(e) =>
+                  setNewProduct({ ...newProduct, Warehouses: e.target.value })
+                }
+                variant="bordered"
+                className="md:col-span-2"
+              >
+                {Warehouses.map((warehouse) => (
+                  <SelectItem key={warehouse._id} value={warehouse._id}>
+                    {warehouse?.name || ""}
+                  </SelectItem>
+                ))}
+              </Select>
               {/* Size Selection */}
               <Input
                 label="Custom Size"
@@ -548,21 +555,6 @@ const AddProductForm = () => {
                 // startContent={selectedCurrencySymbol}
                 variant="bordered"
               />
-
-              {/* <Input
-                label="Available Quantity"
-                labelPlacement="outside"
-                placeholder="0"
-                type="number"
-                value={newProduct.availableQuantity}
-                onChange={(e) =>
-                  setNewProduct({
-                    ...newProduct,
-                    availableQuantity: e.target.value,
-                  })
-                }
-                variant="bordered"
-              /> */}
 
               <Input
                 label={
