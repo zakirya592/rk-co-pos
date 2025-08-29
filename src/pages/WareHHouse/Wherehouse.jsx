@@ -1,19 +1,19 @@
 import React, { useMemo, useState } from 'react';
 import {
-    Card,
-    CardBody,
-    Button,
-    Input,
-    Table,
-    TableHeader,
-    TableColumn,
-    TableBody,
-    TableRow,
-    TableCell,
-    Chip,
-    Tooltip,
-    Spinner,
-    Pagination,
+  Card,
+  CardBody,
+  Button,
+  Input,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+  Chip,
+  Tooltip,
+  Spinner,
+  Pagination,
 } from '@nextui-org/react';
 import { FaPlus, FaSearch, FaEdit, FaTrash, FaEye } from 'react-icons/fa';
 import { useQuery } from 'react-query';
@@ -21,11 +21,12 @@ import userRequest from '../../utils/userRequest';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import { Link, useNavigate } from "react-router-dom";
+import { TbListDetails } from 'react-icons/tb';
 
 const fetchUsers = async ({ queryKey }) => {
-    const [_, page] = queryKey;
-    const res = await userRequest.get(`/warehouses?page=${page || 1}`);
-    return res.data;
+  const [_, page] = queryKey;
+  const res = await userRequest.get(`/warehouses?page=${page || 1}`);
+  return res.data;
 };
 
 const Warehouse = () => {
@@ -36,7 +37,7 @@ const Warehouse = () => {
 
   const [totalPages, setTotalPages] = useState(1);
   const [totalWarehouses, setTotalWarehouses] = useState(0);
-  
+
   const {
     data: response,
     isLoading,
@@ -50,7 +51,7 @@ const Warehouse = () => {
       setTotalWarehouses(data.totalWarehouses);
     },
   });
-  
+
   const warehouses = response?.data || [];
 
   const filteredItems = useMemo(() => {
@@ -106,7 +107,7 @@ const Warehouse = () => {
               cursor: "bg-navy-700 text-black",
             }}
           />
-         
+
         </div>
       </div>
     ),
@@ -146,6 +147,7 @@ const Warehouse = () => {
 
       <Table aria-label="Users table" bottomContent={bottomContent} className='w-full overflow-x-scroll'>
         <TableHeader>
+
           <TableColumn>S.No</TableColumn>
           <TableColumn>NAME</TableColumn>
           <TableColumn>EMAIL</TableColumn>
@@ -216,20 +218,17 @@ const Warehouse = () => {
               </TableCell>
               <TableCell>
                 <div className="flex gap-2">
-                  {/* <Tooltip content="View">
-                                        <Button
-                                            isIconOnly
-                                            size="sm"
-                                            variant="light"
-                                            color="primary"
-                                            onClick={() => {
-                                                setSelectedUser(user);
-                                                setShowDetailsModal(true);
-                                            }}
-                                        >
-                                            <FaEye />
-                                        </Button>
-                                    </Tooltip> */}
+                  <Tooltip content="View Details">
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      color="primary"
+                      onPress={() => navigate(`/warehousedetails/${warehouse._id}`)}
+                    >
+                      <TbListDetails />
+                    </Button>
+                  </Tooltip>
                   <Tooltip content="Update">
                     <Button
                       isIconOnly
