@@ -93,6 +93,13 @@ const cardData = [
     desc: "Warehouse management",
     color: "cyan",
   },
+    {
+      to: "/shop",
+      icon: <FaStore />,
+      title: "Shop",
+      desc: "Shop management",
+      color: "lime",
+    },
 ];
 
 const Navigation = () => {

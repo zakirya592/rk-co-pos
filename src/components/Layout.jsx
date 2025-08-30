@@ -26,6 +26,9 @@ import Addwarahouse from '../pages/WareHHouse/Addwarahouse';
 import SuppliersDetails from '../pages/Suppliers/SuppliersDetails';
 import Updatewarehouse from '../pages/WareHHouse/Updatewarehouse';
 import { Suspense } from 'react';
+import Shop from '../pages/Shop/Shop';
+import AddShopPage from '../pages/Shop/AddShopPage';
+import UpdateShopPage from '../pages/Shop/UpdateShopPage';
 const Layout = () => {
   
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
@@ -68,13 +71,28 @@ const Layout = () => {
           <Route path="/warehouse" element={<Warehouse />} />
           <Route path="/add-warehouse" element={<Addwarahouse />} />
           <Route path="/update-warehouse/:id" element={<Updatewarehouse />} />
-          <Route path="/warehousedetails/:id" element={
-            <Suspense fallback={<div className="flex justify-center items-center h-64"><span>Loading...</span></div>}>
-              {React.createElement(React.lazy(() => import('../pages/WareHHouse/WarehouseDetails')))}
-            </Suspense>
-          } />
+          <Route
+            path="/warehousedetails/:id"
+            element={
+              <Suspense
+                fallback={
+                  <div className="flex justify-center items-center h-64">
+                    <span>Loading...</span>
+                  </div>
+                }
+              >
+                {React.createElement(
+                  React.lazy(() =>
+                    import("../pages/WareHHouse/WarehouseDetails")
+                  )
+                )}
+              </Suspense>
+            }
+          />
           <Route path="/settings" element={<Settings />} />
-          {/* <Route path="*" element={<Products />} /> */}
+          <Route path="/Shop" element={<Shop />} />
+          <Route path="/add-shop" element={<AddShopPage />} />
+          <Route path="/update-shop/:id" element={<UpdateShopPage />} />
         </Routes>
       </div>
     </div>
