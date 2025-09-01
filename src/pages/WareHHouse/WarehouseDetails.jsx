@@ -1,35 +1,110 @@
-import React, { useEffect, useState } from 'react';
-import { Spinner, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Chip } from '@nextui-org/react';
-import { useParams } from 'react-router-dom';
-import userRequest from '../../utils/userRequest';
+import React, { useEffect, useState } from "react";
+import StockTransferModal from "./StockTransferModal";
+import {
+  Spinner,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+  Chip,
+  Button,
+} from "@nextui-org/react";
+import { useParams } from "react-router-dom";
+import userRequest from "../../utils/userRequest";
 
 const WarehouseDetails = () => {
   const { id } = useParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isStockTransferOpen, setIsStockTransferOpen] = useState(false);
+
+  // ✅ Cache for suppliers, categories, currencies
+  const detailsCache = {
+    categories: {},
+    suppliers: {},
+    currencies: {},
+  };
+
+  const fetchDetailsById = async (endpoint, entityId, cacheKey) => {
+    if (!entityId) return null;
+
+    // ✅ Use cache if available
+    if (detailsCache[cacheKey][entityId]) {
+      return detailsCache[cacheKey][entityId];
+    }
+
+    try {
+      const res = await userRequest.get(`/${endpoint}/${entityId}`);
+      const data = res.data?.data || res.data; // handle both shapes
+
+      if (data) {
+        detailsCache[cacheKey][entityId] = data;
+        return data;
+      }
+    } catch (err) {
+      console.error(`❌ Failed to fetch ${endpoint}/${entityId}`, err);
+    }
+
+    return null;
+  };
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const res = await userRequest.get(`/products/location/warehouse/${id}`);
+      let productsData = res.data.data || [];
+
+      const enrichedProducts = await Promise.all(
+        productsData.map(async (product) => {
+          const [category, supplier, currency] = await Promise.all([
+            product.category
+              ? fetchDetailsById("categories", product.category, "categories")
+              : null,
+            product.supplier
+              ? fetchDetailsById("suppliers", product.supplier, "suppliers")
+              : null,
+            product.currency
+              ? fetchDetailsById("currencies", product.currency, "currencies")
+              : null,
+          ]);
+
+          return {
+            ...product,
+            category,
+            supplier,
+            currency,
+          };
+        })
+      );
+
+      setProducts(enrichedProducts);
+    } catch (err) {
+      setError("Failed to fetch products");
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-      try {
-        const res = await userRequest.get(`/warehouses/${id}/products`);
-        setProducts(res.data.data || []);
-      } catch (err) {
-        setError('Failed to fetch products');
-      }
-      setLoading(false);
-    };
     fetchProducts();
   }, [id]);
 
-//   if (error) return <div className="text-center text-red-500">{error}</div>;
-
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold text-gray-800 mb-4">
-        Warehouse Products
-      </h1>
+      <div className="flex justify-between">
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">
+          Warehouse Products
+        </h1>
+        <Button
+          className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold"
+          onClick={() => setIsStockTransferOpen(true)}
+        >
+          Stock Transfer
+        </Button>
+      </div>
+
       <Table
         aria-label="Warehouse Products"
         className="w-full overflow-x-scroll"
@@ -55,7 +130,7 @@ const WarehouseDetails = () => {
           }
           emptyContent={
             <div className="text-center text-gray-500 py-8">
-              No Warehouse found
+              No products found
             </div>
           }
         >
@@ -63,24 +138,34 @@ const WarehouseDetails = () => {
             <TableRow key={product._id}>
               <TableCell>{product.name}</TableCell>
               <TableCell>
-                <Chip>{product.category?.name}</Chip>
+                <Chip>{product.category?.name || "Unknown Category"}</Chip>
               </TableCell>
               <TableCell>
-                <Chip>{product.color || ""}</Chip>
+                <Chip>{product.color || "N/A"}</Chip>
               </TableCell>
-              <TableCell>{product.size || ""}</TableCell>
-              <TableCell>{product.supplier?.name}</TableCell>
+              <TableCell>{product.size || "N/A"}</TableCell>
               <TableCell>
-                {product.currency?.symbol} {product.currency?.code}
+                {product.supplier?.name || "Unknown Supplier"}
+              </TableCell>
+              <TableCell>
+                {product.currency?.symbol} {product.currency?.code || ""}
               </TableCell>
               <TableCell>{product.purchaseRate}</TableCell>
               <TableCell>{product.saleRate}</TableCell>
-              <TableCell>{product.countInStock}</TableCell>
+              <TableCell>{product.currentStock}</TableCell>
               <TableCell>{product.description}</TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      <StockTransferModal
+        isOpen={isStockTransferOpen}
+        onClose={() => setIsStockTransferOpen(false)}
+        products={products}
+        fromWarehouseId={id}
+        apirefresh={fetchProducts}
+      />
     </div>
   );
 };
