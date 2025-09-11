@@ -163,7 +163,7 @@ const Currency = () => {
           {currencies.map((currency) => (
             <Card
               key={currency._id}
-              className="hover:shadow-lg transition-shadow"
+              className="hover:shadow-lg transition-shadow hover:bg-gray-50 hover:border-black hover:border-2"
             >
               <CardBody className="p-6">
                 <div className="flex items-start justify-between mb-4">
