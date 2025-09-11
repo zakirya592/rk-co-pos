@@ -142,10 +142,7 @@ const Shop = () => {
         </CardBody>
       </Card>
 
-      <Table
-        aria-label="Shops table"
-        bottomContent={bottomContent}
-      >
+      <Table aria-label="Shops table" bottomContent={bottomContent} bottomContentPlacement='outside'>
         <TableHeader>
           <TableColumn>S.No</TableColumn>
           <TableColumn>NAME</TableColumn>
@@ -172,13 +169,17 @@ const Shop = () => {
           }
         >
           {filteredItems.map((shop, index) => (
-            <TableRow key={shop._id} >
+            <TableRow key={shop._id}>
               <TableCell>{(page - 1) * rowsPerPage + index + 1}</TableCell>
               <TableCell>
-                <div className="font-semibold">{shop?.name || ""}</div>
+                <div className="font-semibold whitespace-nowrap">
+                  {shop?.name || ""}
+                </div>
               </TableCell>
               <TableCell>
-                <div className="text-sm text-gray-500">{shop?.email || ""}</div>
+                <div className="text-sm text-gray-500 whitespace-nowrap">
+                  {shop?.email || ""}
+                </div>
               </TableCell>
               <TableCell>
                 <Chip
@@ -197,49 +198,49 @@ const Shop = () => {
                 </Chip>
               </TableCell>
               <TableCell>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 whitespace-nowrap">
                   {shop?.openingHours || ""}
                 </div>
               </TableCell>
 
               <TableCell>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 whitespace-nowrap">
                   {shop?.location?.country || ""}
                 </div>
               </TableCell>
               <TableCell>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 whitespace-nowrap">
                   {shop?.location?.state || ""}
                 </div>
               </TableCell>
               <TableCell>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 whitespace-nowrap">
                   {shop?.location?.city || ""}
                 </div>
               </TableCell>
               <TableCell>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 whitespace-nowrap">
                   {shop?.phoneNumber || ""}
                 </div>
               </TableCell>
               <TableCell>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 whitespace-nowrap">
                   {shop?.contactPerson || ""}
                 </div>
               </TableCell>
               <TableCell>
                 <div className="flex gap-2">
-                  {/* <Tooltip content="View Details">
+                  <Tooltip content="View Details">
                     <Button
                       isIconOnly
                       size="sm"
                       variant="light"
                       color="primary"
-                      onPress={() => navigate(`/shopdetails/${shop._id}`)}
+                      onPress={() => navigate(`/ShopDetails/shop/${shop._id}`)}
                     >
                       <TbListDetails />
                     </Button>
-                  </Tooltip> */}
+                  </Tooltip>
                   <Tooltip content="Update">
                     <Button
                       isIconOnly

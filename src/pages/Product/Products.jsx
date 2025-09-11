@@ -398,7 +398,7 @@ const Products = () => {
                 )}
               </TableCell>
 
-              <TableCell className="font-semibold">
+              <TableCell className="font-semibold whitespace-nowrap">
                 {product?.name || ""}
               </TableCell>
 

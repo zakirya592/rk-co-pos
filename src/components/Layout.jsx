@@ -72,7 +72,7 @@ const Layout = () => {
           <Route path="/add-warehouse" element={<Addwarahouse />} />
           <Route path="/update-warehouse/:id" element={<Updatewarehouse />} />
           <Route
-            path="/warehousedetails/:id"
+            path="/warehousedetails/:type/:id"
             element={
               <Suspense
                 fallback={
@@ -93,6 +93,22 @@ const Layout = () => {
           <Route path="/Shop" element={<Shop />} />
           <Route path="/add-shop" element={<AddShopPage />} />
           <Route path="/update-shop/:id" element={<UpdateShopPage />} />
+          <Route
+            path="/ShopDetails/:type/:id"
+            element={
+              <Suspense
+                fallback={
+                  <div className="flex justify-center items-center h-64">
+                    <span>Loading...</span>
+                  </div>
+                }
+              >
+                {React.createElement(
+                  React.lazy(() => import("../pages/Shop/ShopDetails"))
+                )}
+              </Suspense>
+            }
+          />
         </Routes>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { Select, SelectItem } from "@nextui-org/react";
 import {
   Modal,
@@ -16,10 +17,19 @@ const StockTransferModal = ({
   isOpen,
   onClose,
   products = [],
-  sourceType = "warehouse",
+  sourceType: propSourceType,
   fromWarehouseId,
   apirefresh,
 }) => {
+  const params = useParams();
+  
+  let sourceType = propSourceType;
+  if (!sourceType) {
+    if (params?.type === "warehouse") sourceType = "warehouse";
+    else if (params?.type === "shop") sourceType = "shop";
+    else sourceType = "warehouse";
+  }
+  
   const [loading, setLoading] = useState(false);
   const [transferTo, setTransferTo] = useState("");
   const [transferOptions, setTransferOptions] = useState([]);
@@ -64,7 +74,7 @@ const StockTransferModal = ({
         .filter((row) => row.productId) // only valid rows
         .map((row) => {
           const product = products.find((p) => p._id === row.productId);
-          const qty = Math.max(1, Math.min(product.countInStock, row.quantity));
+          const qty = Math.max(1, Math.min(product.currentStock, row.quantity));
           return {
             product: row.productId,
             quantity: qty,
@@ -206,7 +216,7 @@ const StockTransferModal = ({
                             p._id !== row.productId
                           }
                         >
-                          {p.name} (In stock: {p.countInStock})
+                          {p.name} (In stock: {p.currentStock})
                         </SelectItem>
                       ))}
                     </Select>
@@ -215,7 +225,7 @@ const StockTransferModal = ({
                     <Input
                       type="number"
                       min={1}
-                      max={product ? product.countInStock : 9999}
+                      max={product ? product.currentStock : 9999}
                       value={row.quantity}
                       className="w-24"
                       onChange={(e) =>
@@ -225,7 +235,7 @@ const StockTransferModal = ({
                           Math.max(
                             1,
                             Math.min(
-                              product ? product.countInStock : 9999,
+                              product ? product.currentStock : 9999,
                               Number(e.target.value)
                             )
                           )

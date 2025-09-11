@@ -39,11 +39,35 @@ const UpdateCurrencyModal = ({
               required
             />
             <Input
+              label="Currency Code"
+              placeholder="Enter currency code (e.g. USD)"
+              value={editCurrency.code || ""}
+              onChange={(e) =>
+                setEditCurrency({ ...editCurrency, code: e.target.value })
+              }
+              variant="bordered"
+              required
+            />
+            <Input
               label="Currency Symbol"
               placeholder="Enter currency symbol"
               value={editCurrency.symbol}
               onChange={(e) =>
                 setEditCurrency({ ...editCurrency, symbol: e.target.value })
+              }
+              variant="bordered"
+              required
+            />
+            <Input
+              label="Exchange Rate"
+              placeholder="Enter exchange rate"
+              type="number"
+              value={editCurrency.exchangeRate || ""}
+              onChange={(e) =>
+                setEditCurrency({
+                  ...editCurrency,
+                  exchangeRate: e.target.value,
+                })
               }
               variant="bordered"
               required

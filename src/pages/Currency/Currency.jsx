@@ -27,17 +27,20 @@ const Currency = () => {
     queryFn: fetchCurrencies
   });
 
-  const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState(null);
   const [newCurrency, setNewCurrency] = useState({
-    name: '',
-    symbol: '',
+    name: "",
+    symbol: "",
+    code: "",
+    exchangeRate:''
   });
   const [editCurrency, setEditCurrency] = useState({
     name: "",
     symbol: "",
+    code: "",
+    exchangeRate: "",
   });
   
   const handleAddCurrency = async () => {
@@ -45,6 +48,8 @@ const Currency = () => {
       await userRequest.post("/currencies", {
         name: newCurrency.name,
         symbol: newCurrency.symbol,
+        code: newCurrency.code,
+        exchangeRate: newCurrency.exchangeRate,
       });
       setNewCurrency({ name: "", symbol: ""});
       refetch();
@@ -62,6 +67,8 @@ const Currency = () => {
       await userRequest.put(`/currencies/${selectedCurrency?._id}`, {
         name: editCurrency.name,
         symbol: editCurrency.symbol,
+        code: editCurrency.code,
+        exchangeRate: editCurrency.exchangeRate,
       });
       setShowEditModal(false);
       setSelectedCurrency(null);
@@ -101,6 +108,8 @@ const Currency = () => {
     setEditCurrency({
       name: currency.name,
       symbol: currency.symbol,
+      code: currency.code,
+      exchangeRate: currency.exchangeRate,
     });
     setShowEditModal(true);
   };
@@ -167,6 +176,12 @@ const Currency = () => {
                       <p className="text-gray-600">
                         <span className="text-green-500">Symbol: </span>
                         {currency.symbol}
+                      <br />
+                      <span className="text-green-500">Code: </span>
+                      {currency.code}
+                      <br />
+                      <span className="text-green-500">Exchange Rate: </span>
+                      {currency.exchangeRate}
                       </p>
                     </div>
                   </div>

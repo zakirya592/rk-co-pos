@@ -77,11 +77,11 @@ const Warehouse = () => {
       if (result.isConfirmed) {
         try {
           await userRequest.delete(`/warehouses/${user?._id || ""}`);
-          toast.success("The user has been deleted.");
+          toast.success("The Warehouse has been deleted.");
           refetch();
         } catch (error) {
           toast.error(
-            error?.response?.data?.message || "Failed to delete the User."
+            error?.response?.data?.message || "Failed to delete the Warehouse."
           );
         }
       }
@@ -145,9 +145,13 @@ const Warehouse = () => {
         </CardBody>
       </Card>
 
-      <Table aria-label="Users table" bottomContent={bottomContent} className='w-full overflow-x-scroll'>
+      <Table
+        aria-label="Warehouse table"
+        bottomContentPlacement="outside"
+        bottomContent={bottomContent}
+        // className="w-full overflow-x-scroll"
+      >
         <TableHeader>
-
           <TableColumn>S.No</TableColumn>
           <TableColumn>NAME</TableColumn>
           <TableColumn>EMAIL</TableColumn>
@@ -177,10 +181,14 @@ const Warehouse = () => {
             <TableRow key={warehouse._id}>
               <TableCell>{(page - 1) * rowsPerPage + index + 1}</TableCell>
               <TableCell>
-                <div className="font-semibold">{warehouse?.name || ""}</div>
+                <div className="font-semibold whitespace-nowrap">
+                  {warehouse?.name || ""}
+                </div>
               </TableCell>
               <TableCell>
-                <div className="text-sm text-gray-500">{warehouse?.email || ""}</div>
+                <div className="text-sm text-gray-500">
+                  {warehouse?.email || ""}
+                </div>
               </TableCell>
               <TableCell>
                 <Chip
@@ -191,28 +199,32 @@ const Warehouse = () => {
                 </Chip>
               </TableCell>
               <TableCell>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 whitespace-nowrap">
                   {warehouse?.branch || ""}
                 </div>
               </TableCell>
               <TableCell>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 whitespace-nowrap">
                   {warehouse?.country || ""}
                 </div>
               </TableCell>
               <TableCell>
-                <div className="text-sm text-gray-500">{warehouse?.state || ""}</div>
+                <div className="text-sm text-gray-500 whitespace-nowrap">
+                  {warehouse?.state || ""}
+                </div>
               </TableCell>
               <TableCell>
-                <div className="text-sm text-gray-500">{warehouse?.city || ""}</div>
+                <div className="text-sm text-gray-500 whitespace-nowrap">
+                  {warehouse?.city || ""}
+                </div>
               </TableCell>
               <TableCell>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 whitespace-nowrap">
                   {warehouse?.phoneNumber || ""}
                 </div>
               </TableCell>
               <TableCell>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 whitespace-nowrap">
                   {warehouse?.contactPerson || ""}
                 </div>
               </TableCell>
@@ -224,7 +236,9 @@ const Warehouse = () => {
                       size="sm"
                       variant="light"
                       color="primary"
-                      onPress={() => navigate(`/warehousedetails/${warehouse._id}`)}
+                      onPress={() =>
+                        navigate(`/warehousedetails/warehouse/${warehouse._id}`)
+                      }
                     >
                       <TbListDetails />
                     </Button>
