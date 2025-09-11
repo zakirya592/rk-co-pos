@@ -8,7 +8,7 @@ import {
   Spinner,
   Tooltip
 } from '@nextui-org/react';
-import { FaPlus, FaSearch, FaEdit, FaTrash, FaMoneyBillWave } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaEdit, FaTrash, FaMoneyBillWave, FaMoneyBillWaveAlt } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import { useQuery } from 'react-query';
@@ -118,11 +118,12 @@ const Currency = () => {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
+         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-gray-800">Currencies</h1>
+            <FaMoneyBillWaveAlt className="text-3xl text-blue-500" />
+            <h1 className="text-3xl font-bold text-gray-800">Currency Manager</h1>
           </div>
-          <p className="text-gray-600">Manage different currencies</p>
+          <p className="text-gray-600">Manage currencies and exchange rates</p>
         </div>
         <div className="flex">
           <Chip
@@ -180,8 +181,9 @@ const Currency = () => {
                       <span className="text-green-500">Code: </span>
                       {currency.code}
                       <br />
-                      <span className="text-green-500">Exchange Rate: </span>
-                      {currency.exchangeRate}
+                      {/* <span className="text-green-500">Exchange Rate: </span>
+                      {currency.exchangeRate} */}
+                      
                       </p>
                     </div>
                   </div>
@@ -202,6 +204,12 @@ const Currency = () => {
                     >
                       <FaTrash />
                     </Button>
+                  </div>
+                </div>
+                <div className="mt-4 p-3 bg-gray-100 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Exchange Rate:</span>
+                    <span className="font-bold text-lg">{currency.exchangeRate}</span>
                   </div>
                 </div>
                 <div className="text-gray-600 mt-2">
