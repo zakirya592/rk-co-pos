@@ -15,6 +15,8 @@ import { useQuery } from 'react-query';
 import userRequest from '../../utils/userRequest';
 import AddCurrencyModal from "./AddCurrencyModal";
 import UpdateCurrencyModal from './UpdateCurrencyModal';
+import CurrencyConverterModal from "./CurrencyConverterModal";
+
 
 const fetchCurrencies = async () => {
   const res = await userRequest.get("/currencies");
@@ -30,6 +32,8 @@ const Currency = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState(null);
+  const [showConverterModal, setShowConverterModal] = useState(false);
+
   const [newCurrency, setNewCurrency] = useState({
     name: "",
     symbol: "",
@@ -118,10 +122,12 @@ const Currency = () => {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-         <div>
+        <div>
           <div className="flex items-center gap-3">
             <FaMoneyBillWaveAlt className="text-3xl text-blue-500" />
-            <h1 className="text-3xl font-bold text-gray-800">Currency Manager</h1>
+            <h1 className="text-3xl font-bold text-gray-800">
+              Currency Manager
+            </h1>
           </div>
           <p className="text-gray-600">Manage currencies and exchange rates</p>
         </div>
@@ -139,6 +145,14 @@ const Currency = () => {
             {currencies.length} Currency
             {currencies.length !== 1 && "s"}
           </Chip>
+          <Button
+            className="bg-gradient-to-r ms-2 from-purple-500 to-pink-600 text-white font-semibold"
+            startContent={<FaMoneyBillWave />}
+            onPress={() => setShowConverterModal(true)}
+          >
+            Currency Converter
+          </Button>
+
           <Button
             className="bg-gradient-to-r ms-2 from-blue-500 to-purple-600 text-white font-semibold"
             startContent={<FaPlus />}
@@ -177,13 +191,12 @@ const Currency = () => {
                       <p className="text-gray-600">
                         <span className="text-green-500">Symbol: </span>
                         {currency.symbol}
-                      <br />
-                      <span className="text-green-500">Code: </span>
-                      {currency.code}
-                      <br />
-                      {/* <span className="text-green-500">Exchange Rate: </span>
+                        <br />
+                        <span className="text-green-500">Code: </span>
+                        {currency.code}
+                        <br />
+                        {/* <span className="text-green-500">Exchange Rate: </span>
                       {currency.exchangeRate} */}
-                      
                       </p>
                     </div>
                   </div>
@@ -209,7 +222,9 @@ const Currency = () => {
                 <div className="mt-4 p-3 bg-gray-100 rounded-lg">
                   <div className="flex justify-between items-center">
                     <span className="font-medium">Exchange Rate:</span>
-                    <span className="font-bold text-lg">{currency.exchangeRate}</span>
+                    <span className="font-bold text-lg">
+                      {currency.exchangeRate}
+                    </span>
                   </div>
                 </div>
                 <div className="text-gray-600 mt-2">
@@ -224,25 +239,27 @@ const Currency = () => {
         </div>
       )}
 
-       <AddCurrencyModal
-             isOpen={showAddModal}
-             onClose={() => setShowAddModal(false)}
-             newCurrency={newCurrency}
-             setNewCurrency={setNewCurrency}
-             onAddCurrency={handleAddCurrency}
-           />
-     
-           {/* Update Currency Modal */}
-           <UpdateCurrencyModal
-             isOpen={showEditModal}
-             onClose={() => setShowEditModal(false)}
-             editCurrency={editCurrency}
-             setEditCurrency={setEditCurrency}
-             onEditCurrency={handleEditCurrency}
-           />
+      <AddCurrencyModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        newCurrency={newCurrency}
+        setNewCurrency={setNewCurrency}
+        onAddCurrency={handleAddCurrency}
+      />
 
-
-
+      {/* Update Currency Modal */}
+      <UpdateCurrencyModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        editCurrency={editCurrency}
+        setEditCurrency={setEditCurrency}
+        onEditCurrency={handleEditCurrency}
+      />
+      <CurrencyConverterModal
+        isOpen={showConverterModal}
+        onClose={() => setShowConverterModal(false)}
+        // currencies={currencies}
+      />
     </div>
   );
 };
