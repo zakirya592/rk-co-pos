@@ -29,6 +29,10 @@ import { Suspense } from 'react';
 import Shop from '../pages/Shop/Shop';
 import AddShopPage from '../pages/Shop/AddShopPage';
 import UpdateShopPage from '../pages/Shop/UpdateShopPage';
+import Shipment from '../pages/Shipment/Shipment';
+import ExpenseNavigation from './Navigation/ExpenseNavigation';
+import AddShipment from '../pages/Shipment/AddShipment';
+import UpdateShipment from '../pages/Shipment/UpdateShipment';
 const Layout = () => {
   
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
@@ -109,6 +113,12 @@ const Layout = () => {
               </Suspense>
             }
           />
+
+          <Route path="/shipments" element={<Shipment />} />
+          <Route path="/shipments/add" element={<AddShipment />} />
+          <Route path="/shipments/update/:id" element={<UpdateShipment />} />
+          
+          <Route path="/expenses" element={<ExpenseNavigation />} />
         </Routes>
       </div>
     </div>

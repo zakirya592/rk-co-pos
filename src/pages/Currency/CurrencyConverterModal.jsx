@@ -11,27 +11,23 @@ import {
   SelectItem,
 } from "@nextui-org/react";
 import userRequest from "../../utils/userRequest";
+import { useQuery } from "react-query";
+
+
+const fetchCurrencie = async () => {
+  const res = await userRequest.get("/currencies");
+   return res.data.data|| [];
+};
 
 const CurrencyConverterModal = ({ isOpen, onClose }) => {
-  const [currencies, setCurrencies] = useState([]);
   const [fromCurrency, setFromCurrency] = useState("");
   const [toCurrency, setToCurrency] = useState("");
   const [amount, setAmount] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  // Fetch currencies on mount
-  useEffect(() => {
-    const fetchCurrencies = async () => {
-      try {
-        const res = await userRequest.get("/currencies");
-        setCurrencies(res.data.data || []);
-      } catch (error) {
-        console.error("Failed to fetch currencies:", error);
-      }
-    };
-    fetchCurrencies();
-  }, []);
+  console.log(fromCurrency, "fromCurrency");
+  
+   const { data: currencies = [] } = useQuery(["currencies"], fetchCurrencie);  
 
   const handleConvert = async () => {
     if (!fromCurrency || !toCurrency || !amount) {
@@ -44,6 +40,7 @@ const CurrencyConverterModal = ({ isOpen, onClose }) => {
         `/currencies/convert?fromCurrency=${fromCurrency}&toCurrency=${toCurrency}&amount=${amount}`
       );
       setResult(res.data.data.to.amount || null);
+      
     } catch (error) {
       console.error("Conversion failed:", error);
       setResult("Error converting currency.");
@@ -68,7 +65,9 @@ const CurrencyConverterModal = ({ isOpen, onClose }) => {
             <Select
               label="From"
               value={fromCurrency}
-              onChange={(e) => setFromCurrency(e.target.value)}
+              onChange={(e) => {
+                setFromCurrency(e.target.value);
+              }}
               className="flex-1"
             >
               {currencies.map((c) => (
@@ -98,6 +97,7 @@ const CurrencyConverterModal = ({ isOpen, onClose }) => {
                 </SelectItem>
               ))}
             </Select>
+
             <Input
               type="number"
               isLoading={loading}

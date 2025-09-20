@@ -12,6 +12,7 @@ import {
   FaUser,
   FaMoneyBill,
   FaUserCircle,
+  FaTruck, // Add this import
 } from "react-icons/fa";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -93,13 +94,27 @@ const cardData = [
     desc: "Warehouse management",
     color: "cyan",
   },
-    {
-      to: "/shop",
-      icon: <FaStore />,
-      title: "Shop",
-      desc: "Shop management",
-      color: "lime",
-    },
+  {
+    to: "/shop",
+    icon: <FaStore />,
+    title: "Shop",
+    desc: "Shop management",
+    color: "lime",
+  },
+  {
+    to: "/shipments",
+    icon: <FaTruck />,
+    title: "Shipments",
+    desc: "Manage shipments",
+    color: "amber",
+  },
+  {
+    to: "/expenses",
+    icon: <FaMoneyBill />,
+    title: "Expenses",
+    desc: "Manage expenses",
+    color: "rose",
+  },
 ];
 
 const Navigation = () => {
@@ -117,7 +132,7 @@ const Navigation = () => {
       <nav className="bg-white shadow-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-extrabold text-gray-800 tracking-tight">
-            RK  <span className="text-blue-600">&</span> Co
+            RK <span className="text-blue-600">&</span> Co
           </h1>
           <div className="flex items-center gap-6">
             {/* <div className="flex items-center space-x-2 text-gray-600">
