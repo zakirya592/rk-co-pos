@@ -33,6 +33,10 @@ import Shipment from '../pages/Shipment/Shipment';
 import ExpenseNavigation from './Navigation/ExpenseNavigation';
 import AddShipment from '../pages/Shipment/AddShipment';
 import UpdateShipment from '../pages/Shipment/UpdateShipment';
+import Transporters from '../pages/Transporters/Transporters';
+import AddTransporterPage from '../pages/Transporters/AddTransporterPage';
+import UpdateTransporterPage from '../pages/Transporters/UpdateTransporterPage';
+import TransporterDetails from '../pages/Transporters/TransporterDetails';
 const Layout = () => {
   
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
@@ -119,6 +123,12 @@ const Layout = () => {
           <Route path="/shipments/update/:id" element={<UpdateShipment />} />
           
           <Route path="/expenses" element={<ExpenseNavigation />} />
+          
+          {/* Transporters Routes */}
+          <Route path="/transporters" element={<Transporters />} />
+          <Route path="/add-transporter" element={<AddTransporterPage />} />
+          <Route path="/update-transporter/:id" element={<UpdateTransporterPage />} />
+          <Route path="/transporter-details/:id" element={<TransporterDetails />} />
         </Routes>
       </div>
     </div>

@@ -13,6 +13,7 @@ import {
   FaCog,
   FaUser,
   FaMoneyBill,
+  FaTruck,
 } from "react-icons/fa";
 import { useAuth } from '../contexts/AuthContext';
 
@@ -27,6 +28,7 @@ const Sidebar = ({ currentPage, onPageChange, isCollapsed, onToggleCollapse }) =
     { id: "user", label: "User", icon: FaUser },
     { id: "pos", label: "Sales", icon: FaShoppingCart },
     { id: "customers", label: "Customers", icon: FaUsers },
+    { id: "transporters", label: "Transporters", icon: FaTruck },
     // { id: "reports", label: "Reports", icon: FaChartBar },
     { id: "history", label: "History", icon: FaHistory },
     // { id: "settings", label: "Settings", icon: FaCog },
