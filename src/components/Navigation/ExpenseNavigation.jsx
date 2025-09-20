@@ -15,12 +15,43 @@ const expenseTypes = [
     desc: "Expenses for distribution",
     color: "green",
   },
+  {
+    to: "/expenses/warehouse",
+    title: "Warehouse Expenses",
+    desc: "Expenses related to warehouse operations",
+    color: "orange",
+  },
+  {
+    to: "/expenses/operational",
+    title: "Operational Expenses",
+    desc: "Day-to-day operational expenses",
+    color: "purple",
+  },
+  {
+    to: "/expenses/miscellaneous",
+    title: "Miscellaneous Expenses",
+    desc: "Other uncategorized expenses",
+    color: "gray",
+  },
+  {
+    to: "/expenses/logistics",
+    title: "Logistics Expenses",
+    desc: "Transportation and logistics costs",
+    color: "red",
+  },
+  {
+    to: "/expenses/financial",
+    title: "Financial Expenses",
+    desc: "Bank charges, interest, and other financial costs",
+    color: "teal",
+  }
 ];
 
+
 const ExpenseNavigation = () => (
-  <div className="max-w-3xl mx-auto py-10 px-6">
+  <div className=" mx-auto py-10 px-6">
     <h2 className="text-2xl font-bold mb-6">Expenses</h2>
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
       {expenseTypes.map(({ to, title, desc, color }) => (
         <Link
           key={to}

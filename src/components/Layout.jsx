@@ -37,6 +37,7 @@ import Transporters from '../pages/Transporters/Transporters';
 import AddTransporterPage from '../pages/Transporters/AddTransporterPage';
 import UpdateTransporterPage from '../pages/Transporters/UpdateTransporterPage';
 import TransporterDetails from '../pages/Transporters/TransporterDetails';
+import { AddProcurementExpense, ProcurementExpenseDetails, ProcurementExpenses ,EditProcurementExpense } from '../pages/ProcurementExpenses';
 const Layout = () => {
   
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
@@ -129,6 +130,13 @@ const Layout = () => {
           <Route path="/add-transporter" element={<AddTransporterPage />} />
           <Route path="/update-transporter/:id" element={<UpdateTransporterPage />} />
           <Route path="/transporter-details/:id" element={<TransporterDetails />} />
+          
+          {/* Procurement Expenses Routes */}
+          <Route path="/expenses/procurement" element={<ProcurementExpenses />} />
+          <Route path="/expenses/procurement/add" element={<AddProcurementExpense />} />
+          <Route path="/expenses/procurement/edit/:id" element={<EditProcurementExpense />} />
+          <Route path="/expenses/procurement/:id" element={<ProcurementExpenseDetails />} />
+          
         </Routes>
       </div>
     </div>

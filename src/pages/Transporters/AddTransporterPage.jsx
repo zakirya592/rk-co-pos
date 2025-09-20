@@ -19,7 +19,7 @@ import toast from 'react-hot-toast';
 
 const vehicleTypes = [
   { label: "Truck", value: "truck" },
-  // { label: "Van", value: "van" },
+  { label: "Van", value: "van" },
   // { label: "Pickup Truck", value: "Pickup" },
   // { label: "Trailer", value: "TRAILER" },
   { label: "Container", value: "container" },
@@ -28,11 +28,11 @@ const vehicleTypes = [
 ];
 
 const paymentTerms = [
-  { label: 'Advance', value: 'advance' },
-  { label: 'Credit', value: 'credit' },
-  { label: 'On Delivery', value: 'on_delivery' },
-  // { label: 'Net 15', value: 'net_15' },
-  // { label: 'Net 30', value: 'net_30' },
+  { label: "Advance", value: "advance" },
+  { label: "Credit", value: "credit" },
+  { label: "On Delivery", value: "on_delivery" },
+  { label: "Credit 15", value: "credit_30" },
+  { label: "Credit 30", value: "credit_60" },
 ];
 
 const AddTransporterPage = () => {
