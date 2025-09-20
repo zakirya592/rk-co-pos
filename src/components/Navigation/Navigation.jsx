@@ -36,7 +36,7 @@ const cardData = [
     icon: <FaUser />,
     title: "Customers",
     desc: "Manage customers",
-    color: "purple",
+    color: "violet",
   },
   {
     to: "/suppliers",
@@ -107,6 +107,13 @@ const cardData = [
     title: "Shipments",
     desc: "Manage shipments",
     color: "amber",
+  },
+  {
+    to: "/transporters",
+    icon: <FaTruck />,
+    title: "Transporters",
+    desc: "Manage transporters",
+    color: "green",
   },
   {
     to: "/expenses",
