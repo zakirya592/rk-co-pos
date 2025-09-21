@@ -40,6 +40,7 @@ import TransporterDetails from '../pages/Transporters/TransporterDetails';
 import { AddProcurementExpense, ProcurementExpenseDetails, ProcurementExpenses ,EditProcurementExpense } from '../pages/ProcurementExpenses';
 import { WarehouseExpenses, AddWarehouseExpense, EditWarehouseExpense, WarehouseExpenseDetails } from '../pages/WarehouseExpenses';
 import { LogisticsExpenses, AddLogisticsExpense, EditLogisticsExpense, LogisticsExpenseDetails } from '../pages/LogisticsExpenses';
+import { SalesDistributionExpenses, AddSalesDistributionExpense, EditSalesDistributionExpense, SalesDistributionExpenseDetails } from '../pages/SalesDistributionExpenses';
 const Layout = () => {
   
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
@@ -150,6 +151,12 @@ const Layout = () => {
           <Route path="/expenses/logistics/add" element={<AddLogisticsExpense />} />
           <Route path="/expenses/logistics/edit/:id" element={<EditLogisticsExpense />} />
           <Route path="/expenses/logistics/:id" element={<LogisticsExpenseDetails />} />
+
+          {/* Sales Distribution Expenses Routes */}
+          <Route path="/expenses/sales-distribution" element={<SalesDistributionExpenses />} />
+          <Route path="/expenses/sales-distribution/add" element={<AddSalesDistributionExpense />} />
+          <Route path="/expenses/sales-distribution/edit/:id" element={<EditSalesDistributionExpense />} />
+          <Route path="/expenses/sales-distribution/:id" element={<SalesDistributionExpenseDetails />} />
           
         </Routes>
       </div>

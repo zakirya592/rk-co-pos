@@ -9,11 +9,17 @@ const expenseTypes = [
     desc: "Expenses for procurement",
     color: "blue",
   },
+  // {
+  //   to: "/expenses/distribution",
+  //   title: "Distribution Expenses",
+  //   desc: "Expenses for distribution",
+  //   color: "green",
+  // },
   {
-    to: "/expenses/distribution",
-    title: "Distribution Expenses",
-    desc: "Expenses for distribution",
-    color: "green",
+    to: "/expenses/sales-distribution",
+    title: "Sales Distribution Expenses",
+    desc: "Commissions, marketing, promotions, discounts",
+    color: "emerald",
   },
   {
     to: "/expenses/warehouse",
