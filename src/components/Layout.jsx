@@ -39,6 +39,7 @@ import UpdateTransporterPage from '../pages/Transporters/UpdateTransporterPage';
 import TransporterDetails from '../pages/Transporters/TransporterDetails';
 import { AddProcurementExpense, ProcurementExpenseDetails, ProcurementExpenses ,EditProcurementExpense } from '../pages/ProcurementExpenses';
 import { WarehouseExpenses, AddWarehouseExpense, EditWarehouseExpense, WarehouseExpenseDetails } from '../pages/WarehouseExpenses';
+import { LogisticsExpenses, AddLogisticsExpense, EditLogisticsExpense, LogisticsExpenseDetails } from '../pages/LogisticsExpenses';
 const Layout = () => {
   
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
@@ -143,6 +144,12 @@ const Layout = () => {
           <Route path="/expenses/warehouse/add" element={<AddWarehouseExpense />} />
           <Route path="/expenses/warehouse/edit/:id" element={<EditWarehouseExpense />} />
           <Route path="/expenses/warehouse/:id" element={<WarehouseExpenseDetails />} />
+          
+          {/* Logistics Expenses Routes */}
+          <Route path="/expenses/logistics" element={<LogisticsExpenses />} />
+          <Route path="/expenses/logistics/add" element={<AddLogisticsExpense />} />
+          <Route path="/expenses/logistics/edit/:id" element={<EditLogisticsExpense />} />
+          <Route path="/expenses/logistics/:id" element={<LogisticsExpenseDetails />} />
           
         </Routes>
       </div>
