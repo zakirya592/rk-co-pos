@@ -19,7 +19,7 @@ const expenseTypes = [
     to: "/expenses/sales-distribution",
     title: "Sales Distribution Expenses",
     desc: "Commissions, marketing, promotions, discounts",
-    color: "emerald",
+    color: "green",
   },
   {
     to: "/expenses/warehouse",
@@ -50,7 +50,7 @@ const expenseTypes = [
     title: "Financial Expenses",
     desc: "Bank charges, interest, and other financial costs",
     color: "teal",
-  }
+  },
 ];
 
 
