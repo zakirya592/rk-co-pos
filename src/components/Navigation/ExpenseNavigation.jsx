@@ -14,7 +14,7 @@ const expenseTypes = [
   //   title: "Distribution Expenses",
   //   desc: "Expenses for distribution",
   //   color: "green",
-  // },
+  // }, 
   {
     to: "/expenses/sales-distribution",
     title: "Sales Distribution Expenses",

@@ -41,8 +41,9 @@ import { AddProcurementExpense, ProcurementExpenseDetails, ProcurementExpenses ,
 import { WarehouseExpenses, AddWarehouseExpense, EditWarehouseExpense, WarehouseExpenseDetails } from '../pages/WarehouseExpenses';
 import { LogisticsExpenses, AddLogisticsExpense, EditLogisticsExpense, LogisticsExpenseDetails } from '../pages/LogisticsExpenses';
 import { SalesDistributionExpenses, AddSalesDistributionExpense, EditSalesDistributionExpense, SalesDistributionExpenseDetails } from '../pages/SalesDistributionExpenses';
+import { OperationalExpenses, AddOperationalExpense, EditOperationalExpense, OperationalExpenseDetails } from '../pages/OperationalExpenses';
 const Layout = () => {
-  
+ 
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -157,6 +158,12 @@ const Layout = () => {
           <Route path="/expenses/sales-distribution/add" element={<AddSalesDistributionExpense />} />
           <Route path="/expenses/sales-distribution/edit/:id" element={<EditSalesDistributionExpense />} />
           <Route path="/expenses/sales-distribution/:id" element={<SalesDistributionExpenseDetails />} />
+          
+          {/* Operational Expenses Routes */}
+          <Route path="/expenses/operational" element={<OperationalExpenses />} />
+          <Route path="/expenses/operational/add" element={<AddOperationalExpense />} />
+          <Route path="/expenses/operational/edit/:id" element={<EditOperationalExpense />} />
+          <Route path="/expenses/operational/:id" element={<OperationalExpenseDetails />} />
           
         </Routes>
       </div>
