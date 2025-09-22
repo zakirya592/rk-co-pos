@@ -42,6 +42,9 @@ import { WarehouseExpenses, AddWarehouseExpense, EditWarehouseExpense, Warehouse
 import { LogisticsExpenses, AddLogisticsExpense, EditLogisticsExpense, LogisticsExpenseDetails } from '../pages/LogisticsExpenses';
 import { SalesDistributionExpenses, AddSalesDistributionExpense, EditSalesDistributionExpense, SalesDistributionExpenseDetails } from '../pages/SalesDistributionExpenses';
 import { OperationalExpenses, AddOperationalExpense, EditOperationalExpense, OperationalExpenseDetails } from '../pages/OperationalExpenses';
+import { MiscellaneousExpenses, AddMiscellaneousExpense, EditMiscellaneousExpense, MiscellaneousExpenseDetails } from '../pages/MiscellaneousExpenses';
+import { FinancialExpenses, AddFinancialExpense, EditFinancialExpense, FinancialExpenseDetails } from '../pages/FinancialExpenses';
+
 const Layout = () => {
  
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
@@ -164,6 +167,18 @@ const Layout = () => {
           <Route path="/expenses/operational/add" element={<AddOperationalExpense />} />
           <Route path="/expenses/operational/edit/:id" element={<EditOperationalExpense />} />
           <Route path="/expenses/operational/:id" element={<OperationalExpenseDetails />} />
+
+          {/* Miscellaneous Expenses Routes */}
+          <Route path="/expenses/miscellaneous" element={<MiscellaneousExpenses />} />
+          <Route path="/expenses/miscellaneous/add" element={<AddMiscellaneousExpense />} />
+          <Route path="/expenses/miscellaneous/edit/:id" element={<EditMiscellaneousExpense />} />
+          <Route path="/expenses/miscellaneous/:id" element={<MiscellaneousExpenseDetails />} />
+          
+          {/* Financial Expenses Routes */}
+          <Route path="/expenses/financial" element={<FinancialExpenses />} />
+          <Route path="/expenses/financial/add" element={<AddFinancialExpense />} />
+          <Route path="/expenses/financial/edit/:id" element={<EditFinancialExpense />} />
+          <Route path="/expenses/financial/:id" element={<FinancialExpenseDetails />} />
           
         </Routes>
       </div>

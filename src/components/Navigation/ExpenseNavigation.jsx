@@ -21,7 +21,7 @@ const expenseTypes = [
     desc: "Commissions, marketing, promotions, discounts",
     color: "green",
   },
-  {
+  { 
     to: "/expenses/warehouse",
     title: "Warehouse Expenses",
     desc: "Expenses related to warehouse operations",
