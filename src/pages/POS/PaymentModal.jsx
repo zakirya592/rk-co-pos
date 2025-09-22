@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Modal,
   ModalContent,
@@ -30,7 +30,8 @@ const PaymentModal = ({
   updateSaleData,
   selectedCustomer,
 }) => {
-  console.log(selectedCustomer, "selectedCustomer");
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchCurrencies = async () => {
     const res = await userRequest.get("/currencies");
@@ -230,7 +231,16 @@ const PaymentModal = ({
             </Button>
             <Button
               color="success"
-              onPress={completeSale}
+              isLoading={isSubmitting}
+              isDisabled={isSubmitting}
+              onPress={async () => {
+                try {
+                  setIsSubmitting(true);
+                  await completeSale();
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}
               // isDisabled={totalPaid < total}
             >
               Complete Sale

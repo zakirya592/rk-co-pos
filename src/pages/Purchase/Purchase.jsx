@@ -395,6 +395,8 @@ const Purchase = () => {
                           </div>
                           <div className="text-xs text-gray-600">
                             {item.currency?.symbol || ""} {item.price || ""}
+                            {console.log(item)
+                            }
                           </div>
                         </div>
                         <div className="flex items-center gap-2">

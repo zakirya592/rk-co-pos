@@ -69,7 +69,7 @@ const POS = () => {
   const [totalPaid, setTotalPaid] = useState(0);
 
   // Fetch products using react-query
-  const { data, isLoading } = useQuery(
+  const { data, isLoading, refetch } = useQuery(
     ["products", searchTerm, currentPage],
     () => fetchProducts("products", searchTerm, currentPage),
     { keepPreviousData: true }
@@ -168,6 +168,7 @@ const POS = () => {
   };
 
   const completeSale = async () => {
+
     try {
       const saleData = {
         customer: selectedCustomer?._id,
@@ -175,9 +176,12 @@ const POS = () => {
           product: item._id,
           quantity: item.quantity,
           price: item.price,
+          // Include warehouse reference if available on the cart item
+          warehouse: item?.warehouse?._id || undefined,
           discount: 0,
           total: item.price * item.quantity - 0,
         })),
+
         totalAmount: subtotal,
         tax: directDiscountAmount,
         grandTotal: total,
@@ -189,11 +193,12 @@ const POS = () => {
         // subtotal: subtotal,
       };
 
-      const response = await userRequest.post('/sales', saleData);
 
-       // Call handleSalepaymets after successful sale
+      const response = await userRequest.post("/sales", saleData);
+
+      // Call handleSalepaymets after successful sale
       await handleSalepaymets();
-
+      refetch()
       setCart([]);
       setDiscount(0);
       setPaymentMethods([]);
@@ -283,8 +288,8 @@ const POS = () => {
                               product.countInStock <= 5
                                 ? "danger"
                                 : product.countInStock <= 10
-                                ? "warning"
-                                : "success"
+                                  ? "warning"
+                                  : "success"
                             }
                           >
                             {product.countInStock}
@@ -330,7 +335,6 @@ const POS = () => {
                     {totalCartItems} item{totalCartItems !== 1 ? "s" : ""}
                   </span>
                 </h3>
-
                 {cart.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     Cart is empty
@@ -349,6 +353,11 @@ const POS = () => {
                           <div className="text-xs text-gray-600">
                             {item.currency?.symbol || ""} {item.price || ""}
                           </div>
+                          {item?.warehouse && (
+                            <div className="text-[10px] text-gray-500 mt-0.5">
+                              Warehouse: {item.warehouse?.name || "-"}
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           <Button
