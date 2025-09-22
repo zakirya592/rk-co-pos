@@ -105,16 +105,74 @@ const UpdateProductForm = () => {
     setLoading(true);
     try {
       const formData = new FormData();
-      // Handle category specially since it might be an object or string
-      formData.append("category", typeof product.category === "object" && product.category !== null ? product.category._id : product.category);
-      // Append other fields
-      Object.keys(product).forEach(key => {
-        if (key !== "_id" && key !== "category") {
-          formData.append(key, product[key]);
-        }
-      });
 
-      console.log(formData, "formData");
+      // Helper to safely append only meaningful values
+      const safeAppend = (key, value) => {
+        if (value === undefined || value === null) return;
+        // allow zero/false but skip empty strings
+        if (typeof value === "string" && value.trim() === "") return;
+        formData.append(key, value);
+      };
+
+      // Resolve IDs from possible populated objects
+      const categoryId = typeof product.category === "object" && product.category !== null
+        ? product.category._id
+        : product.category;
+      const currencyId = typeof product.currency === "object" && product.currency !== null
+        ? product.currency._id
+        : product.currency;
+      const supplierId = typeof product.supplier === "object" && product.supplier !== null
+        ? product.supplier._id
+        : product.supplier;
+      const warehouseId = typeof product.warehouse === "object" && product.warehouse !== null
+        ? product.warehouse._id
+        : product.warehouse;
+
+      // Whitelist fields to avoid sending nested/derived fields like reviews, ratings, etc.
+      safeAppend("name", product.name);
+      safeAppend("category", categoryId);
+      safeAppend("color", product.color);
+      safeAppend("size", product.size);
+      safeAppend("currency", currencyId);
+      safeAppend("supplier", supplierId);
+      safeAppend("warehouse", warehouseId);
+
+      // Numeric fields (coerce to number-like strings only if valid)
+      const num = (v) => {
+        const n = v === "" ? NaN : Number(v);
+        return Number.isFinite(n) ? String(n) : null;
+      };
+      const int = (v) => {
+        const n = v === "" ? NaN : parseInt(v, 10);
+        return Number.isFinite(n) ? String(n) : null;
+        };
+
+      safeAppend("purchaseRate", num(product.purchaseRate));
+      safeAppend("saleRate", num(product.saleRate));
+      safeAppend("wholesaleRate", num(product.wholesaleRate));
+      safeAppend("retailRate", num(product.retailRate));
+      safeAppend("countInStock", int(product.countInStock));
+      safeAppend("soldOutQuantity", int(product.soldOutQuantity));
+      safeAppend("additionalUnit", product.additionalUnit);
+      safeAppend("packingUnit", product.packingUnit);
+      safeAppend("pouchesOrPieces", int(product.pouchesOrPieces));
+
+      // Boolean field
+      if (typeof product.isActive === "boolean") {
+        formData.append("isActive", String(product.isActive));
+      }
+
+      // Description
+      safeAppend("description", product.description);
+
+      // Image: only append if it's a File (avoid sending existing URL or empty string)
+      if (product.image instanceof File) {
+        formData.append("image", product.image);
+      }
+
+      // Note: Intentionally NOT sending fields like reviews, ratings, __v, createdAt, updatedAt
+
+      console.log("Submitting product update with fields:", [...formData.keys()]);
       await userRequest.put(`/products/${id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });

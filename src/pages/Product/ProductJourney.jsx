@@ -68,9 +68,59 @@ const SupplierName = ({ supplierId, label, color }) => {
 
   return (
     <Chip color={color} variant="flat" className="text-xs">
-      {isLoading ? "Loading..." : `${label}: ${data?.name || "N/A"}`}
+      {isLoading ? "Loading..." : `${label}: ${data?.data?.name || data?.name || "N/A"}`}
     </Chip>
   );
+};
+
+// Reusable inline WarehouseName component
+const WarehouseName = ({ warehouseId, label, color }) => {
+  const { data, isLoading } = useQuery(
+    ["warehouse", warehouseId],
+    () => userRequest.get(`/warehouses/${warehouseId}`).then((res) => res.data),
+    { enabled: !!warehouseId }
+  );
+
+  return (
+    <Chip color={color} variant="flat" className="text-xs">
+      {isLoading
+        ? "Loading..."
+        : `${label}: ${data?.data?.name || data?.name || "N/A"}`}
+    </Chip>
+  );
+};
+
+// Reusable inline UserName component
+const UserName = ({ userId, label, color }) => {
+  const { data, isLoading } = useQuery(
+    ["user", userId],
+    () => userRequest.get(`/users/${userId}`).then((res) => res.data),
+    { enabled: !!userId }
+  );
+
+  // Try common shapes: data.data.name, data.name, or compose from first/last, else email/username
+  const displayName =
+    data?.data?.name ||
+    data?.name ||
+    (data?.data?.firstName || data?.firstName
+      ? `${data?.data?.firstName || data?.firstName} ${data?.data?.lastName || data?.lastName || ""}`.trim()
+      : data?.data?.email || data?.email || data?.data?.username || data?.username);
+
+  return (
+    <Chip color={color} variant="flat" className="text-xs">
+      {isLoading ? "Loading..." : `${label}: ${displayName || "N/A"}`}
+    </Chip>
+  );
+};
+
+// Helper to format date as DD/MM/YYYY
+const formatDate = (date) => {
+  if (!date) return "";
+  const d = new Date(date);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
 };
 
 
@@ -150,7 +200,7 @@ const ProductJourney = () => {
                             <span className="font-semibold text-gray-800">
                               Updated Date:
                             </span>{" "}
-                            {new Date(journey.updatedAt).toLocaleDateString()}
+                            {formatDate(journey.updatedAt)}
                           </p>
                           <Chip
                             color={
@@ -265,6 +315,34 @@ const ProductJourney = () => {
                                         <span className="text-gray-500">→</span>
                                         <SupplierName
                                           supplierId={change.newValue}
+                                          label="New"
+                                          color="success"
+                                        />
+                                      </>
+                                    ) : change.field === "warehouse" ? (
+                                      <>
+                                        <WarehouseName
+                                          warehouseId={change.oldValue}
+                                          label="Old"
+                                          color="warning"
+                                        />
+                                        <span className="text-gray-500">→</span>
+                                        <WarehouseName
+                                          warehouseId={change.newValue}
+                                          label="New"
+                                          color="success"
+                                        />
+                                      </>
+                                    ) : change.field === "user" || change.field === "updatedBy" ? (
+                                      <>
+                                        <UserName
+                                          userId={change.oldValue}
+                                          label="Old"
+                                          color="warning"
+                                        />
+                                        <span className="text-gray-500">→</span>
+                                        <UserName
+                                          userId={change.newValue}
                                           label="New"
                                           color="success"
                                         />
@@ -388,12 +466,18 @@ const ProductJourney = () => {
                           </Button>
                         )}
                       </div>
-                      <p className="text-gray-600">
-                        {" "}
-                        <span className="text-lg font-semibold text-gray-800">
-                          Notes:
-                        </span>{" "}
-                        {journey.notes}
+                      <div className="flex flex-wrap gap-2">
+                        
+                        <Chip variant="flat" className="text-xs" color="warning">
+                          Created: {formatDate(journey?.createdAt)}
+                        </Chip>
+                        <Chip variant="flat" className="text-xs" color="success">
+                          Updated: {formatDate(journey?.updatedAt)}
+                        </Chip>
+                      </div>
+
+                      <p className="text-gray-600 mt-2">
+                        <span className="text-lg font-semibold text-gray-800">Notes:</span> {journey.notes}
                       </p>
 
                       {journey?.changes && journey.changes.length > 0 && (
@@ -504,6 +588,38 @@ const ProductJourney = () => {
                                           </span>
                                           <SupplierName
                                             supplierId={change.newValue}
+                                            label="New"
+                                            color="success"
+                                          />
+                                        </>
+                                      ) : change.field === "warehouse" ? (
+                                        <>
+                                          <WarehouseName
+                                            warehouseId={change.oldValue}
+                                            label="Old"
+                                            color="warning"
+                                          />
+                                          <span className="text-gray-500">
+                                            →
+                                          </span>
+                                          <WarehouseName
+                                            warehouseId={change.newValue}
+                                            label="New"
+                                            color="success"
+                                          />
+                                        </>
+                                      ) : change.field === "user" || change.field === "updatedBy" ? (
+                                        <>
+                                          <UserName
+                                            userId={change.oldValue}
+                                            label="Old"
+                                            color="warning"
+                                          />
+                                          <span className="text-gray-500">
+                                            →
+                                          </span>
+                                          <UserName
+                                            userId={change.newValue}
                                             label="New"
                                             color="success"
                                           />
