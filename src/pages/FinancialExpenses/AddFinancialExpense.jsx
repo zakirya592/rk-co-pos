@@ -21,8 +21,10 @@ const AddFinancialExpense = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [currencies, setCurrencies] = useState([]);
+  const [BankAccount, setBankAccount] = useState([]);
 
   const [formData, setFormData] = useState({
+    linkedBankAccount: '',
     expenseSubType: 'bank_charges',
     bankCharges: 0,
     transactionFees: 0,
@@ -33,7 +35,6 @@ const AddFinancialExpense = () => {
     currency: '',
     exchangeRate: 1,
 
-    linkedBankAccount: '',
     paymentMethod: 'bank',
     transactionDate: new Date().toISOString().split('T')[0],
     notes: '',
@@ -53,10 +54,12 @@ const AddFinancialExpense = () => {
     const load = async () => {
       setIsLoading(true);
       try {
-        const [currencyRes] = await Promise.all([
-          userRequest.get('/currencies'),
+        const [currencyRes, BannuAccountRes] = await Promise.all([
+          userRequest.get("/currencies"),
+          userRequest.get("/bank-accounts"),
         ]);
         setCurrencies(currencyRes.data.data || []);
+        setBankAccount(BannuAccountRes.data.data.bankAccounts || []);
         // default currency try PKR
         const pkr = (currencyRes.data.data || []).find((c) => c.code === 'PKR');
         setFormData((prev) => ({ ...prev, currency: pkr?._id || (currencyRes.data.data?.[0]?._id || '') }));
@@ -85,7 +88,7 @@ const AddFinancialExpense = () => {
     try {
       const payload = {
         ...formData,
-        linkedBankAccount: formData.linkedBankAccount || undefined,
+        // linkedBankAccount: formData.linkedBankAccount || undefined,
         transactionDate: formData.transactionDate ? new Date(formData.transactionDate).toISOString() : undefined,
       };
       await userRequest.post('/expenses/financial', payload);
@@ -119,7 +122,7 @@ const AddFinancialExpense = () => {
       <form onSubmit={onSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <Card>
-            <CardBody className="space-y-4">
+            <CardBody className="space-y-7">
               <h2 className="text-lg font-semibold">Basic Information</h2>
               <Divider />
 
@@ -150,6 +153,18 @@ const AddFinancialExpense = () => {
                 <SelectItem key="mixed" value="mixed">Mixed</SelectItem>
               </Select>
 
+              <Select
+                label="Bank Account"
+                placeholder="Select bank account"
+                labelPlacement="outside"
+                selectedKeys={formData.linkedBankAccount ? [formData.linkedBankAccount] : []}
+                onChange={(e) => setFormData((prev) => ({ ...prev, linkedBankAccount: e.target.value }))}
+              >
+                {BankAccount.map((c) => (
+                  <SelectItem key={c._id} value={c._id}>{`${c.bankName} - (${c.accountName})`}</SelectItem>
+                ))}
+              </Select>
+
               <Input
                 type="date"
                 name="transactionDate"
@@ -171,11 +186,11 @@ const AddFinancialExpense = () => {
           </Card>
 
           <Card>
-            <CardBody className="space-y-4">
+            <CardBody className="space-y-6">
               <h2 className="text-lg font-semibold">Financial Details</h2>
               <Divider />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 ">
                 <Select
                   label="Currency"
                   placeholder="Select currency"
@@ -222,7 +237,7 @@ const AddFinancialExpense = () => {
           <Button variant="flat" onPress={() => navigate(-1)} isDisabled={isSubmitting}>
             Cancel
           </Button>
-          <Button color="primary" type="submit" isLoading={isSubmitting} startContent={!isSubmitting && <FaSave />}> 
+          <Button color="primary" type="submit" isLoading={isSubmitting} startContent={!isSubmitting && <FaSave />}>
             {isSubmitting ? 'Saving...' : 'Save Expense'}
           </Button>
         </div>

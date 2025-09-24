@@ -30,9 +30,8 @@ const FinancialExpenseDetails = () => {
     const fetchExpense = async () => {
       try {
         const response = await userRequest.get(`/expenses/financial/${id}`);
-        setExpense(response.data.data || response.data);
+        setExpense(response.data.data.expense || response.data.expense);
       } catch (error) {
-        console.error('Error fetching financial expense details:', error);
         toast.error('Failed to load expense details');
       } finally {
         setIsLoading(false);

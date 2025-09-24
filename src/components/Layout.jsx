@@ -44,6 +44,9 @@ import { SalesDistributionExpenses, AddSalesDistributionExpense, EditSalesDistri
 import { OperationalExpenses, AddOperationalExpense, EditOperationalExpense, OperationalExpenseDetails } from '../pages/OperationalExpenses';
 import { MiscellaneousExpenses, AddMiscellaneousExpense, EditMiscellaneousExpense, MiscellaneousExpenseDetails } from '../pages/MiscellaneousExpenses';
 import { FinancialExpenses, AddFinancialExpense, EditFinancialExpense, FinancialExpenseDetails } from '../pages/FinancialExpenses';
+import BankAccounts from '../pages/BankAccounts/BankAccounts';
+import AddBankAccount from '../pages/BankAccounts/AddBankAccount';
+import UpdateBankAccount from '../pages/BankAccounts/UpdateBankAccount';
 
 const Layout = () => {
  
@@ -179,6 +182,11 @@ const Layout = () => {
           <Route path="/expenses/financial/add" element={<AddFinancialExpense />} />
           <Route path="/expenses/financial/edit/:id" element={<EditFinancialExpense />} />
           <Route path="/expenses/financial/:id" element={<FinancialExpenseDetails />} />
+          
+          {/* Bank Accounts */}
+          <Route path="/bank-accounts" element={<BankAccounts />} />
+          <Route path="/bank-accounts/add" element={<AddBankAccount />} />
+          <Route path="/bank-accounts/update/:id" element={<UpdateBankAccount />} />
           
         </Routes>
       </div>

@@ -33,6 +33,8 @@ const EditFinancialExpense = () => {
 
   const [currencies, setCurrencies] = useState([]);
 
+  const [BankAccount, setBankAccount] = useState([]);
+
   const [formData, setFormData] = useState({
     expenseSubType: 'bank_charges',
     bankCharges: 0,
@@ -64,14 +66,18 @@ const EditFinancialExpense = () => {
     const load = async () => {
       setIsLoading(true);
       try {
-        const [expRes, currencyRes] = await Promise.all([
+        const [expRes, currencyRes, BannuAccountRes] = await Promise.all([
           userRequest.get(`/expenses/financial/${id}`),
-          userRequest.get('/currencies'),
+          userRequest.get("/currencies"),
+          userRequest.get("/bank-accounts"),
         ]);
 
         setCurrencies(currencyRes.data.data || []);
+        setBankAccount(BannuAccountRes.data.data.bankAccounts || []);
 
-        const e = expRes.data.data;
+        const e = expRes.data.data.expense;
+        console.log(e);
+        
         setFormData({
           expenseSubType: e.expenseSubType || 'bank_charges',
           bankCharges: e.bankCharges || 0,
@@ -111,7 +117,7 @@ const EditFinancialExpense = () => {
     try {
       const payload = {
         ...formData,
-        linkedBankAccount: formData.linkedBankAccount || undefined,
+        // linkedBankAccount: formData.linkedBankAccount || undefined,
         transactionDate: formData.transactionDate ? new Date(formData.transactionDate).toISOString() : undefined,
       };
       await userRequest.put(`/expenses/financial/${id}`, payload);
@@ -145,7 +151,7 @@ const EditFinancialExpense = () => {
       <form onSubmit={onSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <Card>
-            <CardBody className="space-y-4">
+            <CardBody className="space-y-6">
               <h2 className="text-lg font-semibold">Basic Information</h2>
               <Divider />
 
@@ -173,6 +179,18 @@ const EditFinancialExpense = () => {
                 <SelectItem key="bank" value="bank">Bank</SelectItem>
                 <SelectItem key="cash" value="cash">Cash</SelectItem>
                 <SelectItem key="credit" value="credit">Credit</SelectItem>
+
+              </Select>
+              <Select
+                label="Bank Account"
+                placeholder="Select bank account"
+                labelPlacement="outside"
+                selectedKeys={formData.linkedBankAccount ? [formData.linkedBankAccount] : []}
+                onChange={(e) => setFormData((prev) => ({ ...prev, linkedBankAccount: e.target.value }))}
+              >
+                {BankAccount.map((c) => (
+                  <SelectItem key={c._id} value={c._id}>{`${c.bankName} - (${c.accountName})`}</SelectItem>
+                ))}
               </Select>
 
               <Input
@@ -196,7 +214,7 @@ const EditFinancialExpense = () => {
           </Card>
 
           <Card>
-            <CardBody className="space-y-4">
+            <CardBody className="space-y-6">
               <h2 className="text-lg font-semibold">Financial Details</h2>
               <Divider />
 
@@ -247,7 +265,7 @@ const EditFinancialExpense = () => {
           <Button variant="flat" onPress={() => navigate(-1)} isDisabled={isSubmitting}>
             Cancel
           </Button>
-          <Button color="primary" type="submit" isLoading={isSubmitting} startContent={!isSubmitting && <FaSave />}> 
+          <Button color="primary" type="submit" isLoading={isSubmitting} startContent={!isSubmitting && <FaSave />}>
             {isSubmitting ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>

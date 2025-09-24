@@ -4,7 +4,6 @@ import {
   FaBoxes,
   FaTags,
   FaChartBar,
-  FaHistory,
   FaSignOutAlt,
   FaStore,
   FaShoppingCart,
@@ -12,7 +11,9 @@ import {
   FaUser,
   FaMoneyBill,
   FaUserCircle,
-  FaTruck, // Add this import
+  FaTruck,
+  FaHistory,
+  FaUniversity, // Add this import
 } from "react-icons/fa";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -121,6 +122,13 @@ const cardData = [
     title: "Expenses",
     desc: "Manage expenses",
     color: "rose",
+  },
+  {
+    to: "/bank-accounts",
+    icon: <FaUniversity />,
+    title: "Bank Accounts",
+    desc: "Manage bank accounts",
+    color: "emerald",
   },
 ];
 
