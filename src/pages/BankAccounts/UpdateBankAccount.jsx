@@ -42,19 +42,22 @@ const UpdateBankAccount = () => {
 
                 if (account) {
                     setFormData({
-                        accountName: account.accountName || "",
-                        accountNumber: account.accountNumber || "",
-                        bankName: account.bankName || "",
-                        branchName: account.branchName || "",
-                        branchCode: account.branchCode || "",
-                        accountType: account.accountType || "",
-                        currency: account.currency || "PKR",
-                        openingBalance: account.openingBalance?.toString() || "0",
-                        swiftCode: account.swiftCode || "",
-                        iban: account.iban || "",
-                        contactPerson: account.contactPerson || "",
-                        contactNumber: account.contactNumber || "",
-                        isActive: account.isActive !== undefined ? account.isActive : true,
+                      accountName: account.accountName || "",
+                      accountNumber: account.accountNumber || "",
+                      bankName: account.bankName || "",
+                      branchName: account.branchName || "",
+                      branchCode: account.branchCode || "",
+                      accountType: account.accountType || "",
+                      currency: account.currency?._id || "",
+                      openingBalance: account.openingBalance?.toString() || "0",
+                      swiftCode: account.swiftCode || "",
+                      iban: account.iban || "",
+                      contactPerson: account.contactPerson || "",
+                      contactNumber: account.contactNumber || "",
+                      isActive:
+                        account.isActive !== undefined
+                          ? account.isActive
+                          : true,
                     });
                 }
             } catch (error) {
@@ -267,11 +270,11 @@ const UpdateBankAccount = () => {
                                 value={formData.openingBalance}
                                 onChange={handleChange}
                                 placeholder="0.00"
-                                startContent={
-                                    <div className="pointer-events-none flex items-center">
-                                        <span className="text-default-400 text-small">$</span>
-                                    </div>
-                                }
+                                // startContent={
+                                //     <div className="pointer-events-none flex items-center">
+                                //         <span className="text-default-400 text-small">$</span>
+                                //     </div>
+                                // }
                             />
 
                             <Input

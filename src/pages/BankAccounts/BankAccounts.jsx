@@ -67,26 +67,37 @@ const BankAccounts = () => {
     },
   });
 
-  const handleDelete = async (id) => {
-    const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: 'You will not be able to recover this bank account!',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Yes, delete it!',
-      cancelButtonText: 'No, keep it',
-    });
+ const handleDelete = async (id) => {
+   Swal.fire({
+     title: "Are you sure?",
+     text: "You will not be able to recover this bank account!",
+     icon: "warning",
+     showCancelButton: true,
+     confirmButtonText: "Yes, delete it!",
+     cancelButtonText: "No, keep it",
+     showLoaderOnConfirm: true, // ✅ shows loader on button
+     preConfirm: async () => {
+       try {
+         const response = await userRequest.delete(`/bank-accounts/${id}`);
+         return response; // return response for use in .then()
+       } catch (error) {
+         Swal.showValidationMessage(
+           error.response?.data?.message || "Failed to delete bank account"
+         );
+         throw error;
+       }
+     },
+     allowOutsideClick: () => !Swal.isLoading(), // disable click outside while loading
+   }).then((result) => {
+     if (result.isConfirmed) {
+       toast.success(
+         result.value?.data?.message || "Bank account deleted successfully"
+       );
+       refetch();
+     }
+   });
+ };
 
-    if (result.isConfirmed) {
-      try {
-      const response =  await userRequest.delete(`/bank-accounts/${id}`);
-        toast.success(response?.data?.message || 'Bank account deactivated successfully');
-        refetch();
-      } catch (error) {
-        toast.error(error.response?.data?.message || 'Failed to delete bank account');
-      }
-    }
-  };
 
   const filteredItems = useMemo(() => {
     const list = response?.data || [];
