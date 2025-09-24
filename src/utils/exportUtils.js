@@ -60,3 +60,39 @@ export const viewPdfInNewTab = (data, filename, searchValue) => {
   window.open(url, '_blank');
   URL.revokeObjectURL(url);
 };
+
+// Generic helpers for exporting arbitrary table data
+export const exportTableToExcel = (headers, rows, filename = 'report', sheetTitle = 'Report') => {
+  // headers: array of strings
+  // rows: array of arrays (string/number)
+  const aoa = [headers, ...rows];
+  const worksheet = XLSX.utils.aoa_to_sheet(aoa);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, sheetTitle);
+  XLSX.writeFile(workbook, `${filename}.xlsx`);
+};
+
+export const exportTableToPdf = (headers, rows, title = 'Report') => {
+  const doc = new jsPDF();
+  doc.setFontSize(18);
+  doc.text(title, 105, 20, { align: 'center' });
+
+  autoTable(doc, {
+    startY: 30,
+    head: [headers],
+    body: rows,
+    theme: 'grid',
+    headStyles: { fillColor: [22, 160, 133] },
+    styles: { fontSize: 10, cellPadding: 3 },
+  });
+
+  return doc;
+};
+
+export const viewTablePdfInNewTab = (headers, rows, title = 'Report') => {
+  const doc = exportTableToPdf(headers, rows, title);
+  const blob = doc.output('blob');
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  URL.revokeObjectURL(url);
+};
