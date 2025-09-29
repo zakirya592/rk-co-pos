@@ -6,7 +6,9 @@ import {
   Input,
   Chip,
   Divider,
-  Spinner
+  Spinner,
+  Select,
+  SelectItem
 } from '@nextui-org/react';
 import { FaSearch, FaPlus, FaMinus, FaTrash, FaPrint, FaUser, FaPercent, FaCalculator } from 'react-icons/fa';
 import CustomerSelectionModal from './CustomerSelectionModal';
@@ -16,13 +18,18 @@ import userRequest from '../../utils/userRequest';
 import toast from 'react-hot-toast';
 
 
-const fetchProducts = async (key, searchTerm, currentPage) => {
-  const res = await userRequest.get("/products", {
-    params: {
-      search: searchTerm,
-      page: currentPage,
-    },
-  });
+const fetchProducts = async (key, searchTerm, currentPage, locationType, locationId) => {
+  let endpoint = "/products";
+  const params = {
+    search: searchTerm,
+    page: currentPage,
+  };
+
+  if (locationType && locationId) {
+    endpoint = `/products/location/${locationType}/${locationId}`;
+  }
+
+  const res = await userRequest.get(endpoint);
   return {
     products: res.data.data || [],
     total: res.data.results || 0,
@@ -38,6 +45,11 @@ const POS = () => {
   const [customers, setCustomers] = useState([]);
   const [customerSearchTerm, setCustomerSearchTerm] = useState('');
   const [customerPage, setCustomerPage] = useState(1);
+
+  const [selectedTransferTo, setSelectedTransferTo] = useState("");
+  const [transferOptions, setTransferOptions] = useState([]);
+
+  const [transferTo, setTransferTo] = useState("");
   const [saleDataadd, setSaleDataadd] = useState({
     note: "",
     description: "",
@@ -56,6 +68,20 @@ const POS = () => {
     }
   }, [customerData]);
 
+  // Fetch shops or warehouses when transferTo changes
+  useEffect(() => {
+    if (!transferTo) return;
+    setTransferOptions([]);
+    setSelectedTransferTo("");
+    const endpoint = transferTo === "shop" ? "/shops" : "/warehouses";
+    userRequest
+      .get(endpoint)
+      .then((data) => {
+        setTransferOptions(data?.data?.data || []);
+      })
+      .catch(() => console.log("Failed to fetch transfer options"));
+  }, [transferTo]);
+
   const [cart, setCart] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -70,13 +96,17 @@ const POS = () => {
 
   // Fetch products using react-query
   const { data, isLoading, refetch } = useQuery(
-    ["products", searchTerm, currentPage],
-    () => fetchProducts("products", searchTerm, currentPage),
-    { keepPreviousData: true }
+    ["products", searchTerm, currentPage, transferTo, selectedTransferTo],
+    () => fetchProducts("products", searchTerm, currentPage, transferTo, selectedTransferTo),
+    { 
+      keepPreviousData: true,
+      enabled: !!transferTo && !!selectedTransferTo, // Only fetch when both type and ID are selected
+    }
   );
 
   const products = data?.products || [];
   const totalProducts = data?.total || 0;
+  
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -166,12 +196,15 @@ const POS = () => {
       toast.error(error?.response?.data?.message || error.message || "Failed to add customer.");
     }
   };
+ 
+  
 
   const completeSale = async () => {
 
     try {
       const saleData = {
         customer: selectedCustomer?._id,
+        [transferTo]: selectedTransferTo,
         items: cart.map((item) => ({
           product: item._id,
           quantity: item.quantity,
@@ -234,23 +267,80 @@ const POS = () => {
                 </Button>
               </div>
 
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-sm">
+              <div className="flex items-center mb-4 gap-3">
+                <div className="text-sm w-full">
                   Customer:{" "}
                   <strong>{selectedCustomer?.name || "Select Customer"}</strong>{" "}
                   ({selectedCustomer?.customerType || ""})
                 </div>
-                <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow font-semibold text-sm">
+                {/* <div className="flex items-center gap-2 my-auto w-full"> */}
+                <Select
+                  placeholder="Select Shop or Warehouse"
+                  selectedKeys={transferTo ? [transferTo] : []}
+                  onChange={(e) => setTransferTo(e.target.value)}
+                  // className="w-full"
+                >
+                  <SelectItem key="warehouse" value="warehouse">
+                    Warehouse
+                  </SelectItem>
+                  <SelectItem key="shop" value="shop">
+                    Shop
+                  </SelectItem>
+                </Select>
+                <Select
+                  placeholder={`Select ${
+                    transferTo === "shop" ? "Shop" : "Warehouse"
+                  }`}
+                  selectedKeys={selectedTransferTo ? [selectedTransferTo] : []}
+                  onChange={(e) => setSelectedTransferTo(e.target.value)}
+                  // isDisabled={!transferTo || isLoading}
+                  // className="w-full"
+                >
+                  {transferOptions.map((item) => (
+                    <SelectItem key={item._id} value={item._id}>
+                      {item.name}
+                    </SelectItem>
+                  ))}
+                </Select>
+                <div className="bg-gradient-to-r w-full from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow font-semibold text-sm">
                   Total Products: {totalProducts}
                 </div>
               </div>
+              {/* </div> */}
 
               {isLoading ? (
                 <div className="flex justify-center items-center py-8">
                   <Spinner color="success" size="lg" />
                 </div>
+              ) : filteredProducts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="text-gray-400 text-5xl mb-4">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-16 w-16 mx-auto"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-700">
+                    No products found
+                  </h3>
+                  <p className="text-gray-500 mt-1">
+                    {!transferTo || !selectedTransferTo
+                      ? "Please select a location to view products"
+                      : "No products available in the selected location"}
+                  </p>
+                </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 h-full ">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 h-full">
                   {filteredProducts.map((product) => (
                     <Card
                       key={product._id}
@@ -285,14 +375,14 @@ const POS = () => {
                           <Chip
                             size="sm"
                             color={
-                              product.countInStock <= 5
+                              product.currentStock <= 5
                                 ? "danger"
-                                : product.countInStock <= 10
-                                  ? "warning"
-                                  : "success"
+                                : product.currentStock <= 10
+                                ? "warning"
+                                : "success"
                             }
                           >
-                            {product.countInStock}
+                            {product.currentStock}
                           </Chip>
                         </div>
                         <div className="flex justify-between items-center mt-2">
