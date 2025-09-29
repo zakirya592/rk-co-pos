@@ -303,7 +303,7 @@ const POS = () => {
                   ))}
                 </Select>
                 <div className="bg-gradient-to-r w-full from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow font-semibold text-sm">
-                  Total Products: {totalProducts}
+                  Total Products: {filteredProducts.length || '0'}
                 </div>
               </div>
               {/* </div> */}
