@@ -282,7 +282,9 @@ const EditProcurementExpense = () => {
                   label="Product Category"
                   placeholder="Select category"
                   labelPlacement="outside"
-                  selectedKeys={formData.productCategory ? [formData.productCategory] : []}
+                  selectedKeys={
+                    formData.productCategory ? [formData.productCategory] : []
+                  }
                   value={formData.productCategory}
                   onChange={(e) =>
                     handleInputChange({
@@ -431,11 +433,24 @@ const EditProcurementExpense = () => {
                     labelPlacement="outside"
                     isRequired
                     selectedKeys={formData.currency ? [formData.currency] : []}
-                    onChange={(e) =>
-                      handleInputChange({
-                        target: { name: "currency", value: e.target.value },
-                      })
-                    }
+                    // onChange={(e) =>
+                    //   handleInputChange({
+                    //     target: { name: "currency", value: e.target.value },
+                    //   })
+                    // }
+                    onChange={(e) => {
+                      const selectedCurrency = currencies.find(
+                        (c) => c._id === e.target.value
+                      );
+
+                      setFormData((prev) => ({
+                        ...prev,
+                        currency: e.target.value,
+                        exchangeRate: selectedCurrency
+                          ? selectedCurrency.exchangeRate
+                          : 1, // auto-fill exchangeRate
+                      }));
+                    }}
                   >
                     {currencies.map((currency) => (
                       <SelectItem key={currency._id} value={currency._id}>
@@ -523,13 +538,13 @@ const EditProcurementExpense = () => {
                         min="0"
                         step="0.01"
                         className="w-32"
-                        startContent={
-                          <div className="pointer-events-none flex items-center">
-                            <span className="text-default-400 text-small">
-                              $
-                            </span>
-                          </div>
-                        }
+                        // startContent={
+                        //   <div className="pointer-events-none flex items-center">
+                        //     <span className="text-default-400 text-small">
+                        //       $
+                        //     </span>
+                        //   </div>
+                        // }
                         isRequired
                         value={product.unitPrice}
                         onChange={(e) =>
@@ -543,7 +558,7 @@ const EditProcurementExpense = () => {
                     </TableCell>
                     <TableCell>
                       <div className="font-medium">
-                        ${(product.quantity * product.unitPrice).toFixed(2)}
+                        {(product.quantity * product.unitPrice).toFixed(2)}
                       </div>
                     </TableCell>
                     <TableCell>

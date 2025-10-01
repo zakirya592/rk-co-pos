@@ -248,7 +248,19 @@ const EditWarehouseExpense = () => {
                   placeholder="Select currency"
                   labelPlacement="outside"
                   selectedKeys={formData.currency ? [formData.currency] : []}
-                  onChange={(e) => setFormData(prev => ({ ...prev, currency: e.target.value }))}
+                   onChange={(e) => {
+                    const selectedCurrency = currencies.find(
+                      (c) => c._id === e.target.value
+                    );
+
+                    setFormData((prev) => ({
+                      ...prev,
+                      currency: e.target.value,
+                      exchangeRate: selectedCurrency
+                        ? selectedCurrency.exchangeRate
+                        : 1, // auto-fill exchangeRate
+                    }));
+                  }}
                 >
                   {currencies.map(c => (
                     <SelectItem key={c._id} value={c._id}>{`${c.code} - ${c.name}`}</SelectItem>

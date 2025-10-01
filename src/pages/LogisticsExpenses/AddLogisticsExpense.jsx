@@ -146,308 +146,331 @@ const AddLogisticsExpense = () => {
     }
 
     return (
-        <div className="p-4">
-            <div className="flex items-center mb-6">
-                <Button
-                    isIconOnly
-                    variant="light"
-                    className="mr-2"
-                    onPress={() => navigate(-1)}
-                >
-                    <FaArrowLeft />
-                </Button>
-                <h1 className="text-2xl font-bold">Add Logistics Expense</h1>
-            </div>
-
-            <form onSubmit={onSubmit}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <Card>
-                        <CardBody className="space-y-4">
-                            <h2 className="text-lg font-semibold">Basic Information</h2>
-                            <Divider />
-                            <div className="mt-4">
-                                <Input
-                                    name="route"
-                                    label="Route"
-                                    placeholder="Karachi to Lahore via GT Road"
-                                    labelPlacement="outside"
-                                    value={formData.route}
-                                    onChange={handleChange}
-                                />
-                            </div>
-                            <div className="mt-4">
-                                <Input
-                                    name="vehicleContainerNo"
-                                    label="Vehicle/Container No"
-                                    placeholder="KHI-1234"
-                                    labelPlacement="outside"
-                                    value={formData.vehicleContainerNo}
-                                    onChange={handleChange}
-                                />
-                            </div>
-                            <div className="mt-2">
-                                <Select
-                                    label="Transporter"
-                                    placeholder="Select transporter"
-                                    labelPlacement="outside"
-                                    selectedKeys={formData.transporter ? [formData.transporter] : []}
-                                    onChange={(e) => setFormData((p) => ({ ...p, transporter: e.target.value }))}
-                                >
-                                    {transporters.map((t) => (
-                                        <SelectItem key={t._id} value={t._id}>
-                                            {t.name}
-                                        </SelectItem>
-                                    ))}
-                                </Select>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <Input
-                                    type="date"
-                                    name="departureDate"
-                                    label="Departure Date"
-                                    labelPlacement="outside"
-                                    value={formData.departureDate}
-                                    onChange={handleChange}
-                                />
-                                <Input
-                                    type="date"
-                                    name="arrivalDate"
-                                    label="Arrival Date"
-                                    labelPlacement="outside"
-                                    value={formData.arrivalDate}
-                                    onChange={handleChange}
-                                />
-                            </div>
-                            <div className="mt-4">
-                                <Select
-                                    label="Transport Status"
-                                    labelPlacement="outside"
-                                    selectedKeys={[formData.transportStatus]}
-                                    onChange={(e) =>
-                                        setFormData((p) => ({
-                                            ...p,
-                                            transportStatus: e.target.value,
-                                        }))
-                                    }
-                                >
-                                    <SelectItem key="pending" value="pending">
-                                        Pending
-                                    </SelectItem>
-                                    <SelectItem key="in_transit" value="in_transit">
-                                        In Transit
-                                    </SelectItem>
-                                    <SelectItem key="delivered" value="delivered">
-                                        Delivered
-                                    </SelectItem>
-                                    <SelectItem key="cancelled" value="cancelled">
-                                        Cancelled
-                                    </SelectItem>
-                                </Select>
-                            </div>
-
-                            <Textarea
-                                name="notes"
-                                label="Notes"
-                                placeholder="Additional notes..."
-                                labelPlacement="outside"
-                                value={formData.notes}
-                                onChange={handleChange}
-                            />
-                        </CardBody>
-                    </Card>
-
-                    <Card>
-                        <CardBody className="space-y-4">
-                            <h2 className="text-lg font-semibold">Financial Details</h2>
-                            <Divider />
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <Input
-                                    type="number"
-                                    name="freightCost"
-                                    label="Freight Cost"
-                                    labelPlacement="outside"
-                                    value={formData.freightCost}
-                                    onChange={handleChange}
-                                    min={0}
-                                />
-                                <Input
-                                    type="number"
-                                    name="borderCrossingCharges"
-                                    label="Border Crossing Charges"
-                                    labelPlacement="outside"
-                                    value={formData.borderCrossingCharges}
-                                    onChange={handleChange}
-                                    min={0}
-                                />
-                                <Input
-                                    type="number"
-                                    name="transporterCommission"
-                                    label="Transporter Commission"
-                                    labelPlacement="outside"
-                                    value={formData.transporterCommission}
-                                    onChange={handleChange}
-                                    min={0}
-                                />
-                                <Input
-                                    type="number"
-                                    name="serviceFee"
-                                    label="Service Fee"
-                                    labelPlacement="outside"
-                                    value={formData.serviceFee}
-                                    onChange={handleChange}
-                                    min={0}
-                                />
-                                <Input
-                                    type="number"
-                                    name="transitWarehouseCharges"
-                                    label="Transit Warehouse Charges"
-                                    labelPlacement="outside"
-                                    value={formData.transitWarehouseCharges}
-                                    onChange={handleChange}
-                                    min={0}
-                                />
-                                <Input
-                                    type="number"
-                                    name="localTransportCharges"
-                                    label="Local Transport Charges"
-                                    labelPlacement="outside"
-                                    value={formData.localTransportCharges}
-                                    onChange={handleChange}
-                                    min={0}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <Select
-                                    label="Currency"
-                                    placeholder="Select currency"
-                                    labelPlacement="outside"
-                                    selectedKeys={formData.currency ? [formData.currency] : []}
-                                    onChange={(e) =>
-                                        setFormData((p) => ({ ...p, currency: e.target.value }))
-                                    }
-                                >
-                                    {currencies.map((c) => (
-                                        <SelectItem
-                                            key={c._id}
-                                            value={c._id}
-                                        >{`${c.code} - ${c.name}`}</SelectItem>
-                                    ))}
-                                </Select>
-
-                                <Input
-                                    type="number"
-                                    name="exchangeRate"
-                                    label="Exchange Rate"
-                                    placeholder="1.00"
-                                    labelPlacement="outside"
-                                    value={formData.exchangeRate}
-                                    onChange={handleChange}
-                                    min={0}
-                                    step={0.01}
-                                />
-                            </div>
-
-                            <div className="text-right text-sm text-gray-600">
-                                Estimated total:{" "}
-                                <span className="font-semibold">
-                                    {calcTotalCost.toLocaleString()}
-                                </span>
-                            </div>
-                        </CardBody>
-                    </Card>
-                </div>
-
-                <Card className="mb-6">
-                    <CardBody className="space-y-4">
-                        <h2 className="text-lg font-semibold">Links & Payment</h2>
-                        <Divider />
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <Select
-                                label="Linked Shipment (optional)"
-                                placeholder="Select shipment"
-                                labelPlacement="outside"
-                                selectedKeys={
-                                    formData.linkedShipment ? [formData.linkedShipment] : []
-                                }
-                                onChange={(e) =>
-                                    setFormData((p) => ({ ...p, linkedShipment: e.target.value }))
-                                }
-                            >
-                                {shipments.map((s) => (
-                                    <SelectItem key={s._id} value={s._id}>
-                                        {s.shipmentId || s.trackingNumber || s._id}
-                                    </SelectItem>
-                                ))}
-                            </Select>
-
-                            <Select
-                                label="Linked Warehouse (optional)"
-                                placeholder="Select warehouse"
-                                labelPlacement="outside"
-                                selectedKeys={
-                                    formData.linkedWarehouse ? [formData.linkedWarehouse] : []
-                                }
-                                onChange={(e) =>
-                                    setFormData((p) => ({
-                                        ...p,
-                                        linkedWarehouse: e.target.value,
-                                    }))
-                                }
-                            >
-                                {warehouses.map((w) => (
-                                    <SelectItem key={w._id} value={w._id}>
-                                        {w.name}
-                                    </SelectItem>
-                                ))}
-                            </Select>
-                            <Select
-                                label="Payment Method"
-                                placeholder="Select payment method"
-                                labelPlacement="outside"
-                                selectedKeys={[formData.paymentMethod]}
-                                onChange={(e) =>
-                                    setFormData((p) => ({ ...p, paymentMethod: e.target.value }))
-                                }
-                            >
-                                <SelectItem key="cash" value="cash">
-                                    Cash
-                                </SelectItem>
-                                <SelectItem key="bank" value="bank">
-                                    Bank Transfer
-                                </SelectItem>
-                                <SelectItem key="credit" value="credit">
-                                    Credit
-                                </SelectItem>
-                                <SelectItem key="mixed" value="mixed">
-                                    Mixed
-                                </SelectItem>
-                            </Select>
-                        </div>
-                    </CardBody>
-                </Card>
-
-                <div className="flex justify-end gap-4">
-                    <Button
-                        variant="flat"
-                        onPress={() => navigate(-1)}
-                        isDisabled={isSubmitting}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        color="primary"
-                        type="submit"
-                        isLoading={isSubmitting}
-                        startContent={!isSubmitting && <FaSave />}
-                    >
-                        {isSubmitting ? "Saving..." : "Save Expense"}
-                    </Button>
-                </div>
-            </form>
+      <div className="p-4">
+        <div className="flex items-center mb-6">
+          <Button
+            isIconOnly
+            variant="light"
+            className="mr-2"
+            onPress={() => navigate(-1)}
+          >
+            <FaArrowLeft />
+          </Button>
+          <h1 className="text-2xl font-bold">Add Logistics Expense</h1>
         </div>
+
+        <form onSubmit={onSubmit}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <Card>
+              <CardBody className="space-y-4">
+                <h2 className="text-lg font-semibold">Basic Information</h2>
+                <Divider />
+                <div className="mt-4">
+                  <Input
+                    name="route"
+                    label="Route"
+                    placeholder="Karachi to Lahore via GT Road"
+                    labelPlacement="outside"
+                    value={formData.route}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="mt-4">
+                  <Input
+                    name="vehicleContainerNo"
+                    label="Vehicle/Container No"
+                    placeholder="KHI-1234"
+                    labelPlacement="outside"
+                    value={formData.vehicleContainerNo}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="mt-2">
+                  <Select
+                    label="Transporter"
+                    placeholder="Select transporter"
+                    labelPlacement="outside"
+                    selectedKeys={
+                      formData.transporter ? [formData.transporter] : []
+                    }
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        transporter: e.target.value,
+                      }))
+                    }
+                  >
+                    {transporters.map((t) => (
+                      <SelectItem key={t._id} value={t._id}>
+                        {t.name}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    type="date"
+                    name="departureDate"
+                    label="Departure Date"
+                    labelPlacement="outside"
+                    value={formData.departureDate}
+                    onChange={handleChange}
+                  />
+                  <Input
+                    type="date"
+                    name="arrivalDate"
+                    label="Arrival Date"
+                    labelPlacement="outside"
+                    value={formData.arrivalDate}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="mt-4">
+                  <Select
+                    label="Transport Status"
+                    labelPlacement="outside"
+                    selectedKeys={[formData.transportStatus]}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        transportStatus: e.target.value,
+                      }))
+                    }
+                  >
+                    <SelectItem key="pending" value="pending">
+                      Pending
+                    </SelectItem>
+                    <SelectItem key="in_transit" value="in_transit">
+                      In Transit
+                    </SelectItem>
+                    <SelectItem key="delivered" value="delivered">
+                      Delivered
+                    </SelectItem>
+                    <SelectItem key="cancelled" value="cancelled">
+                      Cancelled
+                    </SelectItem>
+                  </Select>
+                </div>
+
+                <Textarea
+                  name="notes"
+                  label="Notes"
+                  placeholder="Additional notes..."
+                  labelPlacement="outside"
+                  value={formData.notes}
+                  onChange={handleChange}
+                />
+              </CardBody>
+            </Card>
+
+            <Card>
+              <CardBody className="space-y-4">
+                <h2 className="text-lg font-semibold">Financial Details</h2>
+                <Divider />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    type="number"
+                    name="freightCost"
+                    label="Freight Cost"
+                    labelPlacement="outside"
+                    value={formData.freightCost}
+                    onChange={handleChange}
+                    min={0}
+                  />
+                  <Input
+                    type="number"
+                    name="borderCrossingCharges"
+                    label="Border Crossing Charges"
+                    labelPlacement="outside"
+                    value={formData.borderCrossingCharges}
+                    onChange={handleChange}
+                    min={0}
+                  />
+                  <Input
+                    type="number"
+                    name="transporterCommission"
+                    label="Transporter Commission"
+                    labelPlacement="outside"
+                    value={formData.transporterCommission}
+                    onChange={handleChange}
+                    min={0}
+                  />
+                  <Input
+                    type="number"
+                    name="serviceFee"
+                    label="Service Fee"
+                    labelPlacement="outside"
+                    value={formData.serviceFee}
+                    onChange={handleChange}
+                    min={0}
+                  />
+                  <Input
+                    type="number"
+                    name="transitWarehouseCharges"
+                    label="Transit Warehouse Charges"
+                    labelPlacement="outside"
+                    value={formData.transitWarehouseCharges}
+                    onChange={handleChange}
+                    min={0}
+                  />
+                  <Input
+                    type="number"
+                    name="localTransportCharges"
+                    label="Local Transport Charges"
+                    labelPlacement="outside"
+                    value={formData.localTransportCharges}
+                    onChange={handleChange}
+                    min={0}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Select
+                    label="Currency"
+                    placeholder="Select currency"
+                    labelPlacement="outside"
+                    selectedKeys={formData.currency ? [formData.currency] : []}
+                    onChange={(e) => {
+                      const selectedCurrency = currencies.find(
+                        (c) => c._id === e.target.value
+                      );
+
+                      setFormData((prev) => ({
+                        ...prev,
+                        currency: e.target.value,
+                        exchangeRate: selectedCurrency
+                          ? selectedCurrency.exchangeRate
+                          : 1, // auto-fill exchangeRate
+                      }));
+                    }}
+                  >
+                    {currencies.map((c) => (
+                      <SelectItem
+                        key={c._id}
+                        value={c._id}
+                      >{`${c.code} - ${c.name}`}</SelectItem>
+                    ))}
+                  </Select>
+
+                  <Input
+                    type="number"
+                    name="exchangeRate"
+                    label="Exchange Rate"
+                    placeholder="1.00"
+                    labelPlacement="outside"
+                    value={formData.exchangeRate}
+                    onChange={handleChange}
+                    min={0}
+                    step={0.01}
+                  />
+                </div>
+
+                <div className="text-right text-sm text-gray-600">
+                  Estimated total:{" "}
+                  <span className="font-semibold">
+                    {calcTotalCost.toLocaleString()}
+                  </span>
+                </div>
+              </CardBody>
+            </Card>
+          </div>
+
+          <Card className="mb-6">
+            <CardBody className="space-y-4">
+              <h2 className="text-lg font-semibold">Links & Payment</h2>
+              <Divider />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Select
+                  label="Linked Shipment (optional)"
+                  placeholder="Select shipment"
+                  labelPlacement="outside"
+                  selectedKeys={
+                    formData.linkedShipment ? [formData.linkedShipment] : []
+                  }
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      linkedShipment: e.target.value,
+                    }))
+                  }
+                >
+                  {shipments.map((s) => (
+                    <SelectItem key={s._id} value={s._id}>
+                      {s.shipmentId || s.trackingNumber || s._id}
+                    </SelectItem>
+                  ))}
+                </Select>
+
+                <Select
+                  label="Linked Warehouse (optional)"
+                  placeholder="Select warehouse"
+                  labelPlacement="outside"
+                  selectedKeys={
+                    formData.linkedWarehouse ? [formData.linkedWarehouse] : []
+                  }
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      linkedWarehouse: e.target.value,
+                    }))
+                  }
+                >
+                  {warehouses.map((w) => (
+                    <SelectItem key={w._id} value={w._id}>
+                      {w.name}
+                    </SelectItem>
+                  ))}
+                </Select>
+                <Select
+                  label="Payment Method"
+                  placeholder="Select payment method"
+                  labelPlacement="outside"
+                  selectedKeys={[formData.paymentMethod]}
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      paymentMethod: e.target.value,
+                    }))
+                  }
+                >
+                  <SelectItem key="cash" value="cash">
+                    Cash
+                  </SelectItem>
+                  <SelectItem key="bank" value="bank">
+                    Bank Transfer
+                  </SelectItem>
+                  <SelectItem key="credit" value="credit">
+                    Credit
+                  </SelectItem>
+                  <SelectItem key="mixed" value="mixed">
+                    Mixed
+                  </SelectItem>
+                </Select>
+              </div>
+            </CardBody>
+          </Card>
+
+          <div className="flex justify-end gap-4">
+            <Button
+              variant="flat"
+              onPress={() => navigate(-1)}
+              isDisabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              type="submit"
+              isLoading={isSubmitting}
+              startContent={!isSubmitting && <FaSave />}
+            >
+              {isSubmitting ? "Saving..." : "Save Expense"}
+            </Button>
+          </div>
+        </form>
+      </div>
     );
 };
 

@@ -143,7 +143,12 @@ const AddSalesDistributionExpense = () => {
   return (
     <div className="p-4">
       <div className="flex items-center mb-6">
-        <Button isIconOnly variant="light" className="mr-2" onPress={() => navigate(-1)}>
+        <Button
+          isIconOnly
+          variant="light"
+          className="mr-2"
+          onPress={() => navigate(-1)}
+        >
           <FaArrowLeft />
         </Button>
         <h1 className="text-2xl font-bold">Add Sales Distribution Expense</h1>
@@ -157,33 +162,103 @@ const AddSalesDistributionExpense = () => {
               <Divider />
 
               <div className="grid grid-cols-2 gap-4">
-                <Input type="date" name="startDate" label="Start Date" labelPlacement="outside" value={formData.salesPeriod.startDate} onChange={handlePeriodChange} />
-                <Input type="date" name="endDate" label="End Date" labelPlacement="outside" value={formData.salesPeriod.endDate} onChange={handlePeriodChange} />
+                <Input
+                  type="date"
+                  name="startDate"
+                  label="Start Date"
+                  labelPlacement="outside"
+                  value={formData.salesPeriod.startDate}
+                  onChange={handlePeriodChange}
+                />
+                <Input
+                  type="date"
+                  name="endDate"
+                  label="End Date"
+                  labelPlacement="outside"
+                  value={formData.salesPeriod.endDate}
+                  onChange={handlePeriodChange}
+                />
               </div>
 
-              <Input name="salesTeam" label="Sales Team" placeholder="e.g., North Region" labelPlacement="outside" value={formData.salesTeam} onChange={handleChange} />
+              <Input
+                name="salesTeam"
+                label="Sales Team"
+                placeholder="e.g., North Region"
+                labelPlacement="outside"
+                value={formData.salesTeam}
+                onChange={handleChange}
+              />
 
               {users.length > 0 ? (
-                <Select label="Salesperson" placeholder="Select salesperson" labelPlacement="outside" selectedKeys={formData.salesperson ? [formData.salesperson] : []} onChange={(e) => setFormData((prev) => ({ ...prev, salesperson: e.target.value }))}>
+                <Select
+                  label="Salesperson"
+                  placeholder="Select salesperson"
+                  labelPlacement="outside"
+                  selectedKeys={
+                    formData.salesperson ? [formData.salesperson] : []
+                  }
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      salesperson: e.target.value,
+                    }))
+                  }
+                >
                   {users.map((u) => (
-                    <SelectItem key={u._id} value={u._id}>{u.name || u.email || u._id}</SelectItem>
+                    <SelectItem key={u._id} value={u._id}>
+                      {u.name || u.email || u._id}
+                    </SelectItem>
                   ))}
                 </Select>
               ) : (
-                <Input name="salesperson" label="Salesperson ID" placeholder="Salesperson ID" labelPlacement="outside" value={formData.salesperson} onChange={handleChange} />
+                <Input
+                  name="salesperson"
+                  label="Salesperson ID"
+                  placeholder="Salesperson ID"
+                  labelPlacement="outside"
+                  value={formData.salesperson}
+                  onChange={handleChange}
+                />
               )}
 
               {customers.length > 0 ? (
-                <Select label="Customer" placeholder="Select customer" labelPlacement="outside" selectedKeys={formData.customer ? [formData.customer] : []} onChange={(e) => setFormData((prev) => ({ ...prev, customer: e.target.value }))}>
+                <Select
+                  label="Customer"
+                  placeholder="Select customer"
+                  labelPlacement="outside"
+                  selectedKeys={formData.customer ? [formData.customer] : []}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      customer: e.target.value,
+                    }))
+                  }
+                >
                   {customers.map((c) => (
-                    <SelectItem key={c._id} value={c._id}>{c.name || c.email || c._id}</SelectItem>
+                    <SelectItem key={c._id} value={c._id}>
+                      {c.name || c.email || c._id}
+                    </SelectItem>
                   ))}
                 </Select>
               ) : (
-                <Input name="customer" label="Customer ID" placeholder="Customer ID" labelPlacement="outside" value={formData.customer} onChange={handleChange} />
+                <Input
+                  name="customer"
+                  label="Customer ID"
+                  placeholder="Customer ID"
+                  labelPlacement="outside"
+                  value={formData.customer}
+                  onChange={handleChange}
+                />
               )}
 
-              <Textarea name="notes" label="Notes" placeholder="Additional notes..." labelPlacement="outside" value={formData.notes} onChange={handleChange} />
+              <Textarea
+                name="notes"
+                label="Notes"
+                placeholder="Additional notes..."
+                labelPlacement="outside"
+                value={formData.notes}
+                onChange={handleChange}
+              />
             </CardBody>
           </Card>
 
@@ -193,46 +268,193 @@ const AddSalesDistributionExpense = () => {
               <Divider />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Select label="Currency" placeholder="Select currency" labelPlacement="outside" selectedKeys={formData.currency ? [formData.currency] : []} onChange={(e) => setFormData((prev) => ({ ...prev, currency: e.target.value }))}>
+                <Select
+                  label="Currency"
+                  placeholder="Select currency"
+                  labelPlacement="outside"
+                  selectedKeys={formData.currency ? [formData.currency] : []}
+                  onChange={(e) => {
+                    const selectedCurrency = currencies.find(
+                      (c) => c._id === e.target.value
+                    );
+
+                    setFormData((prev) => ({
+                      ...prev,
+                      currency: e.target.value,
+                      exchangeRate: selectedCurrency
+                        ? selectedCurrency.exchangeRate
+                        : 1, // auto-fill exchangeRate
+                    }));
+                  }}
+                >
                   {currencies.map((c) => (
-                    <SelectItem key={c._id} value={c._id}>{`${c.code} - ${c.name}`}</SelectItem>
+                    <SelectItem
+                      key={c._id}
+                      value={c._id}
+                    >{`${c.code} - ${c.name}`}</SelectItem>
                   ))}
                 </Select>
 
-                <Input type="number" name="exchangeRate" label="Exchange Rate" placeholder="1.00" labelPlacement="outside" value={formData.exchangeRate} onChange={handleChange} min={0} step={0.01} />
+                <Input
+                  type="number"
+                  name="exchangeRate"
+                  label="Exchange Rate"
+                  placeholder="1.00"
+                  labelPlacement="outside"
+                  value={formData.exchangeRate}
+                  onChange={handleChange}
+                  min={0}
+                  step={0.01}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <Input type="number" name="salesAmount" label="Sales Amount" labelPlacement="outside" value={formData.salesAmount} onChange={handleChange} min={0} />
-                <Input type="number" name="commissionRate" label="Commission Rate (%)" labelPlacement="outside" value={formData.commissionRate} onChange={handleChange} min={0} step={0.01} />
-                <Input type="number" name="commissionAmount" label="Commission Amount" labelPlacement="outside" value={formData.commissionAmount} onChange={handleChange} min={0} />
-                <Input type="number" name="customerDiscounts" label="Customer Discounts" labelPlacement="outside" value={formData.customerDiscounts} onChange={handleChange} min={0} />
-                <Input type="number" name="creditLoss" label="Credit Loss" labelPlacement="outside" value={formData.creditLoss} onChange={handleChange} min={0} />
-                <Input type="number" name="badDebts" label="Bad Debts" labelPlacement="outside" value={formData.badDebts} onChange={handleChange} min={0} />
-                <Input type="number" name="promotionalCost" label="Promotional Cost" labelPlacement="outside" value={formData.promotionalCost} onChange={handleChange} min={0} />
-                <Input type="number" name="marketingCost" label="Marketing Cost" labelPlacement="outside" value={formData.marketingCost} onChange={handleChange} min={0} />
+                <Input
+                  type="number"
+                  name="salesAmount"
+                  label="Sales Amount"
+                  labelPlacement="outside"
+                  value={formData.salesAmount}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="commissionRate"
+                  label="Commission Rate (%)"
+                  labelPlacement="outside"
+                  value={formData.commissionRate}
+                  onChange={handleChange}
+                  min={0}
+                  step={0.01}
+                />
+                <Input
+                  type="number"
+                  name="commissionAmount"
+                  label="Commission Amount"
+                  labelPlacement="outside"
+                  value={formData.commissionAmount}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="customerDiscounts"
+                  label="Customer Discounts"
+                  labelPlacement="outside"
+                  value={formData.customerDiscounts}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="creditLoss"
+                  label="Credit Loss"
+                  labelPlacement="outside"
+                  value={formData.creditLoss}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="badDebts"
+                  label="Bad Debts"
+                  labelPlacement="outside"
+                  value={formData.badDebts}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="promotionalCost"
+                  label="Promotional Cost"
+                  labelPlacement="outside"
+                  value={formData.promotionalCost}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="marketingCost"
+                  label="Marketing Cost"
+                  labelPlacement="outside"
+                  value={formData.marketingCost}
+                  onChange={handleChange}
+                  min={0}
+                />
               </div>
 
-              <Select label="Payment Method" placeholder="Select payment method" labelPlacement="outside" selectedKeys={[formData.paymentMethod]} onChange={(e) => setFormData((prev) => ({ ...prev, paymentMethod: e.target.value }))}>
-                <SelectItem key="cash" value="cash">Cash</SelectItem>
-                <SelectItem key="bank" value="bank">Bank Transfer</SelectItem>
-                <SelectItem key="credit" value="credit">Credit</SelectItem>
-                <SelectItem key="mixed" value="mixed">Mixed</SelectItem>
+              <Select
+                label="Payment Method"
+                placeholder="Select payment method"
+                labelPlacement="outside"
+                selectedKeys={[formData.paymentMethod]}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    paymentMethod: e.target.value,
+                  }))
+                }
+              >
+                <SelectItem key="cash" value="cash">
+                  Cash
+                </SelectItem>
+                <SelectItem key="bank" value="bank">
+                  Bank Transfer
+                </SelectItem>
+                <SelectItem key="credit" value="credit">
+                  Credit
+                </SelectItem>
+                <SelectItem key="mixed" value="mixed">
+                  Mixed
+                </SelectItem>
               </Select>
 
-              <Select label="Expense Type" placeholder="Select expense type" labelPlacement="outside" selectedKeys={[formData.expenseType]} onChange={(e) => setFormData((prev) => ({ ...prev, expenseType: e.target.value }))}>
-                <SelectItem key="marketing" value="marketing">Marketing</SelectItem>
-                <SelectItem key="promotion" value="promotion">Promotion</SelectItem>
-                <SelectItem key="commission" value="commission">Commission</SelectItem>
-                <SelectItem key="other" value="other">Other</SelectItem>
+              <Select
+                label="Expense Type"
+                placeholder="Select expense type"
+                labelPlacement="outside"
+                selectedKeys={[formData.expenseType]}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    expenseType: e.target.value,
+                  }))
+                }
+              >
+                <SelectItem key="marketing" value="marketing">
+                  Marketing
+                </SelectItem>
+                <SelectItem key="promotion" value="promotion">
+                  Promotion
+                </SelectItem>
+                <SelectItem key="commission" value="commission">
+                  Commission
+                </SelectItem>
+                <SelectItem key="other" value="other">
+                  Other
+                </SelectItem>
               </Select>
             </CardBody>
           </Card>
         </div>
 
         <div className="flex justify-end gap-4">
-          <Button variant="flat" onPress={() => navigate(-1)} isDisabled={isSubmitting}>Cancel</Button>
-          <Button color="primary" type="submit" isLoading={isSubmitting} startContent={!isSubmitting && <FaSave />}>{isSubmitting ? 'Saving...' : 'Save Expense'}</Button>
+          <Button
+            variant="flat"
+            onPress={() => navigate(-1)}
+            isDisabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button
+            color="primary"
+            type="submit"
+            isLoading={isSubmitting}
+            startContent={!isSubmitting && <FaSave />}
+          >
+            {isSubmitting ? "Saving..." : "Save Expense"}
+          </Button>
         </div>
       </form>
     </div>

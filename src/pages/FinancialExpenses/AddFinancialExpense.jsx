@@ -113,7 +113,12 @@ const AddFinancialExpense = () => {
   return (
     <div className="p-4">
       <div className="flex items-center mb-6">
-        <Button isIconOnly variant="light" className="mr-2" onPress={() => navigate(-1)}>
+        <Button
+          isIconOnly
+          variant="light"
+          className="mr-2"
+          onPress={() => navigate(-1)}
+        >
           <FaArrowLeft />
         </Button>
         <h1 className="text-2xl font-bold">Add Financial Expense</h1>
@@ -131,13 +136,28 @@ const AddFinancialExpense = () => {
                 placeholder="Select expense type"
                 labelPlacement="outside"
                 selectedKeys={[formData.expenseSubType]}
-                onChange={(e) => setFormData((prev) => ({ ...prev, expenseSubType: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    expenseSubType: e.target.value,
+                  }))
+                }
               >
-                <SelectItem key="bank_charges" value="bank_charges">Bank Charges</SelectItem>
-                <SelectItem key="interest" value="interest">Interest</SelectItem>
-                <SelectItem key="fees" value="fees">Fees</SelectItem>
-                <SelectItem key="exchange" value="exchange">Exchange Gain/Loss</SelectItem>
-                <SelectItem key="other" value="other">Other</SelectItem>
+                <SelectItem key="bank_charges" value="bank_charges">
+                  Bank Charges
+                </SelectItem>
+                <SelectItem key="interest" value="interest">
+                  Interest
+                </SelectItem>
+                <SelectItem key="fees" value="fees">
+                  Fees
+                </SelectItem>
+                <SelectItem key="exchange" value="exchange">
+                  Exchange Gain/Loss
+                </SelectItem>
+                <SelectItem key="other" value="other">
+                  Other
+                </SelectItem>
               </Select>
 
               <Select
@@ -145,23 +165,46 @@ const AddFinancialExpense = () => {
                 placeholder="Select payment method"
                 labelPlacement="outside"
                 selectedKeys={[formData.paymentMethod]}
-                onChange={(e) => setFormData((prev) => ({ ...prev, paymentMethod: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    paymentMethod: e.target.value,
+                  }))
+                }
               >
-                <SelectItem key="bank" value="bank">Bank</SelectItem>
-                <SelectItem key="cash" value="cash">Cash</SelectItem>
-                <SelectItem key="credit" value="credit">Credit</SelectItem>
-                <SelectItem key="mixed" value="mixed">Mixed</SelectItem>
+                <SelectItem key="bank" value="bank">
+                  Bank
+                </SelectItem>
+                <SelectItem key="cash" value="cash">
+                  Cash
+                </SelectItem>
+                <SelectItem key="credit" value="credit">
+                  Credit
+                </SelectItem>
+                <SelectItem key="mixed" value="mixed">
+                  Mixed
+                </SelectItem>
               </Select>
 
               <Select
                 label="Bank Account"
                 placeholder="Select bank account"
                 labelPlacement="outside"
-                selectedKeys={formData.linkedBankAccount ? [formData.linkedBankAccount] : []}
-                onChange={(e) => setFormData((prev) => ({ ...prev, linkedBankAccount: e.target.value }))}
+                selectedKeys={
+                  formData.linkedBankAccount ? [formData.linkedBankAccount] : []
+                }
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    linkedBankAccount: e.target.value,
+                  }))
+                }
               >
                 {BankAccount.map((c) => (
-                  <SelectItem key={c._id} value={c._id}>{`${c.bankName} - (${c.accountName})`}</SelectItem>
+                  <SelectItem
+                    key={c._id}
+                    value={c._id}
+                  >{`${c.bankName} - (${c.accountName})`}</SelectItem>
                 ))}
               </Select>
 
@@ -196,10 +239,25 @@ const AddFinancialExpense = () => {
                   placeholder="Select currency"
                   labelPlacement="outside"
                   selectedKeys={formData.currency ? [formData.currency] : []}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, currency: e.target.value }))}
+                  onChange={(e) => {
+                    const selectedCurrency = currencies.find(
+                      (c) => c._id === e.target.value
+                    );
+
+                    setFormData((prev) => ({
+                      ...prev,
+                      currency: e.target.value,
+                      exchangeRate: selectedCurrency
+                        ? selectedCurrency.exchangeRate
+                        : 1, // auto-fill exchangeRate
+                    }));
+                  }}
                 >
                   {currencies.map((c) => (
-                    <SelectItem key={c._id} value={c._id}>{`${c.code} - ${c.name}`}</SelectItem>
+                    <SelectItem
+                      key={c._id}
+                      value={c._id}
+                    >{`${c.code} - ${c.name}`}</SelectItem>
                   ))}
                 </Select>
 
@@ -217,28 +275,80 @@ const AddFinancialExpense = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <Input type="number" name="bankCharges" label="Bank Charges" labelPlacement="outside" value={formData.bankCharges} onChange={handleChange} min={0} />
-                <Input type="number" name="transactionFees" label="Transaction Fees" labelPlacement="outside" value={formData.transactionFees} onChange={handleChange} min={0} />
-                <Input type="number" name="exchangeGainLoss" label="Exchange Gain/Loss" labelPlacement="outside" value={formData.exchangeGainLoss} onChange={handleChange} min={0} />
-                <Input type="number" name="loanInterest" label="Loan Interest" labelPlacement="outside" value={formData.loanInterest} onChange={handleChange} min={0} />
-                <Input type="number" name="financeCharges" label="Finance Charges" labelPlacement="outside" value={formData.financeCharges} onChange={handleChange} min={0} />
+                <Input
+                  type="number"
+                  name="bankCharges"
+                  label="Bank Charges"
+                  labelPlacement="outside"
+                  value={formData.bankCharges}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="transactionFees"
+                  label="Transaction Fees"
+                  labelPlacement="outside"
+                  value={formData.transactionFees}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="exchangeGainLoss"
+                  label="Exchange Gain/Loss"
+                  labelPlacement="outside"
+                  value={formData.exchangeGainLoss}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="loanInterest"
+                  label="Loan Interest"
+                  labelPlacement="outside"
+                  value={formData.loanInterest}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="financeCharges"
+                  label="Finance Charges"
+                  labelPlacement="outside"
+                  value={formData.financeCharges}
+                  onChange={handleChange}
+                  min={0}
+                />
               </div>
 
               <Divider />
 
               <div className="text-right text-sm text-gray-600">
-                Estimated total: <span className="font-semibold">{totalCost.toLocaleString()}</span>
+                Estimated total:{" "}
+                <span className="font-semibold">
+                  {totalCost.toLocaleString()}
+                </span>
               </div>
             </CardBody>
           </Card>
         </div>
 
         <div className="flex justify-end gap-4">
-          <Button variant="flat" onPress={() => navigate(-1)} isDisabled={isSubmitting}>
+          <Button
+            variant="flat"
+            onPress={() => navigate(-1)}
+            isDisabled={isSubmitting}
+          >
             Cancel
           </Button>
-          <Button color="primary" type="submit" isLoading={isSubmitting} startContent={!isSubmitting && <FaSave />}>
-            {isSubmitting ? 'Saving...' : 'Save Expense'}
+          <Button
+            color="primary"
+            type="submit"
+            isLoading={isSubmitting}
+            startContent={!isSubmitting && <FaSave />}
+          >
+            {isSubmitting ? "Saving..." : "Save Expense"}
           </Button>
         </div>
       </form>

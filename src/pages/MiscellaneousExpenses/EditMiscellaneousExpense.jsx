@@ -130,7 +130,12 @@ const EditMiscellaneousExpense = () => {
   return (
     <div className="p-4">
       <div className="flex items-center mb-6">
-        <Button isIconOnly variant="light" className="mr-2" onPress={() => navigate(-1)}>
+        <Button
+          isIconOnly
+          variant="light"
+          className="mr-2"
+          onPress={() => navigate(-1)}
+        >
           <FaArrowLeft />
         </Button>
         <h1 className="text-2xl font-bold">Edit Miscellaneous Expense</h1>
@@ -148,33 +153,52 @@ const EditMiscellaneousExpense = () => {
                 placeholder="Select expense type"
                 labelPlacement="outside"
                 selectedKeys={[formData.expenseSubType]}
-                onChange={(e) => setFormData((prev) => ({ ...prev, expenseSubType: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    expenseSubType: e.target.value,
+                  }))
+                }
               >
                 <SelectItem key="marketing" value="marketing">
-                                  Marketing
-                                </SelectItem>
-                                <SelectItem key="entertainment" value="entertainment">
-                                  Entertainment
-                                </SelectItem>
-                                <SelectItem key="hospitality" value="hospitality">
-                                  Hospitality
-                                </SelectItem>
-                                <SelectItem key="adjustments" value="adjustments">
-                                  Adjustments
-                                </SelectItem>
-                                <SelectItem key="legal" value="legal">
-                                  Legal
-                                </SelectItem>
-                                <SelectItem key="consulting" value="consulting">
-                                  Consulting
-                                </SelectItem>
-                                <SelectItem key="unexpected" value="unexpected">
-                                  Unexpected
-                                </SelectItem>
+                  Marketing
+                </SelectItem>
+                <SelectItem key="entertainment" value="entertainment">
+                  Entertainment
+                </SelectItem>
+                <SelectItem key="hospitality" value="hospitality">
+                  Hospitality
+                </SelectItem>
+                <SelectItem key="adjustments" value="adjustments">
+                  Adjustments
+                </SelectItem>
+                <SelectItem key="legal" value="legal">
+                  Legal
+                </SelectItem>
+                <SelectItem key="consulting" value="consulting">
+                  Consulting
+                </SelectItem>
+                <SelectItem key="unexpected" value="unexpected">
+                  Unexpected
+                </SelectItem>
               </Select>
 
-              <Textarea name="description" label="Description" placeholder="Describe the expense..." labelPlacement="outside" value={formData.description} onChange={handleChange} />
-              <Textarea name="notes" label="Notes" placeholder="Additional notes..." labelPlacement="outside" value={formData.notes} onChange={handleChange} />
+              <Textarea
+                name="description"
+                label="Description"
+                placeholder="Describe the expense..."
+                labelPlacement="outside"
+                value={formData.description}
+                onChange={handleChange}
+              />
+              <Textarea
+                name="notes"
+                label="Notes"
+                placeholder="Additional notes..."
+                labelPlacement="outside"
+                value={formData.notes}
+                onChange={handleChange}
+              />
             </CardBody>
           </Card>
 
@@ -189,44 +213,168 @@ const EditMiscellaneousExpense = () => {
                   placeholder="Select currency"
                   labelPlacement="outside"
                   selectedKeys={formData.currency ? [formData.currency] : []}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, currency: e.target.value }))}
+                  onChange={(e) => {
+                    const selectedCurrency = currencies.find(
+                      (c) => c._id === e.target.value
+                    );
+
+                    setFormData((prev) => ({
+                      ...prev,
+                      currency: e.target.value,
+                      exchangeRate: selectedCurrency
+                        ? selectedCurrency.exchangeRate
+                        : 1, // auto-fill exchangeRate
+                    }));
+                  }}
                 >
                   {currencies.map((c) => (
-                    <SelectItem key={c._id} value={c._id}>{`${c.code} - ${c.name}`}</SelectItem>
+                    <SelectItem
+                      key={c._id}
+                      value={c._id}
+                    >{`${c.code} - ${c.name}`}</SelectItem>
                   ))}
                 </Select>
 
-                <Input type="number" name="exchangeRate" label="Exchange Rate" placeholder="1.00" labelPlacement="outside" value={formData.exchangeRate} onChange={handleChange} min={0} step={0.01} />
+                <Input
+                  type="number"
+                  name="exchangeRate"
+                  label="Exchange Rate"
+                  placeholder="1.00"
+                  labelPlacement="outside"
+                  value={formData.exchangeRate}
+                  onChange={handleChange}
+                  min={0}
+                  step={0.01}
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input type="number" name="marketingCost" label="Marketing Cost" labelPlacement="outside" value={formData.marketingCost} onChange={handleChange} min={0} />
-                <Input type="number" name="promotionCost" label="Promotion Cost" labelPlacement="outside" value={formData.promotionCost} onChange={handleChange} min={0} />
-                <Input type="number" name="entertainmentCost" label="Entertainment Cost" labelPlacement="outside" value={formData.entertainmentCost} onChange={handleChange} min={0} />
-                <Input type="number" name="hospitalityCost" label="Hospitality Cost" labelPlacement="outside" value={formData.hospitalityCost} onChange={handleChange} min={0} />
-                <Input type="number" name="unexpectedCosts" label="Unexpected Costs" labelPlacement="outside" value={formData.unexpectedCosts} onChange={handleChange} min={0} />
-                <Input type="number" name="adjustments" label="Adjustments" labelPlacement="outside" value={formData.adjustments} onChange={handleChange} min={0} />
-                <Input type="number" name="legalFees" label="Legal Fees" labelPlacement="outside" value={formData.legalFees} onChange={handleChange} min={0} />
-                <Input type="number" name="consultingFees" label="Consulting Fees" labelPlacement="outside" value={formData.consultingFees} onChange={handleChange} min={0} />
+                <Input
+                  type="number"
+                  name="marketingCost"
+                  label="Marketing Cost"
+                  labelPlacement="outside"
+                  value={formData.marketingCost}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="promotionCost"
+                  label="Promotion Cost"
+                  labelPlacement="outside"
+                  value={formData.promotionCost}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="entertainmentCost"
+                  label="Entertainment Cost"
+                  labelPlacement="outside"
+                  value={formData.entertainmentCost}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="hospitalityCost"
+                  label="Hospitality Cost"
+                  labelPlacement="outside"
+                  value={formData.hospitalityCost}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="unexpectedCosts"
+                  label="Unexpected Costs"
+                  labelPlacement="outside"
+                  value={formData.unexpectedCosts}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="adjustments"
+                  label="Adjustments"
+                  labelPlacement="outside"
+                  value={formData.adjustments}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="legalFees"
+                  label="Legal Fees"
+                  labelPlacement="outside"
+                  value={formData.legalFees}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="consultingFees"
+                  label="Consulting Fees"
+                  labelPlacement="outside"
+                  value={formData.consultingFees}
+                  onChange={handleChange}
+                  min={0}
+                />
               </div>
 
-              <Select label="Payment Method" placeholder="Select payment method" labelPlacement="outside" selectedKeys={[formData.paymentMethod]} onChange={(e) => setFormData((prev) => ({ ...prev, paymentMethod: e.target.value }))}>
-                <SelectItem key="cash" value="cash">Cash</SelectItem>
-                <SelectItem key="bank" value="bank">Bank Transfer</SelectItem>
-                <SelectItem key="credit" value="credit">Credit</SelectItem>
-                <SelectItem key="mixed" value="mixed">Mixed</SelectItem>
+              <Select
+                label="Payment Method"
+                placeholder="Select payment method"
+                labelPlacement="outside"
+                selectedKeys={[formData.paymentMethod]}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    paymentMethod: e.target.value,
+                  }))
+                }
+              >
+                <SelectItem key="cash" value="cash">
+                  Cash
+                </SelectItem>
+                <SelectItem key="bank" value="bank">
+                  Bank Transfer
+                </SelectItem>
+                <SelectItem key="credit" value="credit">
+                  Credit
+                </SelectItem>
+                <SelectItem key="mixed" value="mixed">
+                  Mixed
+                </SelectItem>
               </Select>
 
               <div className="text-right text-sm text-gray-600">
-                Current total: <span className="font-semibold">{totalCost.toLocaleString()}</span>
+                Current total:{" "}
+                <span className="font-semibold">
+                  {totalCost.toLocaleString()}
+                </span>
               </div>
             </CardBody>
           </Card>
         </div>
 
         <div className="flex justify-end gap-4">
-          <Button variant="flat" onPress={() => navigate(-1)} isDisabled={isSubmitting}>Cancel</Button>
-          <Button color="primary" type="submit" isLoading={isSubmitting} startContent={!isSubmitting && <FaSave />}>{isSubmitting ? 'Saving...' : 'Save Changes'}</Button>
+          <Button
+            variant="flat"
+            onPress={() => navigate(-1)}
+            isDisabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button
+            color="primary"
+            type="submit"
+            isLoading={isSubmitting}
+            startContent={!isSubmitting && <FaSave />}
+          >
+            {isSubmitting ? "Saving..." : "Save Changes"}
+          </Button>
         </div>
       </form>
     </div>

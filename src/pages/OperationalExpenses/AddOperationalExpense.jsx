@@ -143,7 +143,12 @@ const AddOperationalExpense = () => {
   return (
     <div className="p-4">
       <div className="flex items-center mb-6">
-        <Button isIconOnly variant="light" className="mr-2" onPress={() => navigate(-1)}>
+        <Button
+          isIconOnly
+          variant="light"
+          className="mr-2"
+          onPress={() => navigate(-1)}
+        >
           <FaArrowLeft />
         </Button>
         <h1 className="text-2xl font-bold">Add Operational Expense</h1>
@@ -161,17 +166,40 @@ const AddOperationalExpense = () => {
                 placeholder="Select expense subtype"
                 labelPlacement="outside"
                 selectedKeys={[formData.expenseSubType]}
-                onChange={(e) => setFormData((prev) => ({ ...prev, expenseSubType: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    expenseSubType: e.target.value,
+                  }))
+                }
               >
-                <SelectItem key="salaries" value="salaries">Salaries</SelectItem>
-                <SelectItem key="rent" value="rent">Office Rent</SelectItem>
-                <SelectItem key="supplies" value="supplies">Office Supplies</SelectItem>
-                <SelectItem key="stationery" value="stationery">Stationery</SelectItem>
-                <SelectItem key="software" value="software">Software Expenses</SelectItem>
-                <SelectItem key="equipment" value="equipment">Equipment</SelectItem>
-                <SelectItem key="insurance" value="insurance">Insurance</SelectItem>
-                <SelectItem key="utilities" value="utilities">Utilities</SelectItem>
-                <SelectItem key="other" value="other">Other</SelectItem>
+                <SelectItem key="salaries" value="salaries">
+                  Salaries
+                </SelectItem>
+                <SelectItem key="rent" value="rent">
+                  Office Rent
+                </SelectItem>
+                <SelectItem key="supplies" value="supplies">
+                  Office Supplies
+                </SelectItem>
+                <SelectItem key="stationery" value="stationery">
+                  Stationery
+                </SelectItem>
+                <SelectItem key="software" value="software">
+                  Software Expenses
+                </SelectItem>
+                <SelectItem key="equipment" value="equipment">
+                  Equipment
+                </SelectItem>
+                <SelectItem key="insurance" value="insurance">
+                  Insurance
+                </SelectItem>
+                <SelectItem key="utilities" value="utilities">
+                  Utilities
+                </SelectItem>
+                <SelectItem key="other" value="other">
+                  Other
+                </SelectItem>
               </Select>
 
               <Select
@@ -179,7 +207,9 @@ const AddOperationalExpense = () => {
                 placeholder="Select employee"
                 labelPlacement="outside"
                 selectedKeys={formData.employee ? [formData.employee] : []}
-                onChange={(e) => setFormData((prev) => ({ ...prev, employee: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, employee: e.target.value }))
+                }
               >
                 {users.map((u) => (
                   <SelectItem key={u._id} value={u._id}>
@@ -210,10 +240,25 @@ const AddOperationalExpense = () => {
                   placeholder="Select currency"
                   labelPlacement="outside"
                   selectedKeys={formData.currency ? [formData.currency] : []}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, currency: e.target.value }))}
+                  onChange={(e) => {
+                    const selectedCurrency = currencies.find(
+                      (c) => c._id === e.target.value
+                    );
+
+                    setFormData((prev) => ({
+                      ...prev,
+                      currency: e.target.value,
+                      exchangeRate: selectedCurrency
+                        ? selectedCurrency.exchangeRate
+                        : 1, // auto-fill exchangeRate
+                    }));
+                  }}
                 >
                   {currencies.map((c) => (
-                    <SelectItem key={c._id} value={c._id}>{`${c.code} - ${c.name}`}</SelectItem>
+                    <SelectItem
+                      key={c._id}
+                      value={c._id}
+                    >{`${c.code} - ${c.name}`}</SelectItem>
                   ))}
                 </Select>
 
@@ -231,22 +276,110 @@ const AddOperationalExpense = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <Input type="number" name="employeeSalaries" label="Employee Salaries" labelPlacement="outside" value={formData.employeeSalaries} onChange={handleChange} min={0} />
-                <Input type="number" name="officeRent" label="Office Rent" labelPlacement="outside" value={formData.officeRent} onChange={handleChange} min={0} />
-                <Input type="number" name="officeSupplies" label="Office Supplies" labelPlacement="outside" value={formData.officeSupplies} onChange={handleChange} min={0} />
-                <Input type="number" name="stationery" label="Stationery" labelPlacement="outside" value={formData.stationery} onChange={handleChange} min={0} />
-                <Input type="number" name="softwareExpenses" label="Software Expenses" labelPlacement="outside" value={formData.softwareExpenses} onChange={handleChange} min={0} />
-                <Input type="number" name="equipmentCost" label="Equipment Cost" labelPlacement="outside" value={formData.equipmentCost} onChange={handleChange} min={0} />
-                <Input type="number" name="insuranceCost" label="Insurance Cost" labelPlacement="outside" value={formData.insuranceCost} onChange={handleChange} min={0} />
+                <Input
+                  type="number"
+                  name="employeeSalaries"
+                  label="Employee Salaries"
+                  labelPlacement="outside"
+                  value={formData.employeeSalaries}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="officeRent"
+                  label="Office Rent"
+                  labelPlacement="outside"
+                  value={formData.officeRent}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="officeSupplies"
+                  label="Office Supplies"
+                  labelPlacement="outside"
+                  value={formData.officeSupplies}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="stationery"
+                  label="Stationery"
+                  labelPlacement="outside"
+                  value={formData.stationery}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="softwareExpenses"
+                  label="Software Expenses"
+                  labelPlacement="outside"
+                  value={formData.softwareExpenses}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="equipmentCost"
+                  label="Equipment Cost"
+                  labelPlacement="outside"
+                  value={formData.equipmentCost}
+                  onChange={handleChange}
+                  min={0}
+                />
+                <Input
+                  type="number"
+                  name="insuranceCost"
+                  label="Insurance Cost"
+                  labelPlacement="outside"
+                  value={formData.insuranceCost}
+                  onChange={handleChange}
+                  min={0}
+                />
               </div>
 
               <div>
                 <h3 className="font-medium">Utilities</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-                  <Input type="number" name="electricity" label="Electricity" labelPlacement="outside" value={formData.utilities.electricity} onChange={handleUtilityChange} min={0} />
-                  <Input type="number" name="internet" label="Internet" labelPlacement="outside" value={formData.utilities.internet} onChange={handleUtilityChange} min={0} />
-                  <Input type="number" name="phone" label="Phone" labelPlacement="outside" value={formData.utilities.phone} onChange={handleUtilityChange} min={0} />
-                  <Input type="number" name="water" label="Water" labelPlacement="outside" value={formData.utilities.water} onChange={handleUtilityChange} min={0} />
+                  <Input
+                    type="number"
+                    name="electricity"
+                    label="Electricity"
+                    labelPlacement="outside"
+                    value={formData.utilities.electricity}
+                    onChange={handleUtilityChange}
+                    min={0}
+                  />
+                  <Input
+                    type="number"
+                    name="internet"
+                    label="Internet"
+                    labelPlacement="outside"
+                    value={formData.utilities.internet}
+                    onChange={handleUtilityChange}
+                    min={0}
+                  />
+                  <Input
+                    type="number"
+                    name="phone"
+                    label="Phone"
+                    labelPlacement="outside"
+                    value={formData.utilities.phone}
+                    onChange={handleUtilityChange}
+                    min={0}
+                  />
+                  <Input
+                    type="number"
+                    name="water"
+                    label="Water"
+                    labelPlacement="outside"
+                    value={formData.utilities.water}
+                    onChange={handleUtilityChange}
+                    min={0}
+                  />
                 </div>
               </div>
 
@@ -257,24 +390,53 @@ const AddOperationalExpense = () => {
                 placeholder="Select payment method"
                 labelPlacement="outside"
                 selectedKeys={[formData.paymentMethod]}
-                onChange={(e) => setFormData((prev) => ({ ...prev, paymentMethod: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    paymentMethod: e.target.value,
+                  }))
+                }
               >
-                <SelectItem key="cash" value="cash">Cash</SelectItem>
-                <SelectItem key="bank" value="bank">Bank Transfer</SelectItem>
-                <SelectItem key="credit" value="credit">Credit</SelectItem>
-                <SelectItem key="mixed" value="mixed">Mixed</SelectItem>
+                <SelectItem key="cash" value="cash">
+                  Cash
+                </SelectItem>
+                <SelectItem key="bank" value="bank">
+                  Bank Transfer
+                </SelectItem>
+                <SelectItem key="credit" value="credit">
+                  Credit
+                </SelectItem>
+                <SelectItem key="mixed" value="mixed">
+                  Mixed
+                </SelectItem>
               </Select>
 
               <div className="text-right text-sm text-gray-600">
-                Estimated total: <span className="font-semibold">{calcTotalCost().toLocaleString()}</span>
+                Estimated total:{" "}
+                <span className="font-semibold">
+                  {calcTotalCost().toLocaleString()}
+                </span>
               </div>
             </CardBody>
           </Card>
         </div>
 
         <div className="flex justify-end gap-4">
-          <Button variant="flat" onPress={() => navigate(-1)} isDisabled={isSubmitting}>Cancel</Button>
-          <Button color="primary" type="submit" isLoading={isSubmitting} startContent={!isSubmitting && <FaSave />}>{isSubmitting ? 'Saving...' : 'Save Expense'}</Button>
+          <Button
+            variant="flat"
+            onPress={() => navigate(-1)}
+            isDisabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button
+            color="primary"
+            type="submit"
+            isLoading={isSubmitting}
+            startContent={!isSubmitting && <FaSave />}
+          >
+            {isSubmitting ? "Saving..." : "Save Expense"}
+          </Button>
         </div>
       </form>
     </div>
