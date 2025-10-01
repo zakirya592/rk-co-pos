@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { user } = useAuth();
@@ -14,7 +15,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   if (allowedRoles.length === 0 || (user.role && allowedRoles.includes(user.role))) {
     return children;
   }
-
+ toast.error("You are not authorized to use this page");
   // If user doesn't have the required role, redirect to dashboard or home
   return <Navigate to="/Navigation" replace />;
 };
