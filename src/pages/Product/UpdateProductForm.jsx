@@ -148,11 +148,11 @@ const UpdateProductForm = () => {
         };
 
       safeAppend("purchaseRate", num(product.purchaseRate));
-      safeAppend("saleRate", num(product.saleRate));
+      // safeAppend("saleRate", num(product.saleRate));
       safeAppend("wholesaleRate", num(product.wholesaleRate));
       safeAppend("retailRate", num(product.retailRate));
       safeAppend("countInStock", int(product.countInStock));
-      safeAppend("soldOutQuantity", int(product.soldOutQuantity));
+      // safeAppend("soldOutQuantity", int(product.soldOutQuantity));
       safeAppend("additionalUnit", product.additionalUnit);
       safeAppend("packingUnit", product.packingUnit);
       safeAppend("pouchesOrPieces", int(product.pouchesOrPieces));
@@ -241,7 +241,7 @@ const UpdateProductForm = () => {
                 label={
                   <span>
                     Category
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"
@@ -408,7 +408,7 @@ const UpdateProductForm = () => {
                 label={
                   <span>
                     Currency
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"
@@ -437,7 +437,7 @@ const UpdateProductForm = () => {
                 label={
                   <span>
                     Supplier
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"
@@ -461,7 +461,7 @@ const UpdateProductForm = () => {
                 label={
                   <span>
                     Warehouses
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"
@@ -521,7 +521,7 @@ const UpdateProductForm = () => {
                 label={
                   <span>
                     purchase Rate
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"
@@ -536,11 +536,11 @@ const UpdateProductForm = () => {
                 }
                 variant="bordered"
               />
-              <Input
+              {/* <Input
                 label={
                   <span>
                     Sale Rate
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"
@@ -551,12 +551,12 @@ const UpdateProductForm = () => {
                   setProduct({ ...product, saleRate: e.target.value })
                 }
                 variant="bordered"
-              />
+              /> */}
               <Input
                 label={
                   <span>
                     Whole Sale Rate
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"
@@ -575,7 +575,7 @@ const UpdateProductForm = () => {
                 label={
                   <span>
                     Retail Rate
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"
@@ -607,7 +607,7 @@ const UpdateProductForm = () => {
                 label={
                   <span>
                     Stock Quantity
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"
@@ -623,7 +623,7 @@ const UpdateProductForm = () => {
                 variant="bordered"
               />
 
-              <Input
+              {/* <Input
                 label="Sold Out Quantity"
                 labelPlacement="outside"
                 placeholder="0"
@@ -636,7 +636,7 @@ const UpdateProductForm = () => {
                   })
                 }
                 variant="bordered"
-              />
+              /> */}
               <Input
                 label="Quantity Unit"
                 labelPlacement="outside"
@@ -706,7 +706,7 @@ const UpdateProductForm = () => {
                 label={
                   <span>
                     Description
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"

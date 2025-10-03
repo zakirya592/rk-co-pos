@@ -17,14 +17,14 @@ const AddProductForm = () => {
     category: "",
     purchaseRate: "",
     Warehouses: "",
-    saleRate: "",
+    // saleRate: "",
     wholesaleRate: "",
     retailRate: "",
     size: "",
     color: "",
     barcode: "",
     availableQuantity: "",
-    soldOutQuantity: "",
+    // soldOutQuantity: "",
     packingUnit: "",
     pouchesOrPieces: "",
     additionalUnit: "",
@@ -103,14 +103,14 @@ const AddProductForm = () => {
       const formData = new FormData();
       formData.append("name", newProduct.name);
       formData.append("purchaseRate", newProduct.purchaseRate);
-      formData.append("saleRate", newProduct.saleRate);
+      // formData.append("saleRate", newProduct.saleRate);
       formData.append("wholesaleRate", newProduct.wholesaleRate);
       formData.append("retailRate", newProduct.retailRate);
       formData.append("size", newProduct.size);
       formData.append("color", newProduct.color);
       formData.append("barcode", newProduct.barcode);
       formData.append("availableQuantity", newProduct.availableQuantity);
-      formData.append("soldOutQuantity", newProduct.soldOutQuantity);
+      // formData.append("soldOutQuantity", newProduct.soldOutQuantity);
       formData.append("packingUnit", newProduct.packingUnit);
       formData.append("additionalUnit", newProduct.additionalUnit);
       formData.append("pouchesOrPieces", newProduct.pouchesOrPieces);
@@ -133,14 +133,14 @@ const AddProductForm = () => {
         countInStock: "",
         category: "",
         purchaseRate: "",
-        saleRate: "",
+        // saleRate: "",
         wholesaleRate: "",
         retailRate: "",
         size: "",
         color: "",
         barcode: "",
         availableQuantity: "",
-        soldOutQuantity: "",
+        // soldOutQuantity: "",
         packingUnit: "",
         pouchesOrPieces: "",
         additionalUnit: "",
@@ -202,7 +202,7 @@ const AddProductForm = () => {
                 label={
                   <span>
                     Category
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"
@@ -375,7 +375,7 @@ const AddProductForm = () => {
                 label={
                   <span>
                     Currency
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"
@@ -402,7 +402,7 @@ const AddProductForm = () => {
                 label={
                   <span>
                     Supplier
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"
@@ -426,7 +426,7 @@ const AddProductForm = () => {
                 label={
                   <span>
                     Warehouses
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"
@@ -485,7 +485,7 @@ const AddProductForm = () => {
                 label={
                   <span>
                     purchase Rate
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"
@@ -501,11 +501,11 @@ const AddProductForm = () => {
                 // startContent={selectedCurrencySymbol}
                 variant="bordered"
               />
-              <Input
+              {/* <Input
                 label={
                   <span>
                     Sale Rate
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"
@@ -515,14 +515,13 @@ const AddProductForm = () => {
                 onChange={(e) =>
                   setNewProduct({ ...newProduct, saleRate: e.target.value })
                 }
-                // startContent={selectedCurrencySymbol}
                 variant="bordered"
-              />
+              /> */}
               <Input
                 label={
                   <span>
                     Whole Sale Rate
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"
@@ -542,7 +541,7 @@ const AddProductForm = () => {
                 label={
                   <span>
                     Retail Rate
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"
@@ -560,7 +559,7 @@ const AddProductForm = () => {
                 label={
                   <span>
                     Stock Quantity
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"
@@ -576,7 +575,7 @@ const AddProductForm = () => {
                 variant="bordered"
               />
 
-              <Input
+              {/* <Input
                 label="Sold Out Quantity"
                 labelPlacement="outside"
                 placeholder="0"
@@ -589,7 +588,7 @@ const AddProductForm = () => {
                   })
                 }
                 variant="bordered"
-              />
+              /> */}
               <Input
                 label="Quantity Unit"
                 labelPlacement="outside"
@@ -658,7 +657,7 @@ const AddProductForm = () => {
                 label={
                   <span>
                     Description
-                    <span className="text-red-500 font-bold ms-1">*</span>
+                    
                   </span>
                 }
                 labelPlacement="outside"
