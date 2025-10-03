@@ -83,7 +83,7 @@ const cardData = [
     color: "red",
   },
   {
-    to: "/Purchase",
+    to: "/purchases",
     icon: <FaShoppingCart />,
     title: "Purchase",
     desc: "Manage purchases",

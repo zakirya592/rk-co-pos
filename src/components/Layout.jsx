@@ -24,6 +24,8 @@ import AddCustomerPage from "../pages/Customers/AddCustomerPage";
 import UpdateCustomerPage from "../pages/Customers/UpdateCustomerPage";
 import Reports from "../pages/Reports/Reports";
 import Purchase from "../pages/Purchase/Purchase";
+import AddPurchase from "../pages/Purchase/AddPurchase";
+import UpdatePurchase from "../pages/Purchase/UpdatePurchase";
 import Warehouse from "../pages/WareHHouse/Wherehouse";
 import Addwarahouse from "../pages/WareHHouse/Addwarahouse";
 import SuppliersDetails from "../pages/Suppliers/SuppliersDetails";
@@ -86,6 +88,8 @@ import {
 import BankAccounts from "../pages/BankAccounts/BankAccounts";
 import AddBankAccount from "../pages/BankAccounts/AddBankAccount";
 import UpdateBankAccount from "../pages/BankAccounts/UpdateBankAccount";
+import Purchases from "../pages/Purchase/Purchases";
+import PurchaseDetails from "../pages/Purchase/PurchaseDetails";
 
 const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
@@ -170,7 +174,10 @@ const Layout = () => {
                   />
 
                   {/* Purchase */}
-                  <Route path="purchase" element={<Purchase />} />
+                  <Route path="purchases" element={<Purchases />} />
+                  <Route path="purchases/new" element={<AddPurchase />} />
+                  <Route path="purchases/edit/:id" element={<UpdatePurchase />} />
+                  <Route path="purchases/Details/:id" element={<PurchaseDetails />} />
 
                   {/* Warehouse */}
                   <Route path="warehouse" element={<Warehouse />} />

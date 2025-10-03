@@ -1,0 +1,278 @@
+import React, { useMemo, useState } from 'react';
+import {
+  Card,
+  CardBody,
+  Button,
+  Input,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+  Chip,
+  Pagination,
+  Spinner,
+  Tooltip,
+} from "@nextui-org/react";
+import { FaPlus, FaSearch, FaEdit, FaTrash, FaEye } from 'react-icons/fa';
+import { Select, SelectItem } from "@nextui-org/react";
+import { useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from 'react-query';
+import userRequest from '../../utils/userRequest';
+import toast from "react-hot-toast";
+import Swal from "sweetalert2";
+
+const fetchPurchases = async (key, searchTerm, currentPage) => {
+  const res = await userRequest.get("/purchases", {
+    params: {
+      search: searchTerm,
+      page: currentPage,
+    },
+  });
+  return {
+    purchases: res.data.data || [],
+    total: res.data.totalPurchases || 0,
+    totalPages: res.data.totalPages || 1,
+    currentPage: res.data.currentPage || 1,
+  };
+};
+
+const Purchases = () => {
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const queryClient = useQueryClient();
+
+  const { data, isLoading, refetch } = useQuery(
+    ["purchases", searchTerm, currentPage],
+    () => fetchPurchases("purchases", searchTerm, currentPage),
+    { keepPreviousData: true }
+  );
+
+  const purchases = data?.purchases || [];
+  const totalPurchases = data?.total || 0;
+  const totalPages = data?.totalPages || 1;
+
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeletePurchase = (id) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: isDeleting ? 'Deleting...' : 'Yes, delete it!',
+      cancelButtonText: "No, cancel!",
+      showLoaderOnConfirm: true,
+      preConfirm: async () => {
+        try {
+          setIsDeleting(true);
+          await userRequest.delete(`/purchases/${id}`);
+          await queryClient.invalidateQueries("purchases");
+        //   toast.success("Purchase deleted successfully!");
+        } catch (error) {
+          toast.error("Failed to delete purchase.");
+          throw error;
+        } finally {
+          setIsDeleting(false);
+        }
+      },
+      allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+      if (result.isConfirmed && !isDeleting) {
+        toast.success(
+          "Purchase deleted successfully"
+        );
+        refetch();
+      }
+    });
+  };
+
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'completed':
+        return 'success';
+      case 'pending':
+        return 'warning';
+      case 'cancelled':
+        return 'danger';
+      default:
+        return 'default';
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const bottomContent = useMemo(
+    () => (
+      <div className="flex justify-between items-center mt-4">
+        <span className="text-small text-default-400">
+          Total: {totalPurchases} {totalPurchases === 1 ? 'purchase' : 'purchases'}
+        </span>
+        <div className="flex items-center gap-4">
+          <Pagination
+            isCompact
+            total={totalPages}
+            page={currentPage}
+            onChange={setCurrentPage}
+            showControls
+            showShadow
+            color="primary"
+            classNames={{
+              wrapper: "gap-1",
+              item: "bg-transparent text-gray-700 hover:bg-green-50",
+              cursor: "bg-green-600 text-white font-medium",
+            }}
+          />
+          <label className="flex items-center gap-2 text-default-400 text-small">
+            Rows per page:
+            <Select
+              className="w-20"
+              selectedKeys={[String(rowsPerPage)]}
+              onSelectionChange={(keys) => {
+                const value = Number(Array.from(keys)[0]);
+                setRowsPerPage(value);
+                setCurrentPage(1);
+              }}
+              variant="bordered"
+              size="sm"
+            >
+              <SelectItem key="5" value="5">
+                5
+              </SelectItem>
+              <SelectItem key="10" value="10">
+                10
+              </SelectItem>
+              <SelectItem key="15" value="15">
+                15
+              </SelectItem>
+            </Select>
+          </label>
+        </div>
+      </div>
+    ),
+    [totalPages, currentPage, rowsPerPage, totalPurchases]
+  );
+
+  
+
+  return (
+    <div className="p-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <h1 className="text-2xl font-bold">Purchases</h1>
+        <Button
+          color="primary"
+          startContent={<FaPlus />}
+          onPress={() => navigate("/purchases/new")}
+        >
+          Add New Purchase
+        </Button>
+      </div>
+
+      <div className="">
+        <Table
+          aria-label="Purchases table"
+          bottomContent={bottomContent}
+          bottomContentPlacement="outside"
+        >
+          <TableHeader>
+            <TableColumn>INVOICE #</TableColumn>
+            <TableColumn>DATE</TableColumn>
+            <TableColumn>SUPPLIER</TableColumn>
+            <TableColumn>WAREHOUSE</TableColumn>
+            <TableColumn>ITEMS</TableColumn>
+            <TableColumn>TOTAL AMOUNT</TableColumn>
+            <TableColumn>STATUS</TableColumn>
+            <TableColumn>ACTIONS</TableColumn>
+          </TableHeader>
+          <TableBody
+            isLoading={isLoading}
+            loadingContent={
+              <div className="flex justify-center items-center py-8">
+                <Spinner color="success" size="lg" />
+              </div>
+            }
+            emptyContent={
+              <div className="text-center text-gray-500 py-8">
+                No Purchases found
+              </div>
+            }
+          >
+            {purchases.map((purchase) => (
+              <TableRow key={purchase._id}>
+                <TableCell>{purchase.invoiceNumber || "N/A"}</TableCell>
+                <TableCell>{formatDate(purchase.purchaseDate)}</TableCell>
+                <TableCell>{purchase.supplier?.name || "N/A"}</TableCell>
+                <TableCell>{purchase.warehouse?.name || "N/A"}</TableCell>
+                <TableCell>
+                  {purchase.items?.length || purchase.quantity || 0}
+                </TableCell>
+                <TableCell>
+                  {purchase.currency?.symbol || "$"}
+                  {purchase.totalAmount?.toLocaleString()}
+                </TableCell>
+                <TableCell>
+                  <Chip color={getStatusColor(purchase.status)} variant="flat">
+                    {purchase.status?.toUpperCase() || "N/A"}
+                  </Chip>
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Tooltip content="View Details">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        onClick={() =>
+                          navigate(`/purchases/Details/${purchase._id}`)
+                        }
+                      >
+                        <FaEye className="text-blue-500" />
+                      </Button>
+                    </Tooltip>
+                    <Tooltip content="Edit">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        onClick={() =>
+                          navigate(`/purchases/edit/${purchase._id}`)
+                        }
+                      >
+                        <FaEdit className="text-yellow-500" />
+                      </Button>
+                    </Tooltip>
+                    <Tooltip content="Delete">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        onClick={() => handleDeletePurchase(purchase._id)}
+                      >
+                        <FaTrash className="text-red-500" />
+                      </Button>
+                    </Tooltip>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+};
+
+export default Purchases;
