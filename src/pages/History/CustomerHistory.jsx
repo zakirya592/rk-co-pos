@@ -274,12 +274,21 @@ const CustomerHistory = () => {
         <div class="summary">
           <h3>Summary</h3>
            <div class="topprint">
-          <div><strong>Total Item Sales:</strong> ${totalSales?.summary?.totalSales || "0"}</div>
-          <div><strong>Total Sales Amount:</strong> ${grandTotal.toFixed(2)}</div>
+          <div><strong>Total Item Sales:</strong> ${
+            totalSales?.summary?.totalSales || "0"
+          }</div>
+          <div><strong>Total Sales Amount:</strong> ${grandTotal.toFixed(
+            2
+          )}</div>
           </div>
           <div class="topprint">
-          <div><strong>Total Paid:</strong> ${totalSales?.summary?.totalPaid || "0"}</div>
-          <div><strong>Due Amount:</strong> ${Math.max(totalSales?.summary?.currentOutstandingBalance || 0, 0)}</div>
+          <div><strong>Total Paid:</strong> ${
+            totalSales?.summary?.totalPaid || "0"
+          }</div>
+          <div><strong>Due Amount:</strong> ${Math.max(
+            totalSales?.summary?.currentOutstandingBalance || 0,
+            0
+          )}</div>
           </div>
          
         </div>
@@ -300,8 +309,8 @@ const CustomerHistory = () => {
           </thead>
           <tbody>
             ${transactions
-        .map(
-          (t, i) => `
+              .map(
+                (t, i) => `
               <tr>
                 <td>${i + 1}</td>
                 <td>${t.invoiceNumber}</td>
@@ -313,8 +322,8 @@ const CustomerHistory = () => {
                 <td>${t.paymentMethod}</td>
               </tr>
             `
-        )
-        .join("")}
+              )
+              .join("")}
           </tbody>
         </table>
 
@@ -322,6 +331,9 @@ const CustomerHistory = () => {
           <p>Thank you for your business!</p>
           <p>Visit us again!</p>
         </div>
+         <div className="text-sm text-gray-600 border-t pt-4">
+                  <p>Computer software developed by E&Z Tech Solution (PH: +923499386512 OR +923015199394)</p>
+                </div>
       </body>
     </html>
   `;
