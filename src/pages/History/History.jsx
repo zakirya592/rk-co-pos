@@ -550,6 +550,9 @@ const History = () => {
                   <p>Thank you for your business!</p>
                   <p>Visit us again soon</p>
                 </div>
+                 <div className="text-sm text-gray-600 border-t pt-4">
+                  <p>Computer software developed by E&Z Tech Solution (PH: +923499386512 OR +923015199394)</p>
+                </div>
               </div>
             )}
           </ModalBody>

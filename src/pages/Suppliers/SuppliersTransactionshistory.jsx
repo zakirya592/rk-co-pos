@@ -263,7 +263,8 @@ function SuppliersTransactionshistory() {
                             <TableCell>{item.product?.name || "N/A"}</TableCell>
                             <TableCell>{item?.quantity || "N/A"}</TableCell>
                             <TableCell>
-                              {selectedTransaction?.currency?.symbol || "Rs"} {item?.amount || "N/A"}
+                              {selectedTransaction?.currency?.symbol || "Rs"}{" "}
+                              {item?.amount || "N/A"}
                             </TableCell>
                             {/* <TableCell>
                                     {item?.quantity * item?.price || "N/A"}
@@ -278,17 +279,19 @@ function SuppliersTransactionshistory() {
                     <div className="flex justify-between">
                       <span>Subtotal:</span>
                       <span>
-                        {selectedTransaction?.currency?.symbol || "Rs"} {
-                          calculateTotal(selectedTransaction.products).toFixed(2)
-                        }
+                        {selectedTransaction?.currency?.symbol || "Rs"}{" "}
+                        {calculateTotal(selectedTransaction.products).toFixed(
+                          2
+                        )}
                       </span>
                     </div>
                     <div className="flex justify-between text-lg font-bold border-t mt-2 pt-2">
                       <span>TOTAL:</span>
                       <span>
-                        {selectedTransaction?.currency?.symbol || "Rs"} {
-                          calculateTotal(selectedTransaction.products).toFixed(2)
-                        }
+                        {selectedTransaction?.currency?.symbol || "Rs"}{" "}
+                        {calculateTotal(selectedTransaction.products).toFixed(
+                          2
+                        )}
                       </span>
                     </div>
                   </div>
@@ -296,6 +299,12 @@ function SuppliersTransactionshistory() {
                   <div className="text-center text-sm text-gray-600 border-t pt-4">
                     <p>Thank you for your business!</p>
                     <p>Visit us again soon</p>
+                  </div>
+                  <div className="text-sm text-gray-600 border-t pt-4">
+                    <p>
+                      Computer software developed by E&Z Tech Solution (PH:
+                      +923499386512 OR +923015199394)
+                    </p>
                   </div>
                 </div>
               )}
@@ -310,7 +319,7 @@ function SuppliersTransactionshistory() {
               <Button
                 color="primary"
                 startContent={<FaPrint />}
-                  onPress={printReceipt}
+                onPress={printReceipt}
               >
                 Print Receipt
               </Button>
