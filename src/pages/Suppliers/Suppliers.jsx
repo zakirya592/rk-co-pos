@@ -69,7 +69,7 @@ const Suppliers = () => {
     return (
       <div className="p-6 space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between flex-col md:flex-row sm:flex-col lg:flex-row">
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold text-gray-800">Suppliers</h1>
@@ -153,7 +153,9 @@ const Suppliers = () => {
                         size="sm"
                         variant="light"
                         color="primary"
-                        onPress={() => navigate(`/suppliers/details/${supplier._id}`)}
+                        onPress={() =>
+                          navigate(`/suppliers/details/${supplier._id}`)
+                        }
                       >
                         <TbListDetails />
                       </Button>

@@ -127,7 +127,7 @@ const POS = () => {
 
     if (existingItem) {
       // Allow adding if stock is available, for all customer customerType
-      if (existingItem.quantity < product.countInStock) {
+      if (existingItem.quantity < product.currentStock) {
         setCart(cart.map(item =>
           item._id === product._id
             ? { ...item, quantity: item.quantity + 1 }
@@ -146,7 +146,7 @@ const POS = () => {
     }
 
     const product = products.find(p => p._id === _id);
-    if (product && newQuantity <= product.countInStock) {
+    if (product && newQuantity <= product.currentStock) {
       setCart(cart.map(item =>
         item._id === _id ? { ...item, quantity: newQuantity } : item
       ));
@@ -243,6 +243,38 @@ const POS = () => {
     }
   };
 
+  // Reusable inline CurrencyName component
+  const CurrencyName = ({ currencyId, label, color }) => {
+    const { data, isLoading } = useQuery(
+      ["currency", currencyId],
+      () => userRequest.get(`/currencies/${currencyId}`).then((res) => res.data),
+      { enabled: !!currencyId }
+    );
+  
+    return (
+      <Chip color={color} variant="flat" className="text-xs">
+        {isLoading ? "Loading..." : `${label}: ${data?.data?.symbol || "N/A"}`}
+      </Chip>
+    );
+  };
+
+  // Reusable inline WarehouseName component
+  const WarehouseName = ({ warehouseId, label, color }) => {
+    const { data, isLoading } = useQuery(
+      ["warehouse", warehouseId],
+      () => userRequest.get(`/warehouses/${warehouseId}`).then((res) => res.data),
+      { enabled: !!warehouseId }
+    );
+  
+    return (
+      <Chip color={color} variant="flat" className="text-xs">
+        {isLoading
+          ? "Loading..."
+          : `${label}: ${data?.data?.name || data?.name || "-"}`}
+      </Chip>
+    );
+  };
+
   return (
     <div className="p-4 h-screen overflow-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
@@ -267,8 +299,8 @@ const POS = () => {
                 </Button>
               </div>
 
-              <div className="flex items-center mb-4 gap-3">
-                <div className="text-sm w-full">
+              <div className="flex justify-between flex-col md:flex-row sm:flex-col lg:flex-row mb-3 gap-2">
+                <div className="text-sm w-full my-auto">
                   Customer:{" "}
                   <strong>{selectedCustomer?.name || "Select Customer"}</strong>{" "}
                   ({selectedCustomer?.customerType || ""})
@@ -303,7 +335,7 @@ const POS = () => {
                   ))}
                 </Select>
                 <div className="bg-gradient-to-r w-full from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow font-semibold text-sm">
-                  Total Products: {filteredProducts.length || '0'}
+                  Total Products: {filteredProducts.length || "0"}
                 </div>
               </div>
               {/* </div> */}
@@ -371,6 +403,11 @@ const POS = () => {
                         <div className="flex justify-between items-center mt-2">
                           <span className="text-sm font-bold">
                             {product?.currency?.symbol || ""} {product.price}
+                            <CurrencyName
+                              currencyId={product?.currency}
+                              label="currency"
+                              color="warning"
+                            />
                           </span>
                           <Chip
                             size="sm"
@@ -385,7 +422,7 @@ const POS = () => {
                             {product.currentStock}
                           </Chip>
                         </div>
-                        <div className="flex justify-between items-center mt-2">
+                        {/* <div className="flex justify-between items-center mt-2">
                           <span className="text-sm font-bold">
                             Purchase Rate
                           </span>
@@ -394,7 +431,7 @@ const POS = () => {
                         <div className="flex justify-between items-center mt-2">
                           <span className="text-sm font-bold">Sale Rate</span>
                           <span>{product.saleRate}</span>
-                        </div>
+                        </div> */}
                         <div className="flex justify-between items-center mt-2">
                           <span className="text-sm font-bold">Retail Rate</span>
                           <span>{product.retailRate}</span>
@@ -441,11 +478,21 @@ const POS = () => {
                             {item.name || ""}
                           </div>
                           <div className="text-xs text-gray-600">
-                            {item.currency?.symbol || ""} {item.price || ""}
+                            {/* <CurrencyName
+                              currencyId={item.currency}
+                              label="currency"
+                              color="warning"
+                            />{" "} */}{" "}
+                            Price :{item.price || ""}
                           </div>
                           {item?.warehouse && (
                             <div className="text-[10px] text-gray-500 mt-0.5">
-                              Warehouse: {item.warehouse?.name || "-"}
+                              {/* Warehouse: */}
+                              <WarehouseName
+                                warehouseId={item.warehouse}
+                                label="Warehouse"
+                                color="success"
+                              />
                             </div>
                           )}
                         </div>

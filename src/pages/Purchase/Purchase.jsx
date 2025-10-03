@@ -7,6 +7,8 @@ import {
   Chip,
   Divider,
   Spinner,
+  Select,
+  SelectItem,
 } from "@nextui-org/react";
 import {
   FaSearch,
@@ -24,13 +26,24 @@ import { useQuery } from "react-query";
 import userRequest from "../../utils/userRequest";
 import toast from "react-hot-toast";
 
-const fetchProducts = async (key, searchTerm, currentPage) => {
-  const res = await userRequest.get("/products", {
-    params: {
-      search: searchTerm,
-      page: currentPage,
-    },
-  });
+const fetchProducts = async (
+  key,
+  searchTerm,
+  currentPage,
+  locationType,
+  locationId
+) => {
+  let endpoint = "/products";
+  const params = {
+    search: searchTerm,
+    page: currentPage,
+  };
+
+  if (locationType && locationId) {
+    endpoint = `/products/location/${locationType}/${locationId}`;
+  }
+
+  const res = await userRequest.get(endpoint);
   return {
     products: res.data.data || [],
     total: res.data.results || 0,
@@ -63,7 +76,7 @@ const Purchase = () => {
     if (customerData) {
       setCustomers(customerData || []);
       console.log(customerData);
-      
+
     }
   }, [customerData]);
 
@@ -78,12 +91,20 @@ const Purchase = () => {
   const [showSuppliersPaymentmodel, setShowSuppliersPaymentmodel] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [totalPaid, setTotalPaid] = useState(0);
+  const [selectedTransferTo, setSelectedTransferTo] = useState("");
+  const [transferOptions, setTransferOptions] = useState([]);
+
+  const [transferTo, setTransferTo] = useState("");
 
   // Fetch products using react-query
-  const { data, isLoading } = useQuery(
-    ["products", searchTerm, currentPage],
-    () => fetchProducts("products", searchTerm, currentPage),
-    { keepPreviousData: true }
+  // Fetch products using react-query
+  const { data, isLoading, refetch } = useQuery(
+    ["products", searchTerm, currentPage, transferTo, selectedTransferTo],
+    () => fetchProducts("products", searchTerm, currentPage, transferTo, selectedTransferTo),
+    {
+      keepPreviousData: true,
+      enabled: !!transferTo && !!selectedTransferTo, // Only fetch when both type and ID are selected
+    }
   );
 
   const products = data?.products || [];
@@ -95,20 +116,33 @@ const Purchase = () => {
     // product.barcode.includes(searchTerm)
   );
 
+  useEffect(() => {
+    if (!transferTo) return;
+    setTransferOptions([]);
+    setSelectedTransferTo("");
+    const endpoint = transferTo === "shop" ? "/shops" : "/warehouses";
+    userRequest
+      .get(endpoint)
+      .then((data) => {
+        setTransferOptions(data?.data?.data || []);
+      })
+      .catch(() => console.log("Failed to fetch transfer options"));
+  }, [transferTo]);
+
   const addToCart = (product) => {
     // Use wholesalePrice for wholesale customers, otherwise use price
     const price =
       selectedCustomer.customerType === "wholesale"
         ? product.wholesalePrice ?? product.wholesaleRate
         : selectedCustomer.customerType === "retail"
-        ? product.retailRate ?? product.retailRate
-        : product.price;
+          ? product.retailRate ?? product.retailRate
+          : product.price;
 
     const existingItem = cart.find((item) => item._id === product._id);
 
     if (existingItem) {
       // Allow adding if stock is available, for all customer customerType
-      if (existingItem.quantity < product.countInStock) {
+      if (existingItem.quantity < product.currentStock) {
         setCart(
           cart.map((item) =>
             item._id === product._id
@@ -129,7 +163,7 @@ const Purchase = () => {
     }
 
     const product = products.find((p) => p._id === _id);
-    if (product && newQuantity <= product.countInStock) {
+    if (product && newQuantity <= product.currentStock) {
       setCart(
         cart.map((item) =>
           item._id === _id ? { ...item, quantity: newQuantity } : item
@@ -169,7 +203,7 @@ const Purchase = () => {
     );
   };
 
-  const completeSale = async() => {
+  const completeSale = async () => {
     setpaymentMethodslosding(true);
     //handleSalepaymets
     try {
@@ -188,69 +222,27 @@ const Purchase = () => {
           totalPaid === total
             ? "completed"
             : totalPaid > 0
-            ? "partial"
-            : "pending",
+              ? "partial"
+              : "pending",
         currency: saleDataadd.currency || "",
         notes: saleDataadd.description,
       });
       setCart([]);
-          setDiscount(0);
-          setPaymentMethods([]);
-          setTotalPaid(0);
-          setShowSuppliersPaymentmodel(false);
-          setpaymentMethodslosding(false);
+      setDiscount(0);
+      setPaymentMethods([]);
+      setTotalPaid(0);
+      setShowSuppliersPaymentmodel(false);
+      setpaymentMethodslosding(false);
       toast.success("Sale completed successfully!");
     } catch (error) {
-       setpaymentMethodslosding(false);
+      setpaymentMethodslosding(false);
       toast.error(
         error?.response?.data?.message ||
-          error.message ||
-          "Failed to add customer."
+        error.message ||
+        "Failed to add customer."
       );
     }
   };
-
-  // const completeSale = async () => {
-  //   try {
-  //     const saleData = {
-  //       customer: selectedCustomer?._id,
-  //       items: cart.map((item) => ({
-  //         product: item._id,
-  //         quantity: item.quantity,
-  //         price: item.price,
-  //         discount: 0,
-  //         total: item.price * item.quantity - 0,
-  //       })),
-  //       totalAmount: subtotal,
-  //       tax: directDiscountAmount,
-  //       grandTotal: total,
-  //       discount: discountAmount,
-  //       // paymentMethod: paymentMethods[0]?.method || "cash",
-  //       // paymentStatus: totalPaid === total ? "paid" : totalPaid > 0 ? "partial" : "unpaid",
-  //       // paidAmount: totalPaid,
-  //       // notes: saleDataadd.description,
-  //       // subtotal: subtotal,
-  //     };
-
-  //     // const response = await userRequest.post("/sales", saleData);
-
-  //     // Call handleSalepaymets after successful sale
-  //     await handleSalepaymets();
-
-  //     setCart([]);
-  //     setDiscount(0);
-  //     setPaymentMethods([]);
-  //     setTotalPaid(0);
-  //     setShowSuppliersPaymentmodel(false);
-  //     // console.log(response.data);
-  //   } catch (error) {
-  //     toast.error(
-  //       error?.response?.data?.message ||
-  //         error.message ||
-  //         "Failed to complete sale. Please try again."
-  //     );
-  //   }
-  // };
 
   return (
     <div className="p-4 h-screen ">
@@ -276,20 +268,75 @@ const Purchase = () => {
                 </Button>
               </div>
 
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-sm">
+              <div className="flex items-center mb-4 gap-2">
+                <div className="text-sm  w-full">
                   Supplier:{" "}
                   <strong>{selectedCustomer?.name || "Select Customer"}</strong>{" "}
                   ({selectedCustomer?.customerType || ""})
                 </div>
-                <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow font-semibold text-sm">
-                  Total Products: {totalProducts}
+                <Select
+                  placeholder="Select Shop or Warehouse"
+                  selectedKeys={transferTo ? [transferTo] : []}
+                  onChange={(e) => setTransferTo(e.target.value)}
+                  // className="w-full"
+                >
+                  <SelectItem key="warehouse" value="warehouse">
+                    Warehouse
+                  </SelectItem>
+                  <SelectItem key="shop" value="shop">
+                    Shop
+                  </SelectItem>
+                </Select>
+                <Select
+                  placeholder={`Select ${
+                    transferTo === "shop" ? "Shop" : "Warehouse"
+                  }`}
+                  selectedKeys={selectedTransferTo ? [selectedTransferTo] : []}
+                  onChange={(e) => setSelectedTransferTo(e.target.value)}
+                  // isDisabled={!transferTo || isLoading}
+                  // className="w-full"
+                >
+                  {transferOptions.map((item) => (
+                    <SelectItem key={item._id} value={item._id}>
+                      {item.name}
+                    </SelectItem>
+                  ))}
+                </Select>
+                <div className="bg-gradient-to-r  w-full from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg shadow font-semibold text-sm">
+                  Total Products: {filteredProducts.length || "0"}
                 </div>
               </div>
 
               {isLoading ? (
                 <div className="flex justify-center items-center py-8">
                   <Spinner color="success" size="lg" />
+                </div>
+              ) : filteredProducts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="text-gray-400 text-5xl mb-4">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-16 w-16 mx-auto"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-700">
+                    No products found
+                  </h3>
+                  <p className="text-gray-500 mt-1">
+                    {!transferTo || !selectedTransferTo
+                      ? "Please select a location to view products"
+                      : "No products available in the selected location"}
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 h-full ">
@@ -327,17 +374,17 @@ const Purchase = () => {
                           <Chip
                             size="sm"
                             color={
-                              product.countInStock <= 5
+                              product.currentStock <= 5
                                 ? "danger"
-                                : product.countInStock <= 10
+                                : product.currentStock <= 10
                                 ? "warning"
                                 : "success"
                             }
                           >
-                            {product.countInStock}
+                            {product.currentStock}
                           </Chip>
                         </div>
-                        <div className="flex justify-between items-center mt-2">
+                        {/* <div className="flex justify-between items-center mt-2">
                           <span className="text-sm font-bold">
                             Purchase Rate
                           </span>
@@ -346,7 +393,7 @@ const Purchase = () => {
                         <div className="flex justify-between items-center mt-2">
                           <span className="text-sm font-bold">Sale Rate</span>
                           <span>{product.saleRate}</span>
-                        </div>
+                        </div> */}
                         <div className="flex justify-between items-center mt-2">
                           <span className="text-sm font-bold">Retail Rate</span>
                           <span>{product.retailRate}</span>
@@ -395,9 +442,8 @@ const Purchase = () => {
                           </div>
                           <div className="text-xs text-gray-600">
                             {item.currency?.symbol || ""} {item.price || ""}
-                            {console.log(item)
-                            }
                           </div>
+                        
                         </div>
                         <div className="flex items-center gap-2">
                           <Button
@@ -410,9 +456,20 @@ const Purchase = () => {
                           >
                             <FaMinus />
                           </Button>
-                          <span className="w-8 text-center">
-                            {item.quantity}
-                          </span>
+                          {/* <span className="w-8 text-center">
+                            {item.quantity}s
+                          </span> */}
+                          <input
+                            type="number"
+                            min="1"
+                            className="w-24 h-8 text-center border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const newQuantity = parseInt(e.target.value) || 1;
+                              updateQuantity(item._id, newQuantity);
+                            }}
+                            onFocus={(e) => e.target.select()}
+                          />
                           <Button
                             isIconOnly
                             size="sm"

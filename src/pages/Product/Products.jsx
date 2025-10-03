@@ -257,7 +257,7 @@ const Products = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between flex-col md:flex-row sm:flex-col lg:flex-row">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Products</h1>
           <p className="text-gray-600">Manage your product inventory</p>

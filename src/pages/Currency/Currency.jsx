@@ -121,7 +121,7 @@ const Currency = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between flex-col md:flex-row sm:flex-col lg:flex-row ">
         <div>
           <div className="flex items-center gap-3">
             <FaMoneyBillWaveAlt className="text-3xl text-blue-500" />
