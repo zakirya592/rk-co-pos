@@ -14,6 +14,7 @@ import {
   FaTruck,
   FaHistory,
   FaUniversity,
+  FaDatabase,
 } from "react-icons/fa";
 import { useAuth } from "../../contexts/AuthContext";
 import { Tooltip } from "@nextui-org/react";
@@ -53,6 +54,14 @@ const cardData = [
     title: "Currencies",
     desc: "Currency settings",
     color: "indigo",
+  },
+  {
+    to: "/master-data",
+    icon: <FaDatabase />,
+    title: "Master Data",
+    desc: "Manage master data",
+    color: "indigo",
+    color: "teal",
   },
   {
     to: "/user",

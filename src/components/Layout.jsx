@@ -90,6 +90,7 @@ import AddBankAccount from "../pages/BankAccounts/AddBankAccount";
 import UpdateBankAccount from "../pages/BankAccounts/UpdateBankAccount";
 import Purchases from "../pages/Purchase/Purchases";
 import PurchaseDetails from "../pages/Purchase/PurchaseDetails";
+import MasterData from "../pages/MasterData/MasterData";
 
 const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
@@ -178,7 +179,7 @@ const Layout = () => {
                   <Route path="purchases/new" element={<AddPurchase />} />
                   <Route path="purchases/edit/:id" element={<UpdatePurchase />} />
                   <Route path="purchases/Details/:id" element={<PurchaseDetails />} />
-
+                  <Route path="master-data" element={<MasterData />} />
                   {/* Warehouse */}
                   <Route path="warehouse" element={<Warehouse />} />
                   <Route path="add-warehouse" element={<Addwarahouse />} />
