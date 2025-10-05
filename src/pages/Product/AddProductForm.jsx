@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardBody, Input, Select, SelectItem, Button, Textarea, Switch } from "@nextui-org/react";
 import { FaImage, FaTrash, FaShoppingCart, FaBox, FaBoxes, FaTruck, FaPlus } from "react-icons/fa";
 import userRequest from "../../utils/userRequest";
@@ -26,8 +26,8 @@ const AddProductForm = () => {
     availableQuantity: "",
     // soldOutQuantity: "",
     packingUnit: "",
-    pouchesOrPieces: "",
-    additionalUnit: "",
+    pochues: "",
+    quantityUnit: "",
     isActive: "active",
     description: "",
     location: "",
@@ -35,6 +35,12 @@ const AddProductForm = () => {
     currency: "",
     image: "",
   });
+  const [quantityUnits, setQuantityUnits] = useState([]);
+  const [packingUnits, setPackingUnits] = useState([]);
+  const [pouches, setPouches] = useState([]);
+  const [selectedQuantityUnit, setSelectedQuantityUnit] = useState("");
+  const [selectedPackingUnit, setSelectedPackingUnit] = useState("");
+  const [selectedPouch, setSelectedPouch] = useState("");
 
   // Add this fetch function
   const fetchCategories = async () => {
@@ -77,6 +83,53 @@ const AddProductForm = () => {
     const { data: Warehouses = [], isLoading: isfetchWarehousesLoading } =
       useQuery(["Warehouses"], fetchWarehouses);
 
+  // Fetch Quantity Units
+  useEffect(() => {
+    userRequest.get("/quantity-units").then((res) => {
+      setQuantityUnits(res.data.data || []);
+    });
+  }, []);
+
+  // Fetch Packing Units when Quantity Unit changes
+  useEffect(() => {
+    if (selectedQuantityUnit) {
+      userRequest.get(`/packing-units/quantity-unit/${selectedQuantityUnit}`).then((res) => {
+        setPackingUnits(res.data.data || []);
+        setSelectedPackingUnit("");
+        setPouches([]);
+        setSelectedPouch("");
+        setNewProduct((prev) => ({
+          ...prev,
+          quantityUnit: selectedQuantityUnit,
+          packingUnit: "",
+          pochues: "",
+        }));
+      });
+    }
+  }, [selectedQuantityUnit]);
+
+  // Fetch Pouches when Packing Unit changes
+  useEffect(() => {
+    if (selectedPackingUnit) {
+      userRequest.get(`/pochues/packing-unit/${selectedPackingUnit}`).then((res) => {
+        setPouches(res.data.data || []);
+        setSelectedPouch("");
+        setNewProduct((prev) => ({
+          ...prev,
+          packingUnit: selectedPackingUnit,
+          pochues: "",
+        }));
+      });
+    }
+  }, [selectedPackingUnit]);
+
+  // Update newProduct when pouch changes
+  useEffect(() => {
+    setNewProduct((prev) => ({
+      ...prev,
+      pochues: selectedPouch,
+    }));
+  }, [selectedPouch]);
 
   // Handle image upload
   const handleImageChange = (e) => {
@@ -111,9 +164,9 @@ const AddProductForm = () => {
       formData.append("barcode", newProduct.barcode);
       formData.append("availableQuantity", newProduct.availableQuantity);
       // formData.append("soldOutQuantity", newProduct.soldOutQuantity);
+      formData.append("quantityUnit", newProduct.quantityUnit);
       formData.append("packingUnit", newProduct.packingUnit);
-      formData.append("additionalUnit", newProduct.additionalUnit);
-      formData.append("pouchesOrPieces", newProduct.pouchesOrPieces);
+      formData.append("pochues", newProduct.pochues);
       formData.append("description", newProduct.description);
       formData.append("category", newProduct.category);
       formData.append("countInStock", newProduct.countInStock);
@@ -142,8 +195,8 @@ const AddProductForm = () => {
         availableQuantity: "",
         // soldOutQuantity: "",
         packingUnit: "",
-        pouchesOrPieces: "",
-        additionalUnit: "",
+        pochues: "",
+        quantityUnit: "",
         isActive: "active",
         description: "",
         image: "",
@@ -422,6 +475,7 @@ const AddProductForm = () => {
                 ))}
               </Select>
 
+
               <Select
                 label={
                   <span>
@@ -589,46 +643,50 @@ const AddProductForm = () => {
                 }
                 variant="bordered"
               /> */}
-              <Input
+              <Select
                 label="Quantity Unit"
                 labelPlacement="outside"
-                placeholder="quantity unit"
-                value={newProduct.additionalUnit}
-                onChange={(e) =>
-                  setNewProduct({
-                    ...newProduct,
-                    additionalUnit: e.target.value,
-                  })
-                }
+                placeholder="Select quantity unit"
+                value={selectedQuantityUnit}
+                onChange={(e) => setSelectedQuantityUnit(e.target.value)}
                 variant="bordered"
-              />
-              <Input
-                label="packaging unit"
+              >
+                {quantityUnits.map((unit) => (
+                  <SelectItem key={unit._id} value={unit._id}>
+                    {unit.name}
+                  </SelectItem>
+                ))}
+              </Select>
+              <Select
+                label="Packaging Unit"
                 labelPlacement="outside"
-                placeholder="packaging unit"
-                value={newProduct.packingUnit}
-                onChange={(e) =>
-                  setNewProduct({
-                    ...newProduct,
-                    packingUnit: e.target.value,
-                  })
-                }
+                placeholder="Select packaging unit"
+                value={selectedPackingUnit}
+                onChange={(e) => setSelectedPackingUnit(e.target.value)}
                 variant="bordered"
-              />
-              <Input
+                disabled={!selectedQuantityUnit}
+              >
+                {packingUnits.map((unit) => (
+                  <SelectItem key={unit._id} value={unit._id}>
+                    {unit.name}
+                  </SelectItem>
+                ))}
+              </Select>
+              <Select
                 label="Pouches or Nos"
                 labelPlacement="outside"
-                type="number"
-                placeholder="Enter pouches or nos"
-                value={newProduct.pouchesOrPieces}
-                onChange={(e) =>
-                  setNewProduct({
-                    ...newProduct,
-                    pouchesOrPieces: e.target.value,
-                  })
-                }
+                placeholder="Select pouches or nos"
+                value={selectedPouch}
+                onChange={(e) => setSelectedPouch(e.target.value)}
                 variant="bordered"
-              />
+                disabled={!selectedPackingUnit}
+              >
+                {pouches.map((pouch) => (
+                  <SelectItem key={pouch._id} value={pouch._id}>
+                    {pouch.name}
+                  </SelectItem>
+                ))}
+              </Select>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-7 gap-4 mt-3">
               {/* Description */}

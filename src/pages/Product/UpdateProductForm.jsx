@@ -13,6 +13,12 @@ const UpdateProductForm = () => {
   const [isCustomColor, setIsCustomColor] = useState(false);
   const [isCustomSize, setIsCustomSize] = useState(false);
   const [product, setProduct] = useState(null);
+  const [quantityUnits, setQuantityUnits] = useState([]);
+  const [packingUnits, setPackingUnits] = useState([]);
+  const [pouches, setPouches] = useState([]);
+  const [selectedQuantityUnit, setSelectedQuantityUnit] = useState("");
+  const [selectedPackingUnit, setSelectedPackingUnit] = useState("");
+  const [selectedPouch, setSelectedPouch] = useState("");
 
   // Add suppliers fetch function
   const fetchSuppliers = async () => {
@@ -153,9 +159,9 @@ const UpdateProductForm = () => {
       safeAppend("retailRate", num(product.retailRate));
       safeAppend("countInStock", int(product.countInStock));
       // safeAppend("soldOutQuantity", int(product.soldOutQuantity));
-      safeAppend("additionalUnit", product.additionalUnit);
+      safeAppend("quantityUnit", product.quantityUnit);
       safeAppend("packingUnit", product.packingUnit);
-      safeAppend("pouchesOrPieces", int(product.pouchesOrPieces));
+      safeAppend("pochues", product.pochues);
 
       // Boolean field
       if (typeof product.isActive === "boolean") {
@@ -189,6 +195,77 @@ const UpdateProductForm = () => {
       setLoading(false);
     }
   };
+
+  // Fetch Quantity Units on mount
+  useEffect(() => {
+    userRequest.get("/quantity-units").then((res) => {
+      setQuantityUnits(res.data.data || []);
+    });
+  }, []);
+
+  // Helper to merge current and fetched options, avoiding duplicates
+  const mergeOptions = (current, fetched) => {
+    if (!current || !current._id) return fetched;
+    const exists = fetched.some((item) => item._id === current._id);
+    return exists ? fetched : [current, ...fetched];
+  };
+
+  // Set initial selects when product loads
+  useEffect(() => {
+    if (product) {
+      // Set selected values from product (handle both object and string cases)
+      setSelectedQuantityUnit(product.quantityUnit?._id || product.quantityUnit || "");
+      setSelectedPackingUnit(product.packingUnit?._id || product.packingUnit || "");
+      setSelectedPouch(product.pochues?._id || product.pochues || "");
+    }
+  }, [product]);
+
+  // Fetch Packing Units when Quantity Unit changes
+  useEffect(() => {
+    if (selectedQuantityUnit) {
+      userRequest.get(`/packing-units/quantity-unit/${selectedQuantityUnit}`).then((res) => {
+        const fetched = res.data.data || [];
+        // If product.packingUnit exists, merge it in
+        setPackingUnits(mergeOptions(product?.packingUnit, fetched));
+        setSelectedPackingUnit("");
+        setPouches([]);
+        setSelectedPouch("");
+        setProduct((prev) => ({
+          ...prev,
+          quantityUnit: selectedQuantityUnit,
+          packingUnit: "",
+          pochues: "",
+        }));
+      });
+    }
+    // eslint-disable-next-line
+  }, [selectedQuantityUnit]);
+
+  // Fetch Pouches when Packing Unit changes
+  useEffect(() => {
+    if (selectedPackingUnit) {
+      userRequest.get(`/pochues/packing-unit/${selectedPackingUnit}`).then((res) => {
+        const fetched = res.data.data || [];
+        setPouches(mergeOptions(product?.pochues, fetched));
+        setSelectedPouch("");
+        setProduct((prev) => ({
+          ...prev,
+          packingUnit: selectedPackingUnit,
+          pochues: "",
+        }));
+      });
+    }
+    // eslint-disable-next-line
+  }, [selectedPackingUnit]);
+
+  // Update product when pouch changes
+  useEffect(() => {
+    setProduct((prev) => ({
+      ...prev,
+      pochues: selectedPouch,
+    }));
+    // eslint-disable-next-line
+  }, [selectedPouch]);
 
   if (!product) return (
     <>
@@ -238,12 +315,7 @@ const UpdateProductForm = () => {
               />
 
               <Select
-                label={
-                  <span>
-                    Category
-                    
-                  </span>
-                }
+                label={<span>Category</span>}
                 labelPlacement="outside"
                 placeholder="Select category"
                 selectedKeys={getCategoryId() ? [getCategoryId()] : []}
@@ -405,12 +477,7 @@ const UpdateProductForm = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-7 gap-4 mt-10">
               <Select
-                label={
-                  <span>
-                    Currency
-                    
-                  </span>
-                }
+                label={<span>Currency</span>}
                 labelPlacement="outside"
                 placeholder="Select currency"
                 selectedKeys={product.currency ? [product.currency] : []}
@@ -434,12 +501,7 @@ const UpdateProductForm = () => {
               </Select>
 
               <Select
-                label={
-                  <span>
-                    Supplier
-                    
-                  </span>
-                }
+                label={<span>Supplier</span>}
                 labelPlacement="outside"
                 placeholder="Select Supplier"
                 selectedKeys={product.supplier ? [product.supplier] : []}
@@ -458,12 +520,7 @@ const UpdateProductForm = () => {
               </Select>
 
               <Select
-                label={
-                  <span>
-                    Warehouses
-                    
-                  </span>
-                }
+                label={<span>Warehouses</span>}
                 labelPlacement="outside"
                 placeholder="Select Warehouses"
                 selectedKeys={product.warehouse ? [product.warehouse] : []}
@@ -518,12 +575,7 @@ const UpdateProductForm = () => {
 
               {/* Pricing */}
               <Input
-                label={
-                  <span>
-                    purchase Rate
-                    
-                  </span>
-                }
+                label={<span>purchase Rate</span>}
                 labelPlacement="outside"
                 placeholder="0.00"
                 type="number"
@@ -553,12 +605,7 @@ const UpdateProductForm = () => {
                 variant="bordered"
               /> */}
               <Input
-                label={
-                  <span>
-                    Whole Sale Rate
-                    
-                  </span>
-                }
+                label={<span>Whole Sale Rate</span>}
                 labelPlacement="outside"
                 placeholder="0.00"
                 type="number"
@@ -572,12 +619,7 @@ const UpdateProductForm = () => {
                 variant="bordered"
               />
               <Input
-                label={
-                  <span>
-                    Retail Rate
-                    
-                  </span>
-                }
+                label={<span>Retail Rate</span>}
                 labelPlacement="outside"
                 placeholder="0.00"
                 type="number"
@@ -604,12 +646,7 @@ const UpdateProductForm = () => {
               /> */}
 
               <Input
-                label={
-                  <span>
-                    Stock Quantity
-                    
-                  </span>
-                }
+                label={<span>Stock Quantity</span>}
                 labelPlacement="outside"
                 placeholder="0"
                 type="number"
@@ -637,46 +674,57 @@ const UpdateProductForm = () => {
                 }
                 variant="bordered"
               /> */}
-              <Input
+              <Select
                 label="Quantity Unit"
                 labelPlacement="outside"
-                placeholder="quantity unit"
-                value={product.additionalUnit}
-                onChange={(e) =>
-                  setProduct({
-                    ...product,
-                    additionalUnit: e.target.value,
-                  })
+                placeholder="Select quantity unit"
+                selectedKeys={
+                  selectedQuantityUnit ? [selectedQuantityUnit] : []
                 }
+                value={selectedQuantityUnit}
+                onChange={(e) => setSelectedQuantityUnit(e.target.value)}
                 variant="bordered"
-              />
-              <Input
-                label="packaging unit"
+              >
+                {mergeOptions(product?.quantityUnit, quantityUnits).map(
+                  (unit) => (
+                    <SelectItem key={unit._id} value={unit._id}>
+                      {unit.name}
+                    </SelectItem>
+                  )
+                )}
+              </Select>
+              <Select
+                label="Packaging Unit"
                 labelPlacement="outside"
-                placeholder="packaging unit"
-                value={product.packingUnit}
-                onChange={(e) =>
-                  setProduct({
-                    ...product,
-                    packingUnit: e.target.value,
-                  })
-                }
+                placeholder="Select packaging unit"
+                selectedKeys={selectedPackingUnit ? [selectedPackingUnit] : []}
+                value={selectedPackingUnit}
+                onChange={(e) => setSelectedPackingUnit(e.target.value)}
                 variant="bordered"
-              />
-              <Input
+                disabled={!selectedQuantityUnit}
+              >
+                {packingUnits.map((unit) => (
+                  <SelectItem key={unit._id} value={unit._id}>
+                    {unit.name}
+                  </SelectItem>
+                ))}
+              </Select>
+              <Select
                 label="Pouches or Nos"
                 labelPlacement="outside"
-                type="number"
-                placeholder="Enter pouches or nos"
-                value={product.pouchesOrPieces}
-                onChange={(e) =>
-                  setProduct({
-                    ...product,
-                    pouchesOrPieces: e.target.value,
-                  })
-                }
+                selectedKeys={selectedPouch ? [selectedPouch] : []}
+                placeholder="Select pouches or nos"
+                value={selectedPouch}
+                onChange={(e) => setSelectedPouch(e.target.value)}
                 variant="bordered"
-              />
+                disabled={!selectedPackingUnit}
+              >
+                {pouches.map((pouch) => (
+                  <SelectItem key={pouch._id} value={pouch._id}>
+                    {pouch.name}
+                  </SelectItem>
+                ))}
+              </Select>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-7 gap-4 mt-3">
@@ -703,12 +751,7 @@ const UpdateProductForm = () => {
                 </div>
               </div>
               <Textarea
-                label={
-                  <span>
-                    Description
-                    
-                  </span>
-                }
+                label={<span>Description</span>}
                 labelPlacement="outside"
                 placeholder="Enter product description"
                 value={product.description}

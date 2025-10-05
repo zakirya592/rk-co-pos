@@ -76,7 +76,7 @@ const Products = () => {
     soldOutQuantity: "",
     packingUnit: "",
     pouchesOrPieces: "",
-    additionalUnit: "",
+    quantityUnit: "",
     isActive: "active",
     description: "",
     image: "",
@@ -151,7 +151,7 @@ const Products = () => {
       formData.append("availableQuantity", editProduct.availableQuantity);
       formData.append("soldOutQuantity", editProduct.soldOutQuantity);
       formData.append("packingUnit", editProduct.packingUnit);
-      formData.append("additionalUnit", editProduct.additionalUnit);
+      formData.append("quantityUnit", editProduct.quantityUnit);
       formData.append("pouchesOrPieces", editProduct.pouchesOrPieces);
       formData.append("description", editProduct.description);
       formData.append("category", typeof editProduct.category === "object" && editProduct.category !== null ? editProduct.category._id : editProduct.category);
@@ -363,9 +363,9 @@ const Products = () => {
           <TableColumn>BARCODE</TableColumn>
           <TableColumn>AVAILABLE QTY</TableColumn>
           <TableColumn>SOLD OUT QTY</TableColumn>
-          <TableColumn>PACKAGING UNIT</TableColumn>
-          <TableColumn>ADDITIONAL UNIT</TableColumn>
           <TableColumn>QUANTITY UNIT</TableColumn>
+          <TableColumn>PACKAGING UNIT</TableColumn>
+          <TableColumn>POCHUES</TableColumn>
           <TableColumn>STOCK</TableColumn>
           <TableColumn>STATUS</TableColumn>
           <TableColumn>ACTIONS</TableColumn>
@@ -419,9 +419,9 @@ const Products = () => {
               <TableCell>{product?.barcode || "-"}</TableCell>
               <TableCell>{product?.pouchesOrPieces || "0"}</TableCell>
               <TableCell>{product?.soldOutQuantity || "0"}</TableCell>
-              <TableCell>{product?.packingUnit || "-"}</TableCell>
-              <TableCell>{product?.pouchesOrPieces || "-"}</TableCell>
-              <TableCell>{product?.additionalUnit || "-"}</TableCell>
+              <TableCell>{product?.quantityUnit?.name || "-"}</TableCell>
+              <TableCell>{product?.packingUnit?.name || "-"}</TableCell>
+              <TableCell>{product?.pochues?.name || "-"}</TableCell>
 
               <TableCell>
                 <Chip
