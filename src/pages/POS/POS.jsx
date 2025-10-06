@@ -16,6 +16,7 @@ import PaymentModal from "./PaymentModal";
 import { useQuery } from "react-query";
 import userRequest from '../../utils/userRequest';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 
 const fetchProducts = async (key, searchTerm, currentPage, locationType, locationId) => {
@@ -42,8 +43,10 @@ const fetchCustomers = async (search = '', page = 1) => {
 };
 
 const POS = () => {
+
+    const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
-  const [customerSearchTerm, setCustomerSearchTerm] = useState('');
+  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
   const [customerPage, setCustomerPage] = useState(1);
 
   const [selectedTransferTo, setSelectedTransferTo] = useState("");
@@ -83,7 +86,7 @@ const POS = () => {
   }, [transferTo]);
 
   const [cart, setCart] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
   const [selectedCustomer, setSelectedCustomer] = useState(customers[0]);
@@ -97,8 +100,15 @@ const POS = () => {
   // Fetch products using react-query
   const { data, isLoading, refetch } = useQuery(
     ["products", searchTerm, currentPage, transferTo, selectedTransferTo],
-    () => fetchProducts("products", searchTerm, currentPage, transferTo, selectedTransferTo),
-    { 
+    () =>
+      fetchProducts(
+        "products",
+        searchTerm,
+        currentPage,
+        transferTo,
+        selectedTransferTo
+      ),
+    {
       keepPreviousData: true,
       enabled: !!transferTo && !!selectedTransferTo, // Only fetch when both type and ID are selected
     }
@@ -106,10 +116,9 @@ const POS = () => {
 
   const products = data?.products || [];
   const totalProducts = data?.total || 0;
-  
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredProducts = products.filter(
+    (product) => product.name.toLowerCase().includes(searchTerm.toLowerCase())
     // ||
     // product.barcode.includes(searchTerm)
   );
@@ -120,19 +129,21 @@ const POS = () => {
       selectedCustomer.customerType === "wholesale"
         ? product.wholesalePrice ?? product.wholesaleRate
         : selectedCustomer.customerType === "retail"
-          ? product.retailRate ?? product.retailRate
-          : product.price;
+        ? product.retailRate ?? product.retailRate
+        : product.price;
 
-    const existingItem = cart.find(item => item._id === product._id);
+    const existingItem = cart.find((item) => item._id === product._id);
 
     if (existingItem) {
       // Allow adding if stock is available, for all customer customerType
       if (existingItem.quantity < product.currentStock) {
-        setCart(cart.map(item =>
-          item._id === product._id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        ));
+        setCart(
+          cart.map((item) =>
+            item._id === product._id
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          )
+        );
       }
     } else {
       setCart([...cart, { ...product, quantity: 1, price }]);
@@ -145,30 +156,38 @@ const POS = () => {
       return;
     }
 
-    const product = products.find(p => p._id === _id);
+    const product = products.find((p) => p._id === _id);
     if (product && newQuantity <= product.currentStock) {
-      setCart(cart.map(item =>
-        item._id === _id ? { ...item, quantity: newQuantity } : item
-      ));
+      setCart(
+        cart.map((item) =>
+          item._id === _id ? { ...item, quantity: newQuantity } : item
+        )
+      );
     }
   };
 
   const removeFromCart = (_id) => {
-    setCart(cart.filter(item => item._id !== _id));
+    const newCart = cart.filter((item) => item._id !== _id);
+    setCart(newCart);
   };
 
-  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const discountAmount = (subtotal * discount) / 100;
+  const subtotal = useMemo(() => 
+    cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+    [cart]
+  );
+  
+  const discountAmount = useMemo(() => (subtotal * discount) / 100, [subtotal, discount]);
   const directDiscountAmount = directDiscount;
   const total = subtotal - discountAmount - directDiscountAmount;
-  const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const totalCartItems = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
 
+// {{ ... }}
   const handlePayment = () => {
     setShowPaymentModal(true);
   };
 
   const addPaymentMethod = () => {
-    setPaymentMethods([...paymentMethods, { method: 'cash', amount: 0 }]);
+    setPaymentMethods([...paymentMethods, { method: "cash", amount: 0 }]);
   };
 
   const updatePaymentMethod = (index, field, value) => {
@@ -176,7 +195,9 @@ const POS = () => {
       i === index ? { ...payment, [field]: value } : payment
     );
     setPaymentMethods(updated);
-    setTotalPaid(updated.reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0));
+    setTotalPaid(
+      updated.reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0)
+    );
   };
 
   const handleSalepaymets = () => {
@@ -186,21 +207,26 @@ const POS = () => {
         amount: totalPaid,
         paymentMethod: paymentMethods[0]?.method || "cash",
         status:
-          totalPaid === total ? "completed" : totalPaid > 0 ? "partial" : "pending",
+          totalPaid === total
+            ? "completed"
+            : totalPaid > 0
+            ? "partial"
+            : "pending",
         currency: saleDataadd.currency,
         notes: saleDataadd.description,
         distributionStrategy: "oldest-first",
       });
       toast.success("Sale completed successfully!");
     } catch (error) {
-      toast.error(error?.response?.data?.message || error.message || "Failed to add customer.");
+      toast.error(
+        error?.response?.data?.message ||
+          error.message ||
+          "Failed to add customer."
+      );
     }
   };
- 
-  
 
   const completeSale = async () => {
-
     try {
       const saleData = {
         customer: selectedCustomer?._id,
@@ -226,20 +252,24 @@ const POS = () => {
         // subtotal: subtotal,
       };
 
-
       const response = await userRequest.post("/sales", saleData);
 
       // Call handleSalepaymets after successful sale
       await handleSalepaymets();
-      refetch()
+      refetch();
       setCart([]);
       setDiscount(0);
       setPaymentMethods([]);
       setTotalPaid(0);
       setShowPaymentModal(false);
-      console.log(response.data);
+      navigate("/Navigation");
+      
     } catch (error) {
-      toast.error(error?.response?.data?.message || error.message || "Failed to complete sale. Please try again.");
+      toast.error(
+        error?.response?.data?.message ||
+          error.message ||
+          "Failed to complete sale. Please try again."
+      );
     }
   };
 
@@ -247,10 +277,11 @@ const POS = () => {
   const CurrencyName = ({ currencyId, label, color }) => {
     const { data, isLoading } = useQuery(
       ["currency", currencyId],
-      () => userRequest.get(`/currencies/${currencyId}`).then((res) => res.data),
+      () =>
+        userRequest.get(`/currencies/${currencyId}`).then((res) => res.data),
       { enabled: !!currencyId }
     );
-  
+
     return (
       <Chip color={color} variant="flat" className="text-xs">
         {isLoading ? "Loading..." : `${label}: ${data?.data?.symbol || "N/A"}`}
@@ -262,10 +293,11 @@ const POS = () => {
   const WarehouseName = ({ warehouseId, label, color }) => {
     const { data, isLoading } = useQuery(
       ["warehouse", warehouseId],
-      () => userRequest.get(`/warehouses/${warehouseId}`).then((res) => res.data),
+      () =>
+        userRequest.get(`/warehouses/${warehouseId}`).then((res) => res.data),
       { enabled: !!warehouseId }
     );
-  
+
     return (
       <Chip color={color} variant="flat" className="text-xs">
         {isLoading
@@ -275,30 +307,67 @@ const POS = () => {
     );
   };
 
+  const [itemRows, setItemRows] = useState([
+    { productId: "", price: "", quantity: 1 },
+  ]);
+
+  
+  const handleAddItemRow = () => {
+    setItemRows([...itemRows, { productId: "", price: "", quantity: 1 }]);
+  };
+
+  const handleRemoveItemRow = (index) => {
+    setItemRows(itemRows.filter((_, i) => i !== index));
+  };
+
+  const handleItemChange = (index, field, value) => {
+    setItemRows(
+      itemRows.map((row, i) => (i === index ? { ...row, [field]: value } : row))
+    );
+    // Optionally, update price when product changes
+    if (field === "productId") {
+      const product = filteredProducts.find((p) => p._id === value);
+      if (product) {
+        setItemRows((rows) =>
+          rows.map((row, i) =>
+            i === index ? { ...row, price: product.price || "" } : row
+          )
+        );
+      }
+    }
+  };
+  
+
   return (
-    <div className="p-4 h-screen overflow-hidden">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
+    <div className="p-4 ">
+      <div className=" h-full">
         {/* Product Search & Selection */}
-        <div className="lg:col-span-2 space-y-4 ">
+        <div className="space-y-4 ">
           <Card>
             <CardBody className="p-4">
               <div className="flex gap-4 mb-4">
-                <Input
+                {/* <Input
                   placeholder="Search products by name or scan barcode..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   startContent={<FaSearch className="text-gray-400" />}
                   className="flex-1"
-                />
-                <Button
+                /> */}
+                {/* <Button
                   color="primary"
                   onPress={() => setShowCustomerModal(true)}
                   startContent={<FaUser />}
                 >
                   Customer
-                </Button>
+                </Button> */}
+                <CustomerSelectionModal
+                  // isOpen={showCustomerModal}
+                  // onClose={() => setShowCustomerModal(false)}
+                  customers={customers}
+                  selectedCustomer={selectedCustomer}
+                  setSelectedCustomer={setSelectedCustomer}
+                />
               </div>
-
               <div className="flex justify-between flex-col md:flex-row sm:flex-col lg:flex-row mb-3 gap-2">
                 <div className="text-sm w-full my-auto">
                   Customer:{" "}
@@ -338,285 +407,272 @@ const POS = () => {
                   Total Products: {filteredProducts.length || "0"}
                 </div>
               </div>
-              {/* </div> */}
 
-              {isLoading ? (
-                <div className="flex justify-center items-center py-8">
-                  <Spinner color="success" size="lg" />
-                </div>
-              ) : filteredProducts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="text-gray-400 text-5xl mb-4">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-16 w-16 mx-auto"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-700">
-                    No products found
-                  </h3>
-                  <p className="text-gray-500 mt-1">
-                    {!transferTo || !selectedTransferTo
-                      ? "Please select a location to view products"
-                      : "No products available in the selected location"}
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 h-full">
-                  {filteredProducts.map((product) => (
-                    <Card
-                      key={product._id}
-                      isPressable
-                      onPress={() => addToCart(product)}
-                      className="hover:scale-105 transition-transform"
-                    >
-                      <CardBody className="p-3">
-                        <div className="flex items-center gap-2">
-                          {product.image ? (
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                              className="w-10 h-10 object-cover rounded"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
-                              <span className="text-gray-400">-</span>
-                            </div>
-                          )}
-                          <h4 className="font-semibold text-sm">
-                            {product.name}
-                          </h4>
-                        </div>
-                        <p className="text-xs text-gray-600">
-                          {product?.category?.name || ""}
-                        </p>
-                        <div className="flex justify-between items-center mt-2">
-                          <span className="text-sm font-bold">
-                            {product?.currency?.symbol || ""} {product.price}
-                            <CurrencyName
-                              currencyId={product?.currency}
-                              label="currency"
-                              color="warning"
-                            />
-                          </span>
-                          <Chip
-                            size="sm"
-                            color={
-                              product.currentStock <= 5
-                                ? "danger"
-                                : product.currentStock <= 10
-                                ? "warning"
-                                : "success"
-                            }
-                          >
-                            {product.currentStock}
-                          </Chip>
-                        </div>
-                        {/* <div className="flex justify-between items-center mt-2">
-                          <span className="text-sm font-bold">
-                            Purchase Rate
-                          </span>
-                          <span>{product.purchaseRate}</span>
-                        </div>
-                        <div className="flex justify-between items-center mt-2">
-                          <span className="text-sm font-bold">Sale Rate</span>
-                          <span>{product.saleRate}</span>
-                        </div> */}
-                        <div className="flex justify-between items-center mt-2">
-                          <span className="text-sm font-bold">Retail Rate</span>
-                          <span>{product.retailRate}</span>
-                        </div>
-                        <div className="flex justify-between items-center mt-2">
-                          <span className="text-sm font-bold">
-                            Wholesale Rate
-                          </span>
-                          <span>{product.wholesaleRate}</span>
-                        </div>
-                      </CardBody>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </CardBody>
-          </Card>
-        </div>
-
-        {/* Cart & Checkout */}
-        <div className="space-y-4">
-          <Card className="h-full">
-            <CardBody className="p-4 flex flex-col">
-              <div className="flex-1">
-                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  Shopping Cart
-                  <span className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-2 py-1 rounded-full text-xs font-semibold shadow">
-                    {totalCartItems} item{totalCartItems !== 1 ? "s" : ""}
-                  </span>
-                </h3>
-                {cart.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    Cart is empty
-                  </div>
-                ) : (
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {cart.map((item) => (
-                      <div
-                        key={item._id || ""}
-                        className="flex items-center justify-between p-2 border rounded"
-                      >
-                        <div className="flex-1">
-                          <div className="font-semibold text-sm">
-                            {item.name || ""}
-                          </div>
-                          <div className="text-xs text-gray-600">
-                            {/* <CurrencyName
-                              currencyId={item.currency}
-                              label="currency"
-                              color="warning"
-                            />{" "} */}{" "}
-                            Price :{item.price || ""}
-                          </div>
-                          {item?.warehouse && (
-                            <div className="text-[10px] text-gray-500 mt-0.5">
-                              {/* Warehouse: */}
-                              <WarehouseName
-                                warehouseId={item.warehouse}
-                                label="Warehouse"
-                                color="success"
-                              />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            variant="light"
-                            onPress={() =>
-                              updateQuantity(item._id, item.quantity - 1)
-                            }
-                          >
-                            <FaMinus />
-                          </Button>
-                          <input
-                            type="number"
-                            min="1"
-                            className="w-24 h-8 text-center border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            value={item.quantity}
-                            onChange={(e) => {
-                              const newQuantity = parseInt(e.target.value) || 1;
-                              updateQuantity(item._id, newQuantity);
-                            }}
-                            onFocus={(e) => e.target.select()}
-                          />
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            variant="light"
-                            onPress={() =>
-                              updateQuantity(item._id, item.quantity + 1)
-                            }
-                          >
-                            <FaPlus />
-                          </Button>
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            color="danger"
-                            variant="light"
-                            onPress={() => removeFromCart(item._id)}
-                          >
-                            <FaTrash />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div className="flex w-full justify-end">
+                <Button
+                  color="primary"
+                  variant="flat"
+                  startContent={<FaPlus />}
+                  onPress={handleAddItemRow}
+                >
+                  Add Item
+                </Button>
               </div>
+              {itemRows.map((row, index) => {
+                const selectedProduct = filteredProducts.find(
+                  (p) => p._id === row.productId
+                );
 
-              {cart.length > 0 && (
-                <div className="mt-4 space-y-3">
-                  <Divider />
+                return (
+                  <div className="flex gap-2 my-2" key={index}>
+                    <Select
+                      label="Select Product"
+                      placeholder="Search products by name"
+                      className="w-full"
+                      labelPlacement="outside"
+                      variant="bordered"
+                      scrollShadowProps={{ isEnabled: false }}
+                      selectedKeys={row.productId ? [row.productId] : []}
+                      onSelectionChange={(keys) => {
+                        const selectedId = Array.from(keys)[0];
+                        const product = filteredProducts.find(
+                          (p) => p._id === selectedId
+                        );
+                        if (product) {
+                          // Add the product to cart
+                          addToCart({
+                            ...product,
+                            price:
+                              selectedCustomer?.customerType === "wholesale"
+                                ? product.wholesalePrice ??
+                                  product.wholesaleRate ??
+                                  product.price
+                                : selectedCustomer?.customerType === "retail"
+                                ? product.retailRate ??
+                                  product.retailRate ??
+                                  product.price
+                                : product.price,
+                            quantity: 1,
+                            _id: product._id,
+                          });
 
-                  {/* Discount & Tax */}
-                  <div className="flex gap-2">
+                          // Update the row with selected product details
+                          const updatedRows = [...itemRows];
+                          updatedRows[index] = {
+                            ...updatedRows[index],
+                            productId: selectedId,
+                            price:
+                              selectedCustomer?.customerType === "wholesale"
+                                ? product.wholesalePrice ??
+                                  product.wholesaleRate ??
+                                  product.price
+                                : selectedCustomer?.customerType === "retail"
+                                ? product.retailRate ??
+                                  product.retailRate ??
+                                  product.price
+                                : product.price,
+                            quantity: 1,
+                          };
+                          setItemRows(updatedRows);
+                        }
+                      }}
+                    >
+                      {filteredProducts.map((product) => {
+                        // Calculate display price based on customer type
+                        let displayPrice = product.price;
+                        if (selectedCustomer?.customerType === "wholesale") {
+                          displayPrice =
+                            product.wholesalePrice ??
+                            product.wholesaleRate ??
+                            product.price;
+                        } else if (
+                          selectedCustomer?.customerType === "retail"
+                        ) {
+                          displayPrice =
+                            product.retailRate ??
+                            product.retailRate ??
+                            product.price;
+                        }
+
+                        return (
+                          <SelectItem
+                            key={product._id}
+                            value={product._id}
+                            textValue={`${product.name} - ${displayPrice}`}
+                          >
+                            <div className="flex flex-col">
+                              <div className="flex justify-between items-center">
+                                <span className="font-medium">
+                                  {product.name}
+                                </span>
+                                <span className="text-sm font-bold">
+                                  {displayPrice}
+                                  <CurrencyName
+                                    currencyId={product?.currency}
+                                    label=""
+                                    color="warning"
+                                  />
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center text-xs text-gray-500">
+                                <span>Stock: {product.currentStock}</span>
+                              </div>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
+                    </Select>
+
+                    {/* Price Input - Read Only */}
+                    <div className="w-28">
+                      <label className="text-sm text-foreground-500 mb-1">
+                        Price
+                      </label>
+                      <div className="flex items-center px-3 border-2 border-default-200 rounded-lg">
+                        {selectedProduct?.currency && (
+                          <span className="ml-1 text-xs text-foreground-400">
+                            <CurrencyName
+                              currencyId={selectedProduct.currency}
+                              label=""
+                              color="default"
+                            />
+                          </span>
+                        )}
+                        <span className="text-sm font-medium">
+                          {row.price ? Number(row.price).toFixed(2) : "0.00"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Quantity Input */}
                     <Input
+                      label="Qty"
+                      labelPlacement="outside"
                       type="number"
-                      label="Discount %"
-                      value={discount}
-                      onChange={(e) =>
-                        setDiscount(parseFloat(e.target.value) || 0)
-                      }
-                      startContent={<FaPercent />}
-                      size="sm"
+                      placeholder="1"
+                      value={row.quantity || 1}
+                      onChange={(e) => {
+                        const newQty = parseInt(e.target.value) || 1;
+                        if (
+                          selectedProduct &&
+                          newQty > selectedProduct.currentStock
+                        ) {
+                          toast.error(
+                            `Only ${selectedProduct.currentStock} items available in stock`
+                          );
+                          return;
+                        }
+                        
+                        // Update itemRows
+                        const updatedRows = [...itemRows];
+                        updatedRows[index] = {
+                          ...updatedRows[index],
+                          quantity: newQty,
+                        };
+                        setItemRows(updatedRows);
+                        
+                        // Also update the cart
+                        if (row.productId) {
+                          setCart(cart.map(item => 
+                            item._id === row.productId 
+                              ? { ...item, quantity: newQty }
+                              : item
+                          ));
+                        }
+                      }}
+                      max={selectedProduct?.currentStock || 9999}
+                      variant="bordered"
                     />
-                    <Input
-                      type="number"
-                      label="Direct Discount"
-                      value={directDiscount}
-                      onChange={(e) =>
-                        setDirectDiscount(parseFloat(e.target.value) || 0)
-                      }
-                      startContent={<FaCalculator />}
-                      size="sm"
-                    />
-                  </div>
+                    <div className="my-auto">
+                      <Input value={row.quantity * row.price} variant="bordered"
+                      readOnly 
+                      label='Total'
+                      placeholder='Total'
+                      labelPlacement='outside'
+                      ></Input>
+                    </div>
 
-                  {/* Bill Summary */}
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span>Subtotal:</span>
-                      <span> {subtotal}</span>
-                    </div>
-                    <div className="flex justify-between text-green-600">
-                      <span>Discount ({discount}%):</span>
-                      <span> {discountAmount}</span>
-                    </div>
-                    <div className="flex justify-between text-red-600">
-                      <span>Direct ({directDiscount}%):</span>
-                      <span> {directDiscountAmount}</span>
-                    </div>
-                    <Divider />
-                    <div className="flex justify-between font-bold text-lg">
-                      <span>Total:</span>
-                      <span> {total}</span>
-                    </div>
+                    <Button
+                      isIconOnly
+                      color="danger"
+                      variant="light"
+                      className="my-auto"
+                      onPress={() => handleRemoveItemRow(index)}
+                      isDisabled={itemRows.length === 1}
+                    >
+                      <FaTrash />
+                    </Button>
                   </div>
-
-                  <Button
-                    color="success"
-                    size="lg"
-                    className="w-full"
-                    onPress={handlePayment}
-                    startContent={<FaPrint />}
-                  >
-                    Process Payment
-                  </Button>
-                </div>
-              )}
+                );
+              })}
             </CardBody>
           </Card>
+          <div className="mt-4 space-y-3">
+            <Divider />
+
+            {/* Discount & Tax */}
+            <Card>
+              <CardBody>
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    label="Discount %"
+                    value={discount}
+                    onChange={(e) =>
+                      setDiscount(parseFloat(e.target.value) || 0)
+                    }
+                    startContent={<FaPercent />}
+                    size="sm"
+                  />
+                  <Input
+                    type="number"
+                    label="Direct Discount"
+                    value={directDiscount}
+                    onChange={(e) =>
+                      setDirectDiscount(parseFloat(e.target.value) || 0)
+                    }
+                    startContent={<FaCalculator />}
+                    size="sm"
+                  />
+                </div>
+
+                {/* Bill Summary */}
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span>Subtotal:</span>
+                    <span> {subtotal}</span>
+                  </div>
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount ({discount}%):</span>
+                    <span> {discountAmount}</span>
+                  </div>
+                  <div className="flex justify-between text-red-600">
+                    <span>Direct ({directDiscount}%):</span>
+                    <span> {directDiscountAmount}</span>
+                  </div>
+                  <Divider />
+                  <div className="flex justify-between font-bold text-lg">
+                    <span>Total:</span>
+                    <span> {total}</span>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+
+            <div className="flex justify-end">
+              <Button
+                color="success"
+                size="lg"
+                // className="w-full"
+                onPress={handlePayment}
+                startContent={<FaPrint />}
+              >
+                Process Payment
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Customer Selection Modal */}
-      <CustomerSelectionModal
-        isOpen={showCustomerModal}
-        onClose={() => setShowCustomerModal(false)}
-        customers={customers}
-        selectedCustomer={selectedCustomer}
-        setSelectedCustomer={setSelectedCustomer}
-      />
 
       {/* Payment Modal */}
       <PaymentModal

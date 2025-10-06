@@ -26,12 +26,13 @@ const AddPurchase = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [currencies, setCurrencies] = useState([]);
-  
+
   // Form state
   const [formData, setFormData] = useState({
     supplier: "",
     warehouse: "",
     currency: "PKR",
+    paymentMethod: "cash",
     items: [
       {
         product: "",
@@ -51,7 +52,7 @@ const AddPurchase = () => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        
+
         // Fetch products
         const productsRes = await userRequest.get('/products?limit=1000');
         setProducts(productsRes.data.data || []);
@@ -94,7 +95,7 @@ const AddPurchase = () => {
       ...updatedItems[index],
       [name]: value
     };
-    
+
     setFormData({
       ...formData,
       items: updatedItems
@@ -114,11 +115,11 @@ const AddPurchase = () => {
 
   // Remove item row
   const removeItemRow = (index) => {
-    if (formData.items.length === 1) return; 
-    
+    if (formData.items.length === 1) return;
+
     const updatedItems = [...formData.items];
     updatedItems.splice(index, 1);
-    
+
     setFormData({
       ...formData,
       items: updatedItems
@@ -128,7 +129,7 @@ const AddPurchase = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Prepare the data for submission
     const submissionData = {
       ...formData,
@@ -144,7 +145,7 @@ const AddPurchase = () => {
     try {
       setIsSubmitting(true);
       const response = await userRequest.post('/purchases', submissionData);
-      
+
       if (response.data.status === 'success') {
         toast.success('Purchase created successfully!');
         navigate('/purchases');
@@ -234,26 +235,52 @@ const AddPurchase = () => {
                 ))}
               </Select>
 
-             <Select
-                            label="Currency"
-                            name="currency"
-                            labelPlacement="outside"
-                            selectedKeys={formData.currency ? [formData.currency] : []}
-                            onChange={(e) => setFormData(prev => ({ ...prev, currency: e.target.value }))}
-                            placeholder="Select currency"
-                            isLoading={isLoading}
-                          >
-                            {currencies.map((currency) => (
-                              <SelectItem
-                                key={currency._id}
-                                value={currency._id}
-                                textValue={`${currency.name} ${currency.symbol}`}
-                              >
-                                {currency.code} - {currency.name}
-                              </SelectItem>
-                            ))}
-                          </Select>
-            
+              <Select
+                label="Currency"
+                name="currency"
+                labelPlacement="outside"
+                selectedKeys={formData.currency ? [formData.currency] : []}
+                onChange={(e) => setFormData(prev => ({ ...prev, currency: e.target.value }))}
+                placeholder="Select currency"
+                isLoading={isLoading}
+              >
+                {currencies.map((currency) => (
+                  <SelectItem
+                    key={currency._id}
+                    value={currency._id}
+                    textValue={`${currency.name} ${currency.symbol}`}
+                  >
+                    {currency.code} - {currency.name}
+                  </SelectItem>
+                ))}
+              </Select>
+
+              <Select
+                label="Payment Method"
+                placeholder="Select payment method"
+                labelPlacement="outside"
+                selectedKeys={[formData.paymentMethod]}
+                onChange={(e) =>
+                  setFormData((p) => ({ ...p, paymentMethod: e.target.value }))
+                }
+              >
+                <SelectItem key="cash" value="cash">
+                  Cash
+                </SelectItem>
+                <SelectItem key="bank" value="bank">
+                  Bank Transfer
+                </SelectItem>
+                <SelectItem key="credit" value="credit">
+                  Credit
+                </SelectItem>
+                <SelectItem key="check" value="check">
+                  check
+                </SelectItem>
+                <SelectItem key="online" value="online">
+                  online
+                </SelectItem>
+              </Select>
+
 
               <Input
                 type="date"

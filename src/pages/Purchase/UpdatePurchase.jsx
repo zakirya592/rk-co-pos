@@ -31,6 +31,8 @@ const UpdatePurchase = () => {
     supplier: "",
     warehouse: "",
     currency: "PKR",
+
+    paymentMethod: "cash",
     items: [
       {
         product: "",
@@ -56,26 +58,32 @@ const UpdatePurchase = () => {
         const purchaseData = purchaseRes.data.data;
         
         // Format the purchase data for the form
+        
         setFormData({
-          supplier: purchaseData.supplier?._id || '',
-          warehouse: purchaseData.warehouse?._id || '',
-          currency: purchaseData.currency?._id || '',
-          items: purchaseData.items?.map(item => ({
-            product: item.product?._id || '',
-            quantity: item.quantity || '',
-            purchaseRate: item.purchaseRate || '',
-            retailRate: item.retailRate || '',
-            wholesaleRate: item.wholesaleRate || ''
-          })) || [{
-            product: '',
-            quantity: '',
-            purchaseRate: '',
-            retailRate: '',
-            wholesaleRate: ''
-          }],
-          purchaseDate: purchaseData.purchaseDate ? new Date(purchaseData.purchaseDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-          invoiceNumber: purchaseData.invoiceNumber || '',
-          notes: purchaseData.notes || ''
+          supplier: purchaseData.supplier?._id || "",
+          warehouse: purchaseData.warehouse?._id || "",
+          currency: purchaseData.currency?._id || "",
+          paymentMethod: purchaseData.paymentMethod || "cash",
+          items: purchaseData.items?.map((item) => ({
+            product: item.product?._id || "",
+            quantity: item.quantity || "",
+            purchaseRate: item.purchaseRate || "",
+            retailRate: item.retailRate || "",
+            wholesaleRate: item.wholesaleRate || "",
+          })) || [
+            {
+              product: "",
+              quantity: "",
+              purchaseRate: "",
+              retailRate: "",
+              wholesaleRate: "",
+            },
+          ],
+          purchaseDate: purchaseData.purchaseDate
+            ? new Date(purchaseData.purchaseDate).toISOString().split("T")[0]
+            : new Date().toISOString().split("T")[0],
+          invoiceNumber: purchaseData.invoiceNumber || "",
+          notes: purchaseData.notes || "",
         });
 
         // Fetch related data
@@ -288,6 +296,31 @@ const UpdatePurchase = () => {
                   </SelectItem>
                 ))}
               </Select>
+               <Select
+                              label="Payment Method"
+                              placeholder="Select payment method"
+                              labelPlacement="outside"
+                              selectedKeys={[formData.paymentMethod]}
+                              onChange={(e) =>
+                                setFormData((p) => ({ ...p, paymentMethod: e.target.value }))
+                              }
+                            >
+                              <SelectItem key="cash" value="cash">
+                                Cash
+                              </SelectItem>
+                              <SelectItem key="bank" value="bank">
+                                Bank Transfer
+                              </SelectItem>
+                              <SelectItem key="credit" value="credit">
+                                Credit
+                              </SelectItem>
+                              <SelectItem key="check" value="check">
+                                check
+                              </SelectItem>
+                              <SelectItem key="online" value="online">
+                                online
+                              </SelectItem>
+                            </Select>
 
               <Input
                 type="date"

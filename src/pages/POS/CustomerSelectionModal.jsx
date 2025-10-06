@@ -1,58 +1,82 @@
-import React from "react";
-import { Modal, ModalContent, ModalHeader, ModalBody, Card, CardBody, Chip } from "@nextui-org/react";
+import React from 'react';
+import { Select, SelectItem, Chip } from "@nextui-org/react";
 
-const CustomerSelectionModal = ({
-  isOpen,
-  onClose,
-  customers,
+function CustomerSelectionModal({
+
+  customers = [],
   selectedCustomer,
   setSelectedCustomer,
-}) => (
-  <Modal
-    isOpen={isOpen}
-    onClose={onClose}
-    size="2xl"
-    scrollBehavior="inside"
-    backdrop="opaque"
-    isDismissable={false}
-    hideCloseButton={false}
-  >
-    <ModalContent>
-      <ModalHeader>Select Customer</ModalHeader>
-      <ModalBody>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-3">
-          {customers.map((customer) => (
-            <Card
-              key={customer._id}
-              isPressable
-              onPress={() => {
-                setSelectedCustomer(customer);
-                onClose();
-              }}
-              // className={
-              //   selectedCustomer?.id || "" === customer?.id || ""
-              //     ? "border-2 border-primary"
-              //     : ""
-              // }
+}) {
+  const handleSelectionChange = (e) => {
+    const selectedId = e.target.value;
+    const customer = customers.find(c => c._id === selectedId);
+    if (customer) {
+      setSelectedCustomer(customer);
+      // if (onClose) onClose();
+    }
+  };
+  
+
+  return (
+    <Select
+      label="Select Customer"
+      placeholder="Search customer..."
+      selectedKeys={selectedCustomer ? [selectedCustomer] : []}
+      onChange={handleSelectionChange}
+      className="w-full"
+      size="sm"
+      variant="bordered"
+      renderValue={(items) => {
+        if (!items[0]?.value) return null;
+        const customer = customers.find((c) => c._id === items[0].value);
+        if (!customer) return null;
+
+        return (
+          <div className="flex items-center gap-2">
+            <span>{customer.name}</span>
+            <Chip
+              size="sm"
+              color={
+                customer.customerType === "wholesale" ? "secondary" : "primary"
+              }
+              variant="flat"
             >
-              <CardBody className="p-3">
-                <div className="font-semibold">{customer.name}</div>
-                <div className="text-sm text-gray-600 my-2">{customer.phoneNumber}</div>
-                <Chip
-                  size="sm"
-                  color={
-                    customer.customerType === "wholesale" ? "secondary" : "primary"
-                  }
-                >
-                  {customer.customerType}
-                </Chip>
-              </CardBody>
-            </Card>
-          ))}
-        </div>
-      </ModalBody>
-    </ModalContent>
-  </Modal>
-);
+              {customer.customerType}
+            </Chip>
+          </div>
+        );
+      }}
+    >
+      {customers.map((customer) => (
+        <SelectItem
+          key={customer._id}
+          value={customer._id}
+          textValue={`${customer.name} (${customer.phoneNumber || "No phone"})`}
+        >
+          <div className="flex flex-col">
+            <span className="font-medium">{customer.name}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">
+                {customer.phoneNumber || "No phone"}
+              </span>
+              <Chip
+                size="sm"
+                color={
+                  customer.customerType === "wholesale"
+                    ? "secondary"
+                    : "primary"
+                }
+                variant="flat"
+                className="ml-1"
+              >
+                {customer.customerType}
+              </Chip>
+            </div>
+          </div>
+        </SelectItem>
+      ))}
+    </Select>
+  );
+}
 
 export default CustomerSelectionModal;
