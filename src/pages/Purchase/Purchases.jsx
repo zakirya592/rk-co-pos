@@ -55,6 +55,25 @@ const Purchases = () => {
   const totalPurchases = data?.total || 0;
   const totalPages = data?.totalPages || 1;
 
+  // Calculate total payments by payment method
+  const paymentMethodTotals = useMemo(() => {
+    const totals = {};
+    purchases.forEach(purchase => {
+      const method = purchase.paymentMethod || 'unknown';
+      const amount = purchase.totalAmount || 0;
+      totals[method] = (totals[method] || 0) + amount;
+    });
+    return totals;
+  }, [purchases]);
+  
+  // Format payment method for display
+  const formatPaymentMethod = (method) => {
+    if (!method) return 'Unknown';
+    return method.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDeletePurchase = (id) => {
@@ -170,15 +189,38 @@ const Purchases = () => {
 
   return (
     <div className="p-4">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold">Purchases</h1>
-        <Button
-          color="primary"
-          startContent={<FaPlus />}
-          onPress={() => navigate("/purchases/new")}
-        >
-          Add New Purchase
-        </Button>
+      <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
+        <h1 className="text-2xl font-bold mb-4 my-auto">Purchases</h1>
+        <div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Object.entries(paymentMethodTotals).map(([method, total]) => (
+              <Card key={method} className="border border-gray-200">
+                <CardBody className="p-4">
+                  <p className="text-sm text-gray-500">
+                    {formatPaymentMethod(method)}
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {purchases[0]?.currency?.symbol || "$"}
+                    {total?.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </p>
+                </CardBody>
+              </Card>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-start my-auto">
+          <Button
+            color="primary"
+            startContent={<FaPlus />}
+            onPress={() => navigate("/purchases/new")}
+            className="mt-6"
+          >
+            Add New Purchase
+          </Button>
+        </div>
       </div>
 
       <div className="">
@@ -194,6 +236,7 @@ const Purchases = () => {
             <TableColumn>WAREHOUSE</TableColumn>
             <TableColumn>ITEMS</TableColumn>
             <TableColumn>TOTAL AMOUNT</TableColumn>
+            <TableColumn>PAYMENT METHOD</TableColumn>
             <TableColumn>STATUS</TableColumn>
             <TableColumn>ACTIONS</TableColumn>
           </TableHeader>
@@ -222,6 +265,13 @@ const Purchases = () => {
                 <TableCell>
                   {purchase.currency?.symbol || "$"}
                   {purchase.totalAmount?.toLocaleString()}
+                </TableCell>
+                <TableCell>
+                  <Chip color="primary" variant="flat">
+                    {purchase.paymentMethod
+                      ? purchase.paymentMethod.replace(/_/g, " ").toUpperCase()
+                      : "N/A"}
+                  </Chip>
                 </TableCell>
                 <TableCell>
                   <Chip color={getStatusColor(purchase.status)} variant="flat">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'
 import {
   Card,
   CardBody,
@@ -11,96 +11,96 @@ import {
   Chip,
   Divider,
   Autocomplete,
-  AutocompleteItem,
-} from "@nextui-org/react";
-import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaPlus, FaTrash } from 'react-icons/fa';
-import userRequest from '../../utils/userRequest';
-import toast from 'react-hot-toast';
+  AutocompleteItem
+} from '@nextui-org/react'
+import { useNavigate } from 'react-router-dom'
+import { FaArrowLeft, FaPlus, FaTrash } from 'react-icons/fa'
+import userRequest from '../../utils/userRequest'
+import toast from 'react-hot-toast'
 
 const AddPurchase = () => {
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [products, setProducts] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
-  const [warehouses, setWarehouses] = useState([]);
-  const [currencies, setCurrencies] = useState([]);
-
+  const navigate = useNavigate()
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [products, setProducts] = useState([])
+  const [suppliers, setSuppliers] = useState([])
+  const [warehouses, setWarehouses] = useState([])
+  const [currencies, setCurrencies] = useState([])
+  const [amountpay, setamountpay] = useState('');
   // Form state
   const [formData, setFormData] = useState({
-    supplier: "",
-    warehouse: "",
-    currency: "PKR",
-    paymentMethod: "cash",
+    supplier: '',
+    warehouse: '',
+    currency: 'PKR',
+    paymentMethod: 'cash',
     items: [
       {
-        product: "",
-        quantity: "",
-        purchaseRate: "",
-        retailRate: "",
-        wholesaleRate: "",
-      },
+        product: '',
+        quantity: '',
+        purchaseRate: '',
+        retailRate: '',
+        wholesaleRate: ''
+      }
     ],
-    purchaseDate: new Date().toISOString().split("T")[0],
-    invoiceNumber: "",
-    notes: "",
-  });
+    purchaseDate: new Date().toISOString().split('T')[0],
+    invoiceNumber: '',
+    notes: ''
+  })
 
   // Fetch all necessary data
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setIsLoading(true);
+        setIsLoading(true)
 
         // Fetch products
-        const productsRes = await userRequest.get('/products?limit=1000');
-        setProducts(productsRes.data.data || []);
+        const productsRes = await userRequest.get('/products?limit=1000')
+        setProducts(productsRes.data.data || [])
 
         // Fetch suppliers
-        const suppliersRes = await userRequest.get("/suppliers");
-        setSuppliers(suppliersRes.data || []);
+        const suppliersRes = await userRequest.get('/suppliers')
+        setSuppliers(suppliersRes.data || [])
 
         // Fetch warehouses
-        const warehousesRes = await userRequest.get('/warehouses');
-        setWarehouses(warehousesRes.data.data || []);
+        const warehousesRes = await userRequest.get('/warehouses')
+        setWarehouses(warehousesRes.data.data || [])
 
         // Fetch currencies
-        const currenciesRes = await userRequest.get("/currencies");
-        setCurrencies(currenciesRes.data.data || []);
+        const currenciesRes = await userRequest.get('/currencies')
+        setCurrencies(currenciesRes.data.data || [])
       } catch (error) {
-        toast.error('Failed to load required data');
+        toast.error('Failed to load required data')
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
-    fetchData();
-  }, []);
+    fetchData()
+  }, [])
 
   // Handle input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
+  const handleInputChange = e => {
+    const { name, value } = e.target
     setFormData({
       ...formData,
       [name]: value
-    });
-  };
+    })
+  }
 
   // Handle item changes
   const handleItemChange = (index, e) => {
-    const { name, value } = e.target;
-    const updatedItems = [...formData.items];
+    const { name, value } = e.target
+    const updatedItems = [...formData.items]
     updatedItems[index] = {
       ...updatedItems[index],
       [name]: value
-    };
+    }
 
     setFormData({
       ...formData,
       items: updatedItems
-    });
-  };
+    })
+  }
 
   // Add new item row
   const addItemRow = () => {
@@ -108,28 +108,60 @@ const AddPurchase = () => {
       ...formData,
       items: [
         ...formData.items,
-        { product: '', quantity: '', purchaseRate: '', retailRate: '', wholesaleRate: '' }
+        {
+          product: '',
+          quantity: '',
+          purchaseRate: '',
+          retailRate: '',
+          wholesaleRate: ''
+        }
       ]
-    });
-  };
+    })
+  }
 
   // Remove item row
-  const removeItemRow = (index) => {
-    if (formData.items.length === 1) return;
+  const removeItemRow = index => {
+    if (formData.items.length === 1) return
 
-    const updatedItems = [...formData.items];
-    updatedItems.splice(index, 1);
+    const updatedItems = [...formData.items]
+    updatedItems.splice(index, 1)
 
     setFormData({
       ...formData,
       items: updatedItems
-    });
+    })
+  }
+
+  // Calculate remaining balance
+  const calculateRemainingBalance = () => {
+    const subtotal = formData.items.reduce((sum, item) => {
+      const quantity = parseFloat(item.quantity) || 0;
+      const rate = parseFloat(item.purchaseRate) || 0;
+      return sum + (quantity * rate);
+    }, 0);
+    return subtotal - parseFloat(amountpay || 0);
+  };
+
+  // Map payment method to supplier-payments API format
+  const mapPaymentMethod = (method) => {
+    const methodMap = {
+      'cash': 'cash',
+      'bank': 'bank_transfer',
+      'credit': 'credit_card',
+      'check': 'bank_transfer',
+      'online': 'online_payment',
+      'mobile': 'mobile_payment'
+    };
+    return methodMap[method] || 'cash';
   };
 
   // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async e => {
+    e.preventDefault()
 
+    // Calculate remaining balance
+    const remainingBalance = calculateRemainingBalance();
+    
     // Prepare the data for submission
     const submissionData = {
       ...formData,
@@ -140,32 +172,56 @@ const AddPurchase = () => {
         retailRate: Number(item.retailRate),
         wholesaleRate: Number(item.wholesaleRate)
       }))
-    };
+    }
 
     try {
-      setIsSubmitting(true);
-      const response = await userRequest.post('/purchases', submissionData);
+      setIsSubmitting(true)
+      
+      // First, create the purchase
+      const purchaseResponse = await userRequest.post('/purchases', submissionData)
 
-      if (response.data.status === 'success') {
-        toast.success('Purchase created successfully!');
-        navigate('/purchases');
+      if (purchaseResponse.data.status === 'success') {
+        // Prepare supplier payment data
+        const paymentData = {
+          supplier: formData.supplier,
+          amount: parseFloat(amountpay || 0),
+          paymentMethod: mapPaymentMethod(formData.paymentMethod),
+          status: remainingBalance <= 0 ? "completed" : "partial",
+          notes:
+            formData.notes ||
+            `Payment for purchase #${purchaseResponse.data.data._id}`,
+          currency: formData.currency,
+          products: formData.items.map((item) => ({
+            product: item.product,
+            quantity: Number(item.quantity),
+            amount: Number(item.purchaseRate), //Number(item.quantity) *
+          })),
+        };
+
+        // Make the supplier payment if amount is greater than 0
+        if (paymentData.amount > 0) {
+          await userRequest.post('/supplier-payments', paymentData)
+        }
+
+        toast.success('Purchase and payment processed successfully!')
+        navigate('/purchases')
       } else {
-        throw new Error(response.data.message || 'Failed to create purchase');
+        throw new Error(purchaseResponse.data.message || 'Failed to create purchase')
       }
     } catch (error) {
-      console.error('Error creating purchase:', error);
-      toast.error(error.response?.data?.message || 'Failed to create purchase');
+      console.error('Error processing purchase:', error)
+      toast.error(error.response?.data?.message || 'Failed to process purchase')
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Spinner size="lg" />
+      <div className='flex justify-center items-center h-64'>
+        <Spinner size='lg' />
       </div>
-    );
+    )
   }
 
   return (
@@ -240,7 +296,9 @@ const AddPurchase = () => {
                 name="currency"
                 labelPlacement="outside"
                 selectedKeys={formData.currency ? [formData.currency] : []}
-                onChange={(e) => setFormData(prev => ({ ...prev, currency: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, currency: e.target.value }))
+                }
                 placeholder="Select currency"
                 isLoading={isLoading}
               >
@@ -280,7 +338,6 @@ const AddPurchase = () => {
                   online
                 </SelectItem>
               </Select>
-
 
               <Input
                 type="date"
@@ -404,6 +461,73 @@ const AddPurchase = () => {
 
             <Divider className="my-6" />
 
+            {/* Summary Section */}
+            <div className="flex justify-between gap-3">
+              <Input
+                type="number"
+                label="Amount"
+                placeholder="Amount you pay"
+                name="amount"
+                labelPlacement="outside"
+                value={amountpay}
+                onChange={(e) => setamountpay(e.target.value)}
+                isRequired
+              />
+            <div className="flex flex-col gap-4 mb-6 w-full">
+              {/* Subtotal */}
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Subtotal:</span>
+                <span className="font-semibold">
+                  {formData.items
+                    .reduce((sum, item) => {
+                      const quantity = parseFloat(item.quantity) || 0;
+                      const rate = parseFloat(item.purchaseRate) || 0;
+                      return sum + quantity * rate;
+                    }, 0)
+                    .toFixed(2)}
+                </span>
+              </div>
+
+              {/* Paid Amount */}
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Paid Amount:</span>
+                <span className="font-semibold">
+                  {parseFloat(amountpay || 0).toFixed(2)}
+                </span>
+              </div>
+
+              {/* Total */}
+              <div className="flex justify-between items-center border-t pt-2 mt-2">
+                <span className="text-gray-800 font-semibold">
+                  Remaining Balance:
+                </span>
+                <span
+                  className={`text-lg font-bold ${
+                    formData.items.reduce((sum, item) => {
+                      const quantity = parseFloat(item.quantity) || 0;
+                      const rate = parseFloat(item.purchaseRate) || 0;
+                      return sum + quantity * rate;
+                    }, 0) -
+                      parseFloat(amountpay || 0) >
+                    0
+                      ? "text-red-600"
+                      : "text-green-600"
+                  }`}
+                >
+                  {(
+                    formData.items.reduce((sum, item) => {
+                      const quantity = parseFloat(item.quantity) || 0;
+                      const rate = parseFloat(item.purchaseRate) || 0;
+                      return sum + quantity * rate;
+                    }, 0) - parseFloat(amountpay || 0)
+                  ).toFixed(2)}
+                </span>
+              </div>
+            </div>
+            </div>
+
+            <Divider className="my-6" />
+
             <div className="mb-6">
               <Textarea
                 label="Notes"
@@ -420,6 +544,6 @@ const AddPurchase = () => {
       </form>
     </div>
   );
-};
+}
 
-export default AddPurchase;
+export default AddPurchase
