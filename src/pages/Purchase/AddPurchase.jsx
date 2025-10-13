@@ -191,12 +191,12 @@ const AddPurchase = () => {
             formData.notes ||
             `Payment for purchase #${purchaseResponse.data.data._id}`,
           currency: formData.currency,
-          products: formData.items.map((item) => ({
-            product: item.product,
-            quantity: Number(item.quantity),
-            amount: Number(item.purchaseRate), //Number(item.quantity) *
-          })),
         };
+        // products: formData.items.map((item) => ({
+        //   product: item.product,
+        //   quantity: Number(item.quantity),
+        //   amount: Number(item.purchaseRate),
+        // })),
 
         // Make the supplier payment if amount is greater than 0
         if (paymentData.amount > 0) {

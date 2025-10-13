@@ -30,7 +30,7 @@ function SuppliersTransactionshistory() {
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
     const fetchSupplierPayments = async () => {
-        const response = await userRequest.get(`supplier-payments/supplier/${id}`);
+        const response = await userRequest.get(`supplier-journey/${id}/payments`);
         return response.data || [];
     };
 
@@ -40,12 +40,16 @@ function SuppliersTransactionshistory() {
     );
 
     const payments = supplierPayments?.payments || [];
+    console.log(supplierPayments, "payments");
+    
   const calculateTotal = (products) => {
     if (!products || !Array.isArray(products)) return 0;
     return products.reduce((total, item) => total + (parseFloat(item.amount) || 0), 0);
   };
 
   const viewReceipt = (transaction) => {
+    console.log(transaction);
+    
     setSelectedTransaction(transaction);
     setShowReceiptModal(true);
   };
@@ -105,11 +109,10 @@ function SuppliersTransactionshistory() {
                 <TableColumn>DATE</TableColumn>
                 <TableColumn>PAYMENT METHOD</TableColumn>
                 <TableColumn>AMOUNT</TableColumn>
-                <TableColumn>ITEMS</TableColumn>
+                <TableColumn>Remaining Balance</TableColumn>
                 <TableColumn>STATUS</TableColumn>
                 <TableColumn>USER</TableColumn>
-                <TableColumn>NOTES</TableColumn>
-                <TableColumn>ACTION</TableColumn>
+                {/* <TableColumn>ACTION</TableColumn> */}
               </TableHeader>
               <TableBody
                 isLoading={isPaymentsLoading}
@@ -124,55 +127,46 @@ function SuppliersTransactionshistory() {
                   </div>
                 }
               >
-                {payments.map((payment, index) => (
+                {supplierPayments.paymentEntries.map((payment, index) => (
                   <TableRow key={payment._id}>
                     <TableCell>{index + 1}</TableCell>
-                    <TableCell>{payment.transactionId}</TableCell>
                     <TableCell>
-                      {new Date(payment?.paymentDate).toLocaleDateString()}
+                      {payment?.payment?.transactionId || ""}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(
+                        payment?.payment?.date || ""
+                      ).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="capitalize">
-                      {payment.paymentMethod}
+                      {payment?.payment?.method || ""}
                     </TableCell>
                     <TableCell>
-                      {payment.currency?.symbol || ""}
-                      {payment.amount.toLocaleString()}
+                      {payment.paidAmount.toLocaleString() || ""}
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm">
-                        {payment?.products?.length} item(s)
-                        <div className="text-xs text-gray-500">
-                          {payment?.products?.[0]?.product?.name || ""}
-                          {payment?.products?.length > 1 &&
-                            ` +${payment?.products?.length - 1} more`}
-                        </div>
-                      </div>
+                      {payment.remainingBalance.toLocaleString() || ""}
                     </TableCell>
                     <TableCell>
                       <Chip
                         size="sm"
                         color={
-                          payment.status === "partial"
+                          payment.payment.status === "partial"
                             ? "warning"
-                            : payment.status === "completed"
+                            : payment.payment.status === "completed"
                             ? "success"
                             : "default"
                         }
                         variant="flat"
                         className="capitalize"
                       >
-                        {payment.status}
+                        {payment?.payment?.status || ""}
                       </Chip>
                     </TableCell>
                     <TableCell>{payment.user?.name || "—"}</TableCell>
-                    <TableCell
-                      className="max-w-[200px] truncate"
-                      title={payment.notes}
-                    >
-                      {payment.notes || "—"}
-                    </TableCell>
+
                     {/* Actions */}
-                    <TableCell>
+                    {/* <TableCell>
                       <Tooltip content="View Receipt">
                         <Button
                           isIconOnly
@@ -184,7 +178,7 @@ function SuppliersTransactionshistory() {
                           <FaPrint />
                         </Button>
                       </Tooltip>
-                    </TableCell>
+                    </TableCell> */}
                   </TableRow>
                 ))}
               </TableBody>
@@ -250,29 +244,7 @@ function SuppliersTransactionshistory() {
                   {/* Items */}
                   <div>
                     <h4 className="font-semibold mb-2">Items:</h4>
-                    <Table aria-label="Receipt items" removeWrapper>
-                      <TableHeader>
-                        <TableColumn>ITEM</TableColumn>
-                        <TableColumn>QTY</TableColumn>
-                        <TableColumn>PRICE</TableColumn>
-                        {/* <TableColumn>TOTAL</TableColumn> */}
-                      </TableHeader>
-                      <TableBody>
-                        {selectedTransaction.products.map((item, index) => (
-                          <TableRow key={index}>
-                            <TableCell>{item.product?.name || "N/A"}</TableCell>
-                            <TableCell>{item?.quantity || "N/A"}</TableCell>
-                            <TableCell>
-                              {selectedTransaction?.currency?.symbol || "Rs"}{" "}
-                              {item?.amount || "N/A"}
-                            </TableCell>
-                            {/* <TableCell>
-                                    {item?.quantity * item?.price || "N/A"}
-                                  </TableCell> */}
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                   
                   </div>
                   {/* Totals */}
                   <div className="border-t pt-4">

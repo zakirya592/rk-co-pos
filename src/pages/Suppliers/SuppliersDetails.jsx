@@ -22,6 +22,7 @@ import {
   ModalFooter,
   Tooltip,
 } from "@nextui-org/react";
+import { MdOutlineAccountBalance } from "react-icons/md";
 import * as XLSX from "xlsx";
 import {
   FaUser,
@@ -103,7 +104,7 @@ const SuppliersDetails = () => {
     try {
       const response = await userRequest.get(`/supplier-journey/${id}`);
       const datas = response?.data || [];
-      console.log(datas?.products, "datas");
+      console.log(datas, "datas");
       
       setPurchaseHistory(datas)
     } catch (error) {
@@ -482,10 +483,10 @@ const SuppliersDetails = () => {
               <div className="flex flex-col items-center">
                 <FaShoppingBag className="text-3xl text-yellow-500 mb-1" />
                 <p className="text-lg font-bold">
-                  {PurchaseHistory?.summary?.soldQuantity?.toLocaleString() ||
+                  {PurchaseHistory?.summary?.paidAmount?.toLocaleString() ||
                     "0"}
                 </p>
-                <p className="text-sm text-gray-600">Sold Quantity</p>
+                <p className="text-sm text-gray-600">Paid Amount</p>
               </div>
             </CardBody>
           </Card>
@@ -495,12 +496,12 @@ const SuppliersDetails = () => {
           <Card>
             <CardBody>
               <div className="flex flex-col items-center">
-                <FaMoneyBillWave className="text-3xl text-red-500 mb-1" />
+                <MdOutlineAccountBalance className="text-3xl text-red-500 mb-1" />
                 <p className="text-lg font-bold">
-                  {PurchaseHistory?.summary?.soldAmount?.toLocaleString() ||
+                  {PurchaseHistory?.summary?.remainingBalance?.toLocaleString() ||
                     "0"}
                 </p>
-                <p className="text-sm text-gray-600">Sold Amount</p>
+                <p className="text-sm text-gray-600">Remaining Balance</p>
               </div>
             </CardBody>
           </Card>
@@ -598,20 +599,7 @@ const SuppliersDetails = () => {
                     </TableCell>
                     <TableCell>{transaction?.soldValue || "0"}</TableCell>
                     <TableCell>{transaction?.packingUnit || ""}</TableCell>
-                    {/* Actions */}
-                    {/* <TableCell>
-                      <Tooltip content="View Receipt">
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          variant="light"
-                          color="primary"
-                          onPress={() => viewReceipt(transaction)}
-                        >
-                          <FaPrint />
-                        </Button>
-                      </Tooltip>
-                    </TableCell> */}
+                   
                   </TableRow>
                 );
               })}
@@ -724,8 +712,11 @@ const SuppliersDetails = () => {
                   <p>Thank you for your business!</p>
                   <p>Visit us again soon</p>
                 </div>
-                 <div className="text-sm text-gray-600 border-t pt-4">
-                  <p>Computer software developed by E&Z Tech Solution (PH: +923499386512 OR +923015199394)</p>
+                <div className="text-sm text-gray-600 border-t pt-4">
+                  <p>
+                    Computer software developed by E&Z Tech Solution (PH:
+                    +923499386512 OR +923015199394)
+                  </p>
                 </div>
               </div>
             )}
