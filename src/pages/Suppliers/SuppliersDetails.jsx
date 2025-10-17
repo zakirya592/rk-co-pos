@@ -115,13 +115,13 @@ const SuppliersDetails = () => {
   const fetchCustomerTransactionsss = async () => {
     try {
       const response = await userRequest.get(
-        `/payments/customer/${id}/transactions`
+        `/supplier-journey/${id}/payments`
       );
-      const datas = response?.data?.data || "";
-      console.log(datas.financialSummary, "datas");
-      settotalRevenuetop(datas.financialSummary);
+      const datas = response?.data || {};
+      console.log(datas, "supplier payments data");
+      settotalRevenuetop(datas);
     } catch (error) {
-      console.error("Error fetching suppliers history:", error);
+      console.error("Error fetching suppliers payment history:", error);
     }
   };
 
@@ -508,6 +508,51 @@ const SuppliersDetails = () => {
         </div>
       </div>
 
+      {/* Payment Summary Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div>
+          <Card>
+            <CardBody>
+              <div className="flex flex-col items-center">
+                <FaMoneyBillWave className="text-3xl text-green-600 mb-1" />
+                <p className="text-lg font-bold">
+                  {totalRevenuetop?.totalPayments?.toLocaleString() || "0"}
+                </p>
+                <p className="text-sm text-gray-600">Total Payments</p>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+
+        <div>
+          <Card>
+            <CardBody>
+              <div className="flex flex-col items-center">
+                <FaBalanceScale className="text-3xl text-blue-600 mb-1" />
+                <p className="text-lg font-bold">
+                  {totalRevenuetop?.paymentsByStatus?.completed?.toLocaleString() || "0"}
+                </p>
+                <p className="text-sm text-gray-600">Completed Payments</p>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+
+        <div>
+          <Card>
+            <CardBody>
+              <div className="flex flex-col items-center">
+                <FaClock className="text-3xl text-orange-600 mb-1" />
+                <p className="text-lg font-bold">
+                  {(totalRevenuetop?.paymentsByStatus?.pending || 0) + (totalRevenuetop?.paymentsByStatus?.partial || 0)}
+                </p>
+                <p className="text-sm text-gray-600">Pending/Partial Payments</p>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+      </div>
+
       {/* Transaction History */}
       <Card>
         <CardHeader>
@@ -605,6 +650,51 @@ const SuppliersDetails = () => {
               })}
             </TableBody>
           </Table>
+        </CardBody>
+      </Card>
+
+      {/* Payment Summary Card */}
+      <Card className="mb-6">
+        <CardHeader>
+          <h3 className="text-lg font-bold">Payment Summary</h3>
+        </CardHeader>
+        <CardBody>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Total Payments:</span>
+                <span className="font-semibold">
+                  {totalRevenuetop?.totalPayments?.toLocaleString() || "0"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Completed Payments:</span>
+                <span className="font-semibold text-green-600">
+                  {totalRevenuetop?.paymentsByStatus?.completed?.toLocaleString() || "0"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Pending Payments:</span>
+                <span className="font-semibold text-orange-600">
+                  {totalRevenuetop?.paymentsByStatus?.pending?.toLocaleString() || "0"}
+                </span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Partial Payments:</span>
+                <span className="font-semibold text-yellow-600">
+                  {totalRevenuetop?.paymentsByStatus?.partial?.toLocaleString() || "0"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Total Payment Entries:</span>
+                <span className="font-semibold">
+                  {totalRevenuetop?.paymentEntries?.length?.toLocaleString() || "0"}
+                </span>
+              </div>
+            </div>
+          </div>
         </CardBody>
       </Card>
 
