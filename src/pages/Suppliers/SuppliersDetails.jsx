@@ -433,7 +433,7 @@ const SuppliersDetails = () => {
       </Card>
 
       {/* Summary Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-4">
         <div>
           <Card>
             <CardBody>
@@ -487,6 +487,21 @@ const SuppliersDetails = () => {
                     "0"}
                 </p>
                 <p className="text-sm text-gray-600">Paid Amount</p>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+
+        <div>
+          <Card>
+            <CardBody>
+              <div className="flex flex-col items-center">
+                <FaMoneyBillWave className="text-3xl text-teal-600 mb-1" />
+                <p className="text-lg font-bold">
+                  {PurchaseHistory?.summary?.advancePayment?.toLocaleString() ||
+                    "0"}
+                </p>
+                <p className="text-sm text-gray-600">Advance Payment</p>
               </div>
             </CardBody>
           </Card>
