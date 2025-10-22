@@ -44,7 +44,7 @@ function SuppliersTransactionshistory() {
                 <TableColumn>TRANSACTION ID</TableColumn>
                 <TableColumn>DATE</TableColumn>
                 <TableColumn>PAYMENT METHOD</TableColumn>
-                <TableColumn>PAID AMOUNT</TableColumn>
+                <TableColumn>AMOUNT</TableColumn>
                 <TableColumn>ADVANCE PAYMENT</TableColumn>
                 <TableColumn>REMAINING BALANCE</TableColumn>
                 <TableColumn>STATUS</TableColumn>
@@ -84,7 +84,7 @@ function SuppliersTransactionshistory() {
                     </TableCell>
                     <TableCell>
                       <span className="font-semibold text-green-600">
-                        {payment?.paidAmount?.toLocaleString() || "0"}
+                        {payment?.payment?.amount?.toLocaleString() || "0"}
                       </span>
                     </TableCell>
                     <TableCell>
