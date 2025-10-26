@@ -355,18 +355,8 @@ const Products = () => {
           <TableColumn>CURRENCE</TableColumn>
           <TableColumn>WAREHOUSE</TableColumn>
           <TableColumn>PURCHASE RATE</TableColumn>
-          <TableColumn>SALE RATE</TableColumn>
           <TableColumn>WHOLESALE RATE</TableColumn>
           <TableColumn>RETAIL RATE</TableColumn>
-          <TableColumn>SIZE</TableColumn>
-          <TableColumn>COLOR</TableColumn>
-          <TableColumn>BARCODE</TableColumn>
-          <TableColumn>AVAILABLE QTY</TableColumn>
-          <TableColumn>SOLD OUT QTY</TableColumn>
-          <TableColumn>QUANTITY UNIT</TableColumn>
-          <TableColumn>PACKAGING UNIT</TableColumn>
-          <TableColumn>POCHUES</TableColumn>
-          <TableColumn>STOCK</TableColumn>
           <TableColumn>STATUS</TableColumn>
           <TableColumn>ACTIONS</TableColumn>
         </TableHeader>
@@ -411,26 +401,8 @@ const Products = () => {
               <TableCell>{product?.currency?.symbol || ""}</TableCell>
               <TableCell>{product?.warehouse?.name || "0"}</TableCell>
               <TableCell>{product?.purchaseRate || "0"}</TableCell>
-              <TableCell>{product?.saleRate || "0"}</TableCell>
               <TableCell>{product?.wholesaleRate || "0"}</TableCell>
               <TableCell>{product?.retailRate || "0"}</TableCell>
-              <TableCell>{product?.size || "-"}</TableCell>
-              <TableCell>{product?.color || "-"}</TableCell>
-              <TableCell>{product?.barcode || "-"}</TableCell>
-              <TableCell>{product?.pouchesOrPieces || "0"}</TableCell>
-              <TableCell>{product?.soldOutQuantity || "0"}</TableCell>
-              <TableCell>{product?.quantityUnit?.name || "-"}</TableCell>
-              <TableCell>{product?.packingUnit?.name || "-"}</TableCell>
-              <TableCell>{product?.pochues?.name || "-"}</TableCell>
-
-              <TableCell>
-                <Chip
-                  size="sm"
-                  color={getStockColor(product?.countInStock || "")}
-                >
-                  {product?.countInStock || "0"} units
-                </Chip>
-              </TableCell>
 
               <TableCell>
                 <span
