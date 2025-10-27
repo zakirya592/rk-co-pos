@@ -118,6 +118,7 @@ const WarehouseDetails = () => {
           <TableColumn>Currency</TableColumn>
           <TableColumn>Purchase Rate</TableColumn>
           <TableColumn>Stock</TableColumn>
+          <TableColumn>Sold Out Quantity</TableColumn>
           <TableColumn>Total Amount</TableColumn>
         </TableHeader>
         <TableBody
@@ -151,6 +152,7 @@ const WarehouseDetails = () => {
               </TableCell>
               <TableCell>{product.purchaseRate}</TableCell>
               <TableCell>{product.currentStock}</TableCell>
+              <TableCell>{product.soldOutQuantity || 0}</TableCell>
               <TableCell>
                 {product.currency?.symbol} {Math.round(product.purchaseRate * product.currentStock)}
               </TableCell>
