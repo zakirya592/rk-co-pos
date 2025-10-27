@@ -14,13 +14,7 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Pagination,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  useDisclosure
+  Pagination
 } from '@nextui-org/react';
 import { FaPlus, FaEye, FaEdit, FaCalendarAlt, FaFilter, FaSearch } from 'react-icons/fa';
 import { useQuery } from "react-query";
@@ -30,8 +24,6 @@ import { useNavigate } from 'react-router-dom';
 
 const Sales = () => {
   const navigate = useNavigate();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedSale, setSelectedSale] = useState(null);
 
   // State for pagination and filtering
   const [currentPage, setCurrentPage] = useState(1);
@@ -83,10 +75,9 @@ const Sales = () => {
     setCurrentPage(1);
   };
 
-  // View sale details
+  // Navigate to sale details page
   const viewSaleDetails = (sale) => {
-    setSelectedSale(sale);
-    onOpen();
+    navigate(`/sales/${sale._id}`);
   };
 
   // Navigate to POS for new sale
@@ -111,6 +102,17 @@ const Sales = () => {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
+  };
+
+  // Get product name safely
+  const getProductName = (product) => {
+    if (typeof product === 'string') {
+      return product;
+    }
+    if (product && typeof product === 'object') {
+      return product.name || product._id || 'Unknown Product';
+    }
+    return 'N/A';
   };
 
   // Get payment status color
@@ -249,7 +251,7 @@ const Sales = () => {
                           <div className="text-sm text-gray-500">
                             {sale.items?.map((item, index) => (
                               <div key={index}>
-                                Qty: {item.quantity} × {formatCurrency(item.price)}
+                                {getProductName(item.product)} - Qty: {item.quantity} × {formatCurrency(item.price)}
                               </div>
                             ))}
                           </div>
@@ -322,107 +324,6 @@ const Sales = () => {
         </CardBody>
       </Card>
 
-      {/* Sale Details Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="2xl">
-        <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">
-            Sale Details - {selectedSale?.invoiceNumber}
-          </ModalHeader>
-          <ModalBody>
-            {selectedSale && (
-              <div className="space-y-4">
-                {/* Customer Info */}
-                <div>
-                  <h3 className="font-semibold mb-2">Customer Information</h3>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p><strong>Name:</strong> {selectedSale.customer?.name || 'N/A'}</p>
-                    <p><strong>Email:</strong> {selectedSale.customer?.email || 'N/A'}</p>
-                    <p><strong>Phone:</strong> {selectedSale.customer?.phoneNumber || 'N/A'}</p>
-                  </div>
-                </div>
-
-                {/* Items */}
-                <div>
-                  <h3 className="font-semibold mb-2">Items</h3>
-                  <div className="space-y-2">
-                    {selectedSale.items?.map((item, index) => (
-                      <div key={index} className="bg-gray-50 p-3 rounded-lg">
-                        <div className="flex justify-between">
-                          <span>Product ID: {item.product || 'N/A'}</span>
-                          <span>Qty: {item.quantity}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Price: {formatCurrency(item.price)}</span>
-                          <span>Total: {formatCurrency(item.total)}</span>
-                        </div>
-                        {item.discount > 0 && (
-                          <div className="text-green-600">
-                            Discount: {formatCurrency(item.discount)}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Summary */}
-                <div>
-                  <h3 className="font-semibold mb-2">Summary</h3>
-                  <div className="bg-gray-50 p-3 rounded-lg space-y-1">
-                    <div className="flex justify-between">
-                      <span>Subtotal:</span>
-                      <span>{formatCurrency(selectedSale.totalAmount)}</span>
-                    </div>
-                    {selectedSale.discount > 0 && (
-                      <div className="flex justify-between text-green-600">
-                        <span>Discount:</span>
-                        <span>{formatCurrency(selectedSale.discount)}</span>
-                      </div>
-                    )}
-                    {selectedSale.tax > 0 && (
-                      <div className="flex justify-between text-blue-600">
-                        <span>Tax:</span>
-                        <span>{formatCurrency(selectedSale.tax)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between font-bold text-lg border-t pt-2">
-                      <span>Grand Total:</span>
-                      <span>{formatCurrency(selectedSale.grandTotal)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Payment Status */}
-                <div>
-                  <h3 className="font-semibold mb-2">Payment Information</h3>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <span>Status:</span>
-                      <Chip
-                        color={getPaymentStatusColor(selectedSale.paymentStatus)}
-                        variant="flat"
-                      >
-                        {selectedSale.paymentStatus?.toUpperCase() || 'UNKNOWN'}
-                      </Chip>
-                    </div>
-                    {selectedSale.dueDate && (
-                      <div className="flex justify-between mt-2">
-                        <span>Due Date:</span>
-                        <span>{formatDate(selectedSale.dueDate)}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <Button color="danger" variant="light" onPress={onClose}>
-              Close
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
     </div>
   );
 };
