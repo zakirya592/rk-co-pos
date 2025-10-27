@@ -43,7 +43,6 @@ const AddPurchase = () => {
       }
     ],
     purchaseDate: new Date().toISOString().split('T')[0],
-    invoiceNumber: '',
     notes: ''
   })
 
@@ -346,15 +345,6 @@ const AddPurchase = () => {
                 name="purchaseDate"
                 value={formData.purchaseDate}
                 onChange={handleInputChange}
-                labelPlacement="outside"
-              />
-
-              <Input
-                label="Invoice Number"
-                name="invoiceNumber"
-                value={formData.invoiceNumber}
-                onChange={handleInputChange}
-                placeholder="Enter invoice number"
                 labelPlacement="outside"
               />
             </div>
