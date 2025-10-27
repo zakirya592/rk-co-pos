@@ -71,11 +71,11 @@ const cardData = [
     color: "pink",
   },
   {
-    to: "/pos",
-    icon: <FaShoppingCart />,
+    to: "/sales",
+    icon: <FaChartBar />,
     title: "Sales",
-    desc: "Customer Sale",
-    color: "blue",
+    desc: "Sales Management",
+    color: "green",
   },
   {
     to: "/history",
@@ -155,8 +155,8 @@ const Navigation = () => {
   const isItemAllowed = (itemTo) => {
     if (!user) return false;
     if (user.role === "admin") return true;
-    // For regular users, only allow POS, History, and User
-    return ["/pos", "/history",].includes(itemTo);
+    // For regular users, only allow Sales, History, and User
+    return ["/sales", "/history",].includes(itemTo);
   };
 
   // Show all items but mark unauthorized ones as disabled

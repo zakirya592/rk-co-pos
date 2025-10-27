@@ -23,6 +23,7 @@ import CustomerHistory from "../pages/History/CustomerHistory";
 import AddCustomerPage from "../pages/Customers/AddCustomerPage";
 import UpdateCustomerPage from "../pages/Customers/UpdateCustomerPage";
 import Reports from "../pages/Reports/Reports";
+import Sales from "../pages/Sales/Sales";
 import Purchase from "../pages/Purchase/Purchase";
 import AddPurchase from "../pages/Purchase/AddPurchase";
 import UpdatePurchase from "../pages/Purchase/UpdatePurchase";
@@ -111,6 +112,14 @@ const Layout = () => {
             element={
               <ProtectedRoute allowedRoles={["admin", "user"]}>
                 <POS />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/sales"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "user"]}>
+                <Sales />
               </ProtectedRoute>
             }
           />
