@@ -11,12 +11,13 @@ import {
   Chip,
   Button,
 } from "@nextui-org/react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import userRequest from "../../utils/userRequest";
 import StockTransferModal from "../WareHHouse/StockTransferModal";
 
 const ShopDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -98,12 +99,20 @@ const ShopDetails = () => {
         <h1 className="text-3xl font-bold text-gray-800 mb-4">
           Shop Products
         </h1>
-        <Button
-          className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold"
-          onClick={() => setIsStockTransferOpen(true)}
-        >
-          Stock Transfer
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            className="bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold"
+            onClick={() => navigate(`/damage-products/shop/${id}`)}
+          >
+            Damage Products
+          </Button>
+          <Button
+            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold"
+            onClick={() => setIsStockTransferOpen(true)}
+          >
+            Stock Transfer
+          </Button>
+        </div>
       </div>
 
       <Table

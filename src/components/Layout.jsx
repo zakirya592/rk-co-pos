@@ -93,6 +93,7 @@ import UpdateBankAccount from "../pages/BankAccounts/UpdateBankAccount";
 import Purchases from "../pages/Purchase/Purchases";
 import PurchaseDetails from "../pages/Purchase/PurchaseDetails";
 import MasterData from "../pages/MasterData/MasterData";
+import DamageProducts from "../pages/DamageProducts/DamageProducts";
 
 const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
@@ -157,6 +158,12 @@ const Layout = () => {
                   <Route
                     path="products/productjourney"
                     element={<ProductJourney />}
+                  />
+
+                  {/* Damage Products */}
+                  <Route
+                    path="damage-products/:type/:id"
+                    element={<DamageProducts />}
                   />
 
                   {/* Categories */}
