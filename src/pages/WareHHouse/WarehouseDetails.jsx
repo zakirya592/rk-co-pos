@@ -105,12 +105,20 @@ const WarehouseDetails = () => {
           >
             Damage Products
           </Button>
-          <Button
-            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold"
-            onClick={() => setIsStockTransferOpen(true)}
-          >
-            Stock Transfer
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold"
+              onClick={() => setIsStockTransferOpen(true)}
+            >
+              Add Stock Transfer
+            </Button>
+            <Button
+              variant="flat"
+              onClick={() => navigate(`/stock-transfers/warehouse/${id}`)}
+            >
+              Stock Transfers
+            </Button>
+          </div>
         </div>
       </div>
 

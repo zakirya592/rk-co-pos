@@ -94,6 +94,7 @@ import Purchases from "../pages/Purchase/Purchases";
 import PurchaseDetails from "../pages/Purchase/PurchaseDetails";
 import MasterData from "../pages/MasterData/MasterData";
 import DamageProducts from "../pages/DamageProducts/DamageProducts";
+import TransfersByLocation from "../pages/WareHHouse/TransfersByLocation";
 
 const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
@@ -229,6 +230,10 @@ const Layout = () => {
                         )}
                       </Suspense>
                     }
+                  />
+                  <Route
+                    path="stock-transfers/:type/:id"
+                    element={<TransfersByLocation />}
                   />
 
                   {/* Settings */}
