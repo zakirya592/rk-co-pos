@@ -351,6 +351,13 @@ const Products = () => {
           <TableColumn>IMAGE</TableColumn>
           <TableColumn>NAME</TableColumn>
           <TableColumn>CATEGORY</TableColumn>
+          <TableColumn>SUPPLIERS</TableColumn>
+          <TableColumn>CURRENCE</TableColumn>
+          <TableColumn>WAREHOUSE</TableColumn>
+          <TableColumn>PURCHASE RATE</TableColumn>
+          <TableColumn>WHOLESALE RATE</TableColumn>
+          <TableColumn>RETAIL RATE</TableColumn>
+          <TableColumn>STATUS</TableColumn>
           <TableColumn>ACTIONS</TableColumn>
         </TableHeader>
         <TableBody
@@ -389,6 +396,22 @@ const Products = () => {
                 <Chip size="sm" variant="flat" color="primary">
                   {product?.category?.name || ""}
                 </Chip>
+              </TableCell>
+              <TableCell>{product?.supplier?.name || ""}</TableCell>
+              <TableCell>{product?.currency?.symbol || ""}</TableCell>
+              <TableCell>{product?.warehouse?.name || "0"}</TableCell>
+              <TableCell>{product?.purchaseRate || "0"}</TableCell>
+              <TableCell>{product?.wholesaleRate || "0"}</TableCell>
+              <TableCell>{product?.retailRate || "0"}</TableCell>
+
+              <TableCell>
+                <span
+                  className={`text-sm font-semibold ${
+                    product.isActive ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  {product.isActive ? "Active" : "No Active"}
+                </span>
               </TableCell>
 
               <TableCell>
