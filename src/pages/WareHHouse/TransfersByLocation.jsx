@@ -99,9 +99,10 @@ const TransfersByLocation = () => {
           <TableColumn>Transfer #</TableColumn>
           <TableColumn>Date</TableColumn>
           <TableColumn>Status</TableColumn>
-          <TableColumn>Source</TableColumn>
-          <TableColumn>Destination</TableColumn>
-          <TableColumn>Items</TableColumn>
+          <TableColumn>From</TableColumn>
+          <TableColumn>To</TableColumn>
+          <TableColumn>Products</TableColumn>
+          <TableColumn>Total Qty</TableColumn>
           <TableColumn>User</TableColumn>
         </TableHeader>
         <TableBody
@@ -117,27 +118,99 @@ const TransfersByLocation = () => {
             </div>
           }
         >
-          {transfers.map((t) => (
-            <TableRow key={t._id}>
-              <TableCell>{t.transferNumber}</TableCell>
-              <TableCell>{new Date(t.transferDate).toLocaleString()}</TableCell>
-              <TableCell>
-                <Chip color={t.status === "completed" ? "success" : "warning"}>
-                  {t.status}
-                </Chip>
-              </TableCell>
-              <TableCell>
-                <Chip variant="flat">{t.sourceType}</Chip>
-              </TableCell>
-              <TableCell>
-                <Chip variant="flat">{t.destinationType}</Chip>
-              </TableCell>
-              <TableCell>
-                {(t.items || []).reduce((sum, it) => sum + (it.quantity || 0), 0)}
-              </TableCell>
-              <TableCell>{t?.user?.name || "-"}</TableCell>
-            </TableRow>
-          ))}
+          {transfers.map((t) => {
+            // Use the new source/destination objects or fallback to sourceId/destinationId
+            const sourceObj = t?.source || (t?.sourceId && typeof t.sourceId === "object" ? t.sourceId : null);
+            const destinationObj = t?.destination || (t?.destinationId && typeof t.destinationId === "object" ? t.destinationId : null);
+
+            const formatEntity = (entityType, entity, nameField) => {
+              const typeLabel = entityType ? entityType.charAt(0).toUpperCase() + entityType.slice(1) : "-";
+              
+              // Use the direct name field if available
+              if (nameField) {
+                return nameField;
+              }
+              
+              if (entity && typeof entity === "object") {
+                const name = entity?.name || typeLabel;
+                const code = entity?.code ? ` (${entity.code})` : "";
+                const branch = entity?.branch ? ` - ${entity.branch}` : "";
+                return `${name}${code}${branch}`;
+              }
+              
+              // If API didn't populate entity object, use current location name when it matches this side
+              if (locationInfo && entityType === locationType) {
+                const name = locationInfo?.name || typeLabel;
+                const code = locationInfo?.code ? ` (${locationInfo.code})` : "";
+                return `${name}${code}`;
+              }
+              return typeLabel;
+            };
+
+            const formatProducts = (items) => {
+              if (!items || items.length === 0) return "No items";
+              
+              return items.map((item, index) => {
+                const productName = item?.product?.name || "Unknown Product";
+                const quantity = item?.quantity || 0;
+                return `${productName} (${quantity})`;
+              }).join(", ");
+            };
+
+            const totalQuantity = (t.items || []).reduce((sum, it) => sum + (it.quantity || 0), 0);
+
+            return (
+              <TableRow key={t._id}>
+                <TableCell>
+                  <div className="font-medium">{t.transferNumber}</div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm">
+                    {new Date(t.transferDate).toLocaleDateString()}
+                    <div className="text-xs text-gray-500">
+                      {new Date(t.transferDate).toLocaleTimeString()}
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Chip 
+                    color={t.status === "completed" ? "success" : t.status === "pending" ? "warning" : "default"}
+                    variant="flat"
+                  >
+                    {t.status?.charAt(0).toUpperCase() + t.status?.slice(1)}
+                  </Chip>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm">
+                    {formatEntity(t.sourceType, sourceObj, t.sourceName)}
+                    <div className="text-xs text-gray-500">{t.sourceType}</div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm">
+                    {formatEntity(t.destinationType, destinationObj, t.destinationName)}
+                    <div className="text-xs text-gray-500">{t.destinationType}</div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm max-w-xs">
+                    {formatProducts(t.items)}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="font-medium text-center">{totalQuantity}</div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm">
+                    {t?.user?.name || "-"}
+                    {t?.user?.email && (
+                      <div className="text-xs text-gray-500">{t.user.email}</div>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
 
