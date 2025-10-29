@@ -51,8 +51,38 @@ const TransfersByLocation = () => {
 
   const fetchProductsForLocation = async () => {
     try {
-      const res = await userRequest.get(`/products/location/${locationType}/${locationId}`);
-      setProducts(res?.data?.data || []);
+      if (locationType === "warehouse") {
+        const res = await userRequest.get(`/stock-transfers/by-location/warehouse/${locationId}`);
+        const payload = res?.data || {};
+        const transfers = payload?.data || [];
+        const availableStock = payload?.availableStockByProduct || [];
+
+        const productIdToProduct = new Map();
+        transfers.forEach((t) => {
+          (t.items || []).forEach((it) => {
+            const prod = it?.product;
+            if (prod && prod._id && !productIdToProduct.has(prod._id)) {
+              productIdToProduct.set(prod._id, prod);
+            }
+          });
+        });
+
+        const derivedProducts = availableStock.map((row) => {
+          const prod = productIdToProduct.get(row.product) || { _id: row.product, name: "Unknown" };
+          return {
+            ...prod,
+            availableStockAtWarehouse: row.availableAtLocation ?? 0,
+          };
+        });
+
+        setProducts(derivedProducts);
+      } else if (locationType === "shop") {
+        const res = await userRequest.get(`/products/location/shop/${locationId}`);
+        setProducts(res?.data?.data || []);
+      } else {
+        const res = await userRequest.get(`/products/location/${locationType}/${locationId}`);
+        setProducts(res?.data?.data || []);
+      }
     } catch {
       setProducts([]);
     }
@@ -153,7 +183,10 @@ const TransfersByLocation = () => {
               return items.map((item, index) => {
                 const productName = item?.product?.name || "Unknown Product";
                 const quantity = item?.quantity || 0;
-                return `${productName} (${quantity})`;
+                const available = item?.availableAtLocation;
+                return available !== undefined
+                  ? `${productName} (${quantity}, avail: ${available})`
+                  : `${productName} (${quantity})`;
               }).join(", ");
             };
 

@@ -74,7 +74,8 @@ const StockTransferModal = ({
         .filter((row) => row.productId) // only valid rows
         .map((row) => {
           const product = products.find((p) => p._id === row.productId);
-          const qty = Math.max(1, Math.min(product.currentStock, row.quantity));
+          const available = (product?.availableStockAtWarehouse ?? product?.countInStock ?? 0);
+          const qty = Math.max(1, Math.min(available, row.quantity));
           return {
             product: row.productId,
             quantity: qty,
@@ -216,7 +217,7 @@ const StockTransferModal = ({
                             p._id !== row.productId
                           }
                         >
-                          {p.name} (In stock: {p.currentStock})
+                          {p.name} (In stock: {p.availableStockAtWarehouse ?? p.countInStock ?? 0})
                         </SelectItem>
                       ))}
                     </Select>
@@ -225,7 +226,7 @@ const StockTransferModal = ({
                     <Input
                       type="number"
                       min={1}
-                      max={product ? product.currentStock : 9999}
+                      max={product ? (product.availableStockAtWarehouse ?? product.countInStock ?? 9999) : 9999}
                       value={row.quantity}
                       className="w-24"
                       onChange={(e) =>
@@ -235,7 +236,7 @@ const StockTransferModal = ({
                           Math.max(
                             1,
                             Math.min(
-                              product ? product.currentStock : 9999,
+                              product ? (product.availableStockAtWarehouse ?? product.countInStock ?? 9999) : 9999,
                               Number(e.target.value)
                             )
                           )

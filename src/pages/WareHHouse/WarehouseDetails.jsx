@@ -55,21 +55,56 @@ const WarehouseDetails = () => {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await userRequest.get(`/warehouses/${id}/products`);
-      let productsData = res.data.data || [];
+      const res = await userRequest.get(`/stock-transfers/by-location/warehouse/${id}`);
+      const payload = res?.data || {};
+      const transfers = payload?.data || [];
+      const availableStock = payload?.availableStockByProduct || [];
 
+      // Build a map of productId -> product object from any transfer items
+      const productIdToProduct = new Map();
+      transfers.forEach((t) => {
+        (t.items || []).forEach((it) => {
+          const prod = it?.product;
+          if (prod && prod._id && !productIdToProduct.has(prod._id)) {
+            productIdToProduct.set(prod._id, prod);
+          }
+        });
+      });
+
+      // Merge availability onto product objects; fall back to minimal object if needed
+      const productsData = availableStock.map((row) => {
+        const prod = productIdToProduct.get(row.product) || { _id: row.product, name: "Unknown" };
+        return {
+          ...prod,
+          availableStockAtWarehouse: row.availableAtLocation ?? 0,
+        };
+      });
+
+      // Enrich category/supplier/currency when present (object vs id safe)
       const enrichedProducts = await Promise.all(
         productsData.map(async (product) => {
+          const categoryPromise = !product.category
+            ? Promise.resolve(null)
+            : typeof product.category === "object"
+            ? Promise.resolve(product.category)
+            : fetchDetailsById("categories", product.category, "categories");
+
+          const supplierPromise = !product.supplier
+            ? Promise.resolve(null)
+            : typeof product.supplier === "object"
+            ? Promise.resolve(product.supplier)
+            : fetchDetailsById("suppliers", product.supplier, "suppliers");
+
+          const currencyPromise = !product.currency
+            ? Promise.resolve(null)
+            : typeof product.currency === "object"
+            ? Promise.resolve(product.currency)
+            : fetchDetailsById("currencies", product.currency, "currencies");
+
           const [category, supplier, currency] = await Promise.all([
-            product.category
-              ? fetchDetailsById("categories", product.category, "categories")
-              : null,
-            product.supplier
-              ? fetchDetailsById("suppliers", product.supplier, "suppliers")
-              : null,
-            product.currency
-              ? fetchDetailsById("currencies", product.currency, "currencies")
-              : null,
+            categoryPromise,
+            supplierPromise,
+            currencyPromise,
           ]);
 
           return {
@@ -170,12 +205,12 @@ const WarehouseDetails = () => {
                 {product.currency?.symbol} {product.currency?.code || ""}
               </TableCell>
               <TableCell>{product.purchaseRate}</TableCell>
-              <TableCell>{product.countInStock}</TableCell>
+              <TableCell>{product.availableStockAtWarehouse ?? product.countInStock ?? 0}</TableCell>
               <TableCell>{product.damagedQuantity || 0}</TableCell>
               <TableCell>{product.returnedQuantity || 0}</TableCell>
               <TableCell>{product.soldOutQuantity || 0}</TableCell>
               <TableCell>
-                {product.currency?.symbol} {Math.round(product.purchaseRate * product.countInStock)}
+                {product.currency?.symbol} {Math.round(product.purchaseRate * (product.availableStockAtWarehouse ?? product.countInStock ?? 0))}
               </TableCell>
             </TableRow>
           ))}
