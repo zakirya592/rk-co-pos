@@ -223,6 +223,19 @@ const Purchases = () => {
         </div>
       </div>
 
+      <div className="mb-4">
+        <div className="flex gap-4 items-center">
+          <Input
+            placeholder="Search purchases..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            startContent={<FaSearch className="text-gray-400" />}
+            className="max-w-xs"
+            variant="bordered"
+          />
+        </div>
+      </div>
+
       <div className="">
         <Table
           aria-label="Purchases table"
@@ -234,8 +247,13 @@ const Purchases = () => {
             <TableColumn>DATE</TableColumn>
             <TableColumn>SUPPLIER</TableColumn>
             <TableColumn>WAREHOUSE</TableColumn>
-            <TableColumn>ITEMS</TableColumn>
+            <TableColumn>PRODUCTS</TableColumn>
+            <TableColumn>QUANTITY</TableColumn>
+            <TableColumn>PURCHASE RATE</TableColumn>
+            <TableColumn>RETAIL RATE</TableColumn>
+            <TableColumn>WHOLESALE RATE</TableColumn>
             <TableColumn>TOTAL AMOUNT</TableColumn>
+            <TableColumn>CURRENCY</TableColumn>
             <TableColumn>PAYMENT METHOD</TableColumn>
             <TableColumn>STATUS</TableColumn>
             <TableColumn>ACTIONS</TableColumn>
@@ -255,16 +273,78 @@ const Purchases = () => {
           >
             {purchases.map((purchase) => (
               <TableRow key={purchase._id}>
-                <TableCell>{purchase.invoiceNumber || "N/A"}</TableCell>
-                <TableCell>{formatDate(purchase.purchaseDate)}</TableCell>
-                <TableCell>{purchase.supplier?.name || "N/A"}</TableCell>
-                <TableCell>{purchase.warehouse?.name || "N/A"}</TableCell>
                 <TableCell>
-                  {purchase.items?.length || purchase.quantity || 0}
+                  <div className="font-medium">{purchase.invoiceNumber || "N/A"}</div>
                 </TableCell>
                 <TableCell>
-                  {purchase.currency?.symbol || "$"}
-                  {purchase.totalAmount?.toLocaleString()}
+                  <div className="text-sm">{formatDate(purchase.purchaseDate)}</div>
+                </TableCell>
+                <TableCell>
+                  <div>
+                    <div className="font-medium">{purchase.supplier?.name || "N/A"}</div>
+                    {purchase.supplier?.email && (
+                      <div className="text-xs text-gray-500">{purchase.supplier.email}</div>
+                    )}
+                    {purchase.supplier?.phoneNumber && (
+                      <div className="text-xs text-gray-500">{purchase.supplier.phoneNumber}</div>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div>
+                    <div className="font-medium">{purchase.warehouse?.name || "N/A"}</div>
+                    {purchase.warehouse?.code && (
+                      <div className="text-xs text-gray-500">Code: {purchase.warehouse.code}</div>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="max-w-xs">
+                    {purchase.items?.map((item, index) => (
+                      <div key={index} className="text-sm mb-1">
+                        {item.product?.name || "Unknown Product"}
+                      </div>
+                    )) || "No items"}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-center">
+                    {purchase.items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm">
+                    {purchase.currency?.symbol || "$"}
+                    {purchase.items?.[0]?.purchaseRate?.toFixed(2) || "N/A"}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm">
+                    {purchase.currency?.symbol || "$"}
+                    {purchase.items?.[0]?.retailRate?.toFixed(2) || "N/A"}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm">
+                    {purchase.currency?.symbol || "$"}
+                    {purchase.items?.[0]?.wholesaleRate?.toFixed(2) || "N/A"}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="font-medium">
+                    {purchase.currency?.symbol || "$"}
+                    {purchase.totalAmount?.toLocaleString()}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm">
+                    <div>{purchase.currency?.code || "N/A"}</div>
+                    {purchase.currencyExchangeRate && (
+                      <div className="text-xs text-gray-500">
+                        Rate: {purchase.currencyExchangeRate}
+                      </div>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <Chip color="primary" variant="flat">
