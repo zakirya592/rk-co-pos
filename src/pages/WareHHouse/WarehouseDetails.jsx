@@ -55,7 +55,7 @@ const WarehouseDetails = () => {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await userRequest.get(`/products/location/warehouse/${id}`);
+      const res = await userRequest.get(`/warehouses/${id}/products`);
       let productsData = res.data.data || [];
 
       const enrichedProducts = await Promise.all(
@@ -135,7 +135,9 @@ const WarehouseDetails = () => {
           <TableColumn>Currency</TableColumn>
           <TableColumn>Purchase Rate</TableColumn>
           <TableColumn>Stock</TableColumn>
-          <TableColumn>Sold Out Quantity</TableColumn>
+          <TableColumn>Damaged Qty</TableColumn>
+          <TableColumn>Returned Qty</TableColumn>
+          <TableColumn>Sold Out Qty</TableColumn>
           <TableColumn>Total Amount</TableColumn>
         </TableHeader>
         <TableBody
@@ -168,10 +170,12 @@ const WarehouseDetails = () => {
                 {product.currency?.symbol} {product.currency?.code || ""}
               </TableCell>
               <TableCell>{product.purchaseRate}</TableCell>
-              <TableCell>{product.currentStock}</TableCell>
+              <TableCell>{product.countInStock}</TableCell>
+              <TableCell>{product.damagedQuantity || 0}</TableCell>
+              <TableCell>{product.returnedQuantity || 0}</TableCell>
               <TableCell>{product.soldOutQuantity || 0}</TableCell>
               <TableCell>
-                {product.currency?.symbol} {Math.round(product.purchaseRate * product.currentStock)}
+                {product.currency?.symbol} {Math.round(product.purchaseRate * product.countInStock)}
               </TableCell>
             </TableRow>
           ))}
