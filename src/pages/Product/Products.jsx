@@ -13,7 +13,6 @@ import {
   Select,
   SelectItem,
   Chip,
-  Pagination,
   Spinner,
   Tooltip,
 } from "@nextui-org/react";
@@ -28,11 +27,10 @@ import ProductJourney from './ProductJourney';
 import { useNavigate } from 'react-router-dom';
 
 
-const fetchProducts = async (key, searchTerm, currentPage) => {
+const fetchProducts = async (key, searchTerm) => {
   const res = await userRequest.get("/products", {
     params: {
       search: searchTerm,
-      page: currentPage,
     },
   });
   return {
@@ -81,16 +79,16 @@ const Products = () => {
     description: "",
     image: "",
   });
-  const [currentPage, setCurrentPage] = useState(1);
+  // pagination removed
   const [viewProduct, setViewProduct] = useState(null);
   const [editProduct, setEditProduct] = useState(null);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  // const [rowsPerPage, setRowsPerPage] = useState(5);
 
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery(
-    ["products", searchTerm, currentPage],
-    () => fetchProducts("products", searchTerm, currentPage),
+    ["products", searchTerm],
+    () => fetchProducts("products", searchTerm),
     { keepPreviousData: true }
   );
 
@@ -126,12 +124,7 @@ const Products = () => {
     return matchesSearch && matchesCategory;
   });
 
-  // Pagination logic
-  const totalPages = Math.ceil(totalProducts / rowsPerPage);
-  const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage
-  );
+  // Pagination removed: show all filtered products
 
 
   // Handle update product
@@ -209,49 +202,9 @@ const Products = () => {
         <span className="text-small text-default-400">
           Total: {totalProducts} {totalProducts === 1 ? "product" : "products"}
         </span>
-        <div className="flex items-center gap-4">
-          <Pagination
-            isCompact
-            total={totalPages}
-            page={currentPage}
-            onChange={setCurrentPage}
-            showControls
-            showShadow
-            color="primary"
-            classNames={{
-              wrapper: "gap-1",
-              item: "bg-transparent text-gray-700 hover:bg-green-50",
-              cursor: "bg-green-600 text-white font-medium",
-            }}
-          />
-          <label className="flex items-center gap-2 text-default-400 text-small">
-            Rows per page:
-            <Select
-              className="w-20"
-              selectedKeys={[String(rowsPerPage)]}
-              onSelectionChange={(keys) => {
-                const value = Number(Array.from(keys)[0]);
-                setRowsPerPage(value);
-                setCurrentPage(1);
-              }}
-              variant="bordered"
-              size="sm"
-            >
-              <SelectItem key="5" value="5">
-                5
-              </SelectItem>
-              <SelectItem key="10" value="10">
-                10
-              </SelectItem>
-              <SelectItem key="15" value="15">
-                15
-              </SelectItem>
-            </Select>
-          </label>
-        </div>
       </div>
     ),
-    [totalPages, currentPage, rowsPerPage, totalProducts]
+    [totalProducts]
   );
 
   return (
@@ -310,7 +263,6 @@ const Products = () => {
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                setCurrentPage(1);
               }}
               startContent={<FaSearch className="text-gray-400" />}
               variant="bordered"
@@ -321,7 +273,6 @@ const Products = () => {
               value={selectedCategory}
               onChange={(e) => {
                 setSelectedCategory(e.target.value);
-                setCurrentPage(1);
               }}
               variant="bordered"
               isLoading={isCategoriesLoading}
@@ -373,7 +324,7 @@ const Products = () => {
             </div>
           }
         >
-          {paginatedProducts.map((product, index) => (
+          {filteredProducts.map((product, index) => (
             <TableRow key={product._id}>
               <TableCell>{index + 1}</TableCell>
               <TableCell>
