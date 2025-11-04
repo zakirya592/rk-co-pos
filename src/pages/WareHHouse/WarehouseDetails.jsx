@@ -58,12 +58,25 @@ const WarehouseDetails = () => {
       const res = await userRequest.get(`/stock-transfers/by-location/warehouse/${id}`);
       const payload = res?.data || {};
       const transfers = payload?.data || [];
+      const purchases = payload?.purchases || [];
       const availableStock = payload?.availableStockByProduct || [];
 
-      // Build a map of productId -> product object from any transfer items
+      // Build a map of productId -> product object from any transfer items AND purchase items
       const productIdToProduct = new Map();
+      
+      // Extract products from transfers
       transfers.forEach((t) => {
         (t.items || []).forEach((it) => {
+          const prod = it?.product;
+          if (prod && prod._id && !productIdToProduct.has(prod._id)) {
+            productIdToProduct.set(prod._id, prod);
+          }
+        });
+      });
+
+      // Extract products from purchases
+      purchases.forEach((purchase) => {
+        (purchase.items || []).forEach((it) => {
           const prod = it?.product;
           if (prod && prod._id && !productIdToProduct.has(prod._id)) {
             productIdToProduct.set(prod._id, prod);
@@ -79,6 +92,18 @@ const WarehouseDetails = () => {
           availableStockAtWarehouse: row.availableAtLocation ?? 0,
         };
       });
+
+      // If no availableStock but we have products from transfers/purchases, include them too
+      if (productsData.length === 0) {
+        productIdToProduct.forEach((prod) => {
+          if (!productsData.find(p => p._id === prod._id)) {
+            productsData.push({
+              ...prod,
+              availableStockAtWarehouse: prod.countInStock ?? 0,
+            });
+          }
+        });
+      }
 
       // Enrich category/supplier/currency when present (object vs id safe)
       const enrichedProducts = await Promise.all(

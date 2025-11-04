@@ -55,11 +55,24 @@ const TransfersByLocation = () => {
         const res = await userRequest.get(`/stock-transfers/by-location/warehouse/${locationId}`);
         const payload = res?.data || {};
         const transfers = payload?.data || [];
+        const purchases = payload?.purchases || [];
         const availableStock = payload?.availableStockByProduct || [];
 
         const productIdToProduct = new Map();
+        
+        // Extract products from transfers
         transfers.forEach((t) => {
           (t.items || []).forEach((it) => {
+            const prod = it?.product;
+            if (prod && prod._id && !productIdToProduct.has(prod._id)) {
+              productIdToProduct.set(prod._id, prod);
+            }
+          });
+        });
+
+        // Extract products from purchases
+        purchases.forEach((purchase) => {
+          (purchase.items || []).forEach((it) => {
             const prod = it?.product;
             if (prod && prod._id && !productIdToProduct.has(prod._id)) {
               productIdToProduct.set(prod._id, prod);
@@ -74,6 +87,18 @@ const TransfersByLocation = () => {
             availableStockAtWarehouse: row.availableAtLocation ?? 0,
           };
         });
+
+        // If no availableStock but we have products from transfers/purchases, include them too
+        if (derivedProducts.length === 0) {
+          productIdToProduct.forEach((prod) => {
+            if (!derivedProducts.find(p => p._id === prod._id)) {
+              derivedProducts.push({
+                ...prod,
+                availableStockAtWarehouse: prod.countInStock ?? 0,
+              });
+            }
+          });
+        }
 
         setProducts(derivedProducts);
       } else if (locationType === "shop") {
