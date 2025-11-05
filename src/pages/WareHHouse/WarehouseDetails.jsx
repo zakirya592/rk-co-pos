@@ -63,13 +63,20 @@ const WarehouseDetails = () => {
 
       // Build a map of productId -> product object from any transfer items AND purchase items
       const productIdToProduct = new Map();
+      // Map to track damagedAtLocation per product
+      const productDamagedAtLocation = new Map();
       
       // Extract products from transfers
       transfers.forEach((t) => {
         (t.items || []).forEach((it) => {
           const prod = it?.product;
-          if (prod && prod._id && !productIdToProduct.has(prod._id)) {
-            productIdToProduct.set(prod._id, prod);
+          if (prod && prod._id) {
+            if (!productIdToProduct.has(prod._id)) {
+              productIdToProduct.set(prod._id, prod);
+            }
+            // Accumulate damagedAtLocation from transfer items
+            const currentDamaged = productDamagedAtLocation.get(prod._id) || 0;
+            productDamagedAtLocation.set(prod._id, currentDamaged + (it?.damagedAtLocation ?? 0));
           }
         });
       });
@@ -78,8 +85,13 @@ const WarehouseDetails = () => {
       purchases.forEach((purchase) => {
         (purchase.items || []).forEach((it) => {
           const prod = it?.product;
-          if (prod && prod._id && !productIdToProduct.has(prod._id)) {
-            productIdToProduct.set(prod._id, prod);
+          if (prod && prod._id) {
+            if (!productIdToProduct.has(prod._id)) {
+              productIdToProduct.set(prod._id, prod);
+            }
+            // Accumulate damagedAtLocation from purchase items
+            const currentDamaged = productDamagedAtLocation.get(prod._id) || 0;
+            productDamagedAtLocation.set(prod._id, currentDamaged + (it?.damagedAtLocation ?? 0));
           }
         });
       });
@@ -87,9 +99,13 @@ const WarehouseDetails = () => {
       // Merge availability onto product objects; fall back to minimal object if needed
       const productsData = availableStock.map((row) => {
         const prod = productIdToProduct.get(row.product) || { _id: row.product, name: "Unknown" };
+        // Use damagedAtLocation from availableStockByProduct if available, otherwise use accumulated value from transfers/purchases
+        const damagedFromStock = row.damagedAtLocation;
+        const damagedFromItems = productDamagedAtLocation.get(row.product) ?? 0;
         return {
           ...prod,
           availableStockAtWarehouse: row.availableAtLocation ?? 0,
+          damagedAtLocation: damagedFromStock !== undefined ? damagedFromStock : damagedFromItems,
         };
       });
 
@@ -100,6 +116,7 @@ const WarehouseDetails = () => {
             productsData.push({
               ...prod,
               availableStockAtWarehouse: prod.countInStock ?? 0,
+              damagedAtLocation: productDamagedAtLocation.get(prod._id) ?? 0,
             });
           }
         });
@@ -231,7 +248,7 @@ const WarehouseDetails = () => {
               </TableCell>
               <TableCell>{product.purchaseRate}</TableCell>
               <TableCell>{product.availableStockAtWarehouse ?? product.countInStock ?? 0}</TableCell>
-              <TableCell>{product.damagedQuantity || 0}</TableCell>
+              <TableCell>{product.damagedAtLocation ?? product.damagedQuantity ?? 0}</TableCell>
               <TableCell>{product.returnedQuantity || 0}</TableCell>
               <TableCell>{product.soldOutQuantity || 0}</TableCell>
               <TableCell>
