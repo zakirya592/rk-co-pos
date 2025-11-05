@@ -65,6 +65,8 @@ const WarehouseDetails = () => {
       const productIdToProduct = new Map();
       // Map to track damagedAtLocation per product
       const productDamagedAtLocation = new Map();
+      // Map to track soldAtLocation per product
+      const productSoldAtLocation = new Map();
       
       // Extract products from transfers
       transfers.forEach((t) => {
@@ -77,6 +79,9 @@ const WarehouseDetails = () => {
             // Accumulate damagedAtLocation from transfer items
             const currentDamaged = productDamagedAtLocation.get(prod._id) || 0;
             productDamagedAtLocation.set(prod._id, currentDamaged + (it?.damagedAtLocation ?? 0));
+            // Accumulate soldAtLocation from transfer items
+            const currentSold = productSoldAtLocation.get(prod._id) || 0;
+            productSoldAtLocation.set(prod._id, currentSold + (it?.soldAtLocation ?? 0));
           }
         });
       });
@@ -89,9 +94,12 @@ const WarehouseDetails = () => {
             if (!productIdToProduct.has(prod._id)) {
               productIdToProduct.set(prod._id, prod);
             }
-            // Accumulate damagedAtLocation from purchase items
+            // Accumulate damagedAtLocation from purchase items only; purchases should not affect sold counts
             const currentDamaged = productDamagedAtLocation.get(prod._id) || 0;
-            productDamagedAtLocation.set(prod._id, currentDamaged + (it?.damagedAtLocation ?? 0));
+            productDamagedAtLocation.set(
+              prod._id,
+              currentDamaged + (it?.damagedAtLocation ?? 0)
+            );
           }
         });
       });
@@ -102,10 +110,14 @@ const WarehouseDetails = () => {
         // Use damagedAtLocation from availableStockByProduct if available, otherwise use accumulated value from transfers/purchases
         const damagedFromStock = row.damagedAtLocation;
         const damagedFromItems = productDamagedAtLocation.get(row.product) ?? 0;
+        // Use soldAtLocation from availableStockByProduct if available, otherwise accumulated
+        const soldFromStock = row.soldAtLocation;
+        const soldFromItems = productSoldAtLocation.get(row.product) ?? 0;
         return {
           ...prod,
           availableStockAtWarehouse: row.availableAtLocation ?? 0,
           damagedAtLocation: damagedFromStock !== undefined ? damagedFromStock : damagedFromItems,
+          soldAtLocation: soldFromStock !== undefined ? soldFromStock : soldFromItems,
         };
       });
 
@@ -117,6 +129,7 @@ const WarehouseDetails = () => {
               ...prod,
               availableStockAtWarehouse: prod.countInStock ?? 0,
               damagedAtLocation: productDamagedAtLocation.get(prod._id) ?? 0,
+              soldAtLocation: productSoldAtLocation.get(prod._id) ?? 0,
             });
           }
         });
@@ -250,7 +263,7 @@ const WarehouseDetails = () => {
               <TableCell>{product.availableStockAtWarehouse ?? product.countInStock ?? 0}</TableCell>
               <TableCell>{product.damagedAtLocation ?? product.damagedQuantity ?? 0}</TableCell>
               <TableCell>{product.returnedQuantity || 0}</TableCell>
-              <TableCell>{product.soldOutQuantity || 0}</TableCell>
+              <TableCell>{product.soldAtLocation ?? product.soldOutQuantity ?? 0}</TableCell>
               <TableCell>
                 {product.currency?.symbol} {Math.round(product.purchaseRate * (product.availableStockAtWarehouse ?? product.countInStock ?? 0))}
               </TableCell>
