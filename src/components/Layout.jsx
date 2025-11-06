@@ -25,6 +25,7 @@ import UpdateCustomerPage from "../pages/Customers/UpdateCustomerPage";
 import Reports from "../pages/Reports/Reports";
 import Sales from "../pages/Sales/Sales";
 import SaleDetails from "../pages/Sales/SaleDetails";
+import UpdateSale from "../pages/Sales/UpdateSale";
 import Purchase from "../pages/Purchase/Purchase";
 import AddPurchase from "../pages/Purchase/AddPurchase";
 import UpdatePurchase from "../pages/Purchase/UpdatePurchase";
@@ -131,6 +132,14 @@ const Layout = () => {
             element={
               <ProtectedRoute allowedRoles={["admin", "user"]}>
                 <SaleDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/sales/edit/:id"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "user"]}>
+                <UpdateSale />
               </ProtectedRoute>
             }
           />

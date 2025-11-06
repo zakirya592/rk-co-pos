@@ -14,7 +14,8 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Pagination
+  Pagination,
+  Tooltip
 } from '@nextui-org/react';
 import { FaPlus, FaEye, FaEdit, FaCalendarAlt, FaFilter, FaSearch } from 'react-icons/fa';
 import { useQuery } from "react-query";
@@ -291,7 +292,7 @@ const Sales = () => {
                         )}
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <Button
                             size="sm"
                             variant="light"
@@ -300,6 +301,17 @@ const Sales = () => {
                           >
                             View
                           </Button>
+                          <Tooltip content="Edit this sale" placement="top">
+                            <Button
+                              size="sm"
+                              variant="solid"
+                              color="primary"
+                              startContent={<FaEdit />}
+                              onPress={() => navigate(`/sales/edit/${sale._id}`)}
+                            >
+                              Edit
+                            </Button>
+                          </Tooltip>
                         </div>
                       </TableCell>
                     </TableRow>
