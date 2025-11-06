@@ -25,6 +25,10 @@ const UpdatePurchase = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [currencies, setCurrencies] = useState([]);
+  const [bankAccounts, setBankAccounts] = useState([]);
+  const [bankAccount, setBankAccount] = useState('');
+  const [transactionReceipt, setTransactionReceipt] = useState(null);
+  const [existingReceiptUrl, setExistingReceiptUrl] = useState(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -86,23 +90,34 @@ const UpdatePurchase = () => {
           notes: purchaseData.notes || "",
         });
 
+        // Set bank account and receipt if they exist
+        if (purchaseData.bankAccount) {
+          setBankAccount(purchaseData.bankAccount?._id || purchaseData.bankAccount || "");
+        }
+        if (purchaseData.transactionReceipt) {
+          setExistingReceiptUrl(purchaseData.transactionReceipt);
+        }
+
         // Fetch related data
         const [
           productsRes,
           suppliersRes,
           warehousesRes,
-          currenciesRes
+          currenciesRes,
+          bankAccountsRes
         ] = await Promise.all([
           userRequest.get('/products?limit=1000'),
           userRequest.get('/suppliers'),
           userRequest.get('/warehouses'),
-          userRequest.get('/currencies')
+          userRequest.get('/currencies'),
+          userRequest.get('/bank-accounts')
         ]);
 
         setProducts(productsRes.data.data || []);
         setSuppliers(suppliersRes.data || []);
         setWarehouses(warehousesRes.data.data || []);
         setCurrencies(currenciesRes.data.data || []);
+        setBankAccounts(bankAccountsRes.data.data?.bankAccounts || []);
 
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -164,25 +179,71 @@ const UpdatePurchase = () => {
     });
   };
 
+  // Reset bank fields when payment method changes away from bank
+  useEffect(() => {
+    if (formData.paymentMethod !== 'bank') {
+      setBankAccount('')
+      setTransactionReceipt(null)
+    }
+  }, [formData.paymentMethod])
+
+  // Handle file change for transaction receipt
+  const handleReceiptChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      setTransactionReceipt(file)
+      setExistingReceiptUrl(null) // Clear existing URL when new file is selected
+    }
+  }
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Prepare the data for submission
-    const submissionData = {
-      ...formData,
-      items: formData.items.map(item => ({
+    // Prepare FormData for multipart request
+    const formDataToSend = new FormData()
+    
+    // Append basic form fields
+    formDataToSend.append('supplier', formData.supplier)
+    formDataToSend.append('warehouse', formData.warehouse)
+    formDataToSend.append('currency', formData.currency)
+    formDataToSend.append('paymentMethod', formData.paymentMethod)
+    formDataToSend.append('purchaseDate', formData.purchaseDate)
+    if (formData.invoiceNumber) {
+      formDataToSend.append('invoiceNumber', formData.invoiceNumber)
+    }
+    if (formData.notes) {
+      formDataToSend.append('notes', formData.notes)
+    }
+    
+    // Append items as JSON string
+    formDataToSend.append('items', JSON.stringify(
+      formData.items.map(item => ({
         ...item,
         quantity: Number(item.quantity),
         purchaseRate: Number(item.purchaseRate),
         retailRate: Number(item.retailRate),
         wholesaleRate: Number(item.wholesaleRate)
       }))
-    };
+    ))
+    
+    // Append bank transfer specific fields if payment method is bank
+    if (formData.paymentMethod === 'bank') {
+      if (bankAccount) {
+        formDataToSend.append('bankAccount', bankAccount)
+      }
+      if (transactionReceipt) {
+        formDataToSend.append('transactionReceipt', transactionReceipt)
+      }
+    }
 
     try {
       setIsSubmitting(true);
-      const response = await userRequest.put(`/purchases/${id}`, submissionData);
+      const response = await userRequest.put(`/purchases/${id}`, formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
       
       if (response.data.status === 'success') {
         toast.success('Purchase updated successfully!');
@@ -341,6 +402,56 @@ const UpdatePurchase = () => {
                 labelPlacement="outside"
               />
             </div>
+
+            {/* Bank Transfer specific fields */}
+            {formData.paymentMethod === 'bank' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 mt-6">
+                <Select
+                  label="Bank Account"
+                  placeholder="Select bank account"
+                  labelPlacement="outside"
+                  selectedKeys={bankAccount ? new Set([bankAccount]) : new Set()}
+                  onSelectionChange={(keys) => {
+                    const selectedKey = Array.from(keys)[0]
+                    setBankAccount(selectedKey || '')
+                  }}
+                >
+                  {bankAccounts.map((account) => {
+                    const displayText = `${account.bankName} - ${account.accountName} (${account.branchCode})`
+                    return (
+                      <SelectItem 
+                        key={account._id} 
+                        value={account._id}
+                        textValue={displayText}
+                      >
+                        {displayText}
+                      </SelectItem>
+                    )
+                  })}
+                </Select>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Transaction Receipt
+                  </label>
+                  <Input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={handleReceiptChange}
+                    className="cursor-pointer"
+                  />
+                  {transactionReceipt && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Selected: {transactionReceipt.name}
+                    </p>
+                  )}
+                  {existingReceiptUrl && !transactionReceipt && (
+                    <p className="text-xs text-blue-500 mt-1">
+                      Current receipt: <a href={existingReceiptUrl} target="_blank" rel="noopener noreferrer" className="underline">View</a>
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
 
             <Divider className="my-6" />
 
