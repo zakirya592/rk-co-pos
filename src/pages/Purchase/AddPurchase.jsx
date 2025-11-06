@@ -26,7 +26,10 @@ const AddPurchase = () => {
   const [suppliers, setSuppliers] = useState([])
   const [warehouses, setWarehouses] = useState([])
   const [currencies, setCurrencies] = useState([])
+  const [bankAccounts, setBankAccounts] = useState([])
   const [amountpay, setamountpay] = useState('');
+  const [bankAccount, setBankAccount] = useState('')
+  const [transactionReceipt, setTransactionReceipt] = useState(null)
   // Form state
   const [formData, setFormData] = useState({
     supplier: '',
@@ -45,6 +48,14 @@ const AddPurchase = () => {
     purchaseDate: new Date().toISOString().split('T')[0],
     notes: ''
   })
+
+  // Reset bank fields when payment method changes away from bank
+  useEffect(() => {
+    if (formData.paymentMethod !== 'bank') {
+      setBankAccount('')
+      setTransactionReceipt(null)
+    }
+  }, [formData.paymentMethod])
 
   // Fetch all necessary data
   useEffect(() => {
@@ -67,6 +78,10 @@ const AddPurchase = () => {
         // Fetch currencies
         const currenciesRes = await userRequest.get('/currencies')
         setCurrencies(currenciesRes.data.data || [])
+
+        // Fetch bank accounts
+        const bankAccountsRes = await userRequest.get('/bank-accounts')
+        setBankAccounts(bankAccountsRes.data.data?.bankAccounts || [])
       } catch (error) {
         toast.error('Failed to load required data')
       } finally {
@@ -154,6 +169,14 @@ const AddPurchase = () => {
     return methodMap[method] || 'cash';
   };
 
+  // Handle file change for transaction receipt
+  const handleReceiptChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      setTransactionReceipt(file)
+    }
+  }
+
   // Handle form submission
   const handleSubmit = async e => {
     e.preventDefault()
@@ -161,23 +184,49 @@ const AddPurchase = () => {
     // Calculate remaining balance
     const remainingBalance = calculateRemainingBalance();
     
-    // Prepare the data for submission
-    const submissionData = {
-      ...formData,
-      items: formData.items.map(item => ({
+    // Prepare FormData for multipart request
+    const formDataToSend = new FormData()
+    
+    // Append basic form fields
+    formDataToSend.append('supplier', formData.supplier)
+    formDataToSend.append('warehouse', formData.warehouse)
+    formDataToSend.append('currency', formData.currency)
+    formDataToSend.append('paymentMethod', formData.paymentMethod)
+    formDataToSend.append('purchaseDate', formData.purchaseDate)
+    if (formData.notes) {
+      formDataToSend.append('notes', formData.notes)
+    }
+    
+    // Append items as JSON string (or you can append each item separately)
+    formDataToSend.append('items', JSON.stringify(
+      formData.items.map(item => ({
         ...item,
         quantity: Number(item.quantity),
         purchaseRate: Number(item.purchaseRate),
         retailRate: Number(item.retailRate),
         wholesaleRate: Number(item.wholesaleRate)
       }))
+    ))
+    
+    // Append bank transfer specific fields if payment method is bank
+    if (formData.paymentMethod === 'bank') {
+      if (bankAccount) {
+        formDataToSend.append('bankAccount', bankAccount)
+      }
+      if (transactionReceipt) {
+        formDataToSend.append('transactionReceipt', transactionReceipt)
+      }
     }
 
     try {
       setIsSubmitting(true)
       
-      // First, create the purchase
-      const purchaseResponse = await userRequest.post('/purchases', submissionData)
+      // First, create the purchase with multipart/form-data
+      const purchaseResponse = await userRequest.post('/purchases', formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
 
       if (purchaseResponse.data.status === 'success') {
         // Prepare supplier payment data
@@ -515,6 +564,51 @@ const AddPurchase = () => {
               </div>
             </div>
             </div>
+
+            {/* Bank Transfer specific fields */}
+            {formData.paymentMethod === 'bank' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 mt-6">
+                <Select
+                  label="Bank Account"
+                  placeholder="Select bank account"
+                  labelPlacement="outside"
+                  selectedKeys={bankAccount ? new Set([bankAccount]) : new Set()}
+                  onSelectionChange={(keys) => {
+                    const selectedKey = Array.from(keys)[0]
+                    setBankAccount(selectedKey || '')
+                  }}
+                >
+                  {bankAccounts.map((account) => {
+                    const displayText = `${account.bankName} - ${account.accountName} (${account.branchCode})`
+                    return (
+                      <SelectItem 
+                        key={account._id} 
+                        value={account._id}
+                        textValue={displayText}
+                      >
+                        {displayText}
+                      </SelectItem>
+                    )
+                  })}
+                </Select>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Transaction Receipt
+                  </label>
+                  <Input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={handleReceiptChange}
+                    className="cursor-pointer"
+                  />
+                  {transactionReceipt && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Selected: {transactionReceipt.name}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
 
             <Divider className="my-6" />
 
