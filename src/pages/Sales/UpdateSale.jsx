@@ -10,6 +10,7 @@ import {
   Textarea,
 } from "@nextui-org/react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQuery } from "react-query";
 import userRequest from "../../utils/userRequest";
 import toast from "react-hot-toast";
 
@@ -33,6 +34,50 @@ const UpdateSale = () => {
   const [dueDate, setDueDate] = useState("");
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState([]);
+
+  // Fetch customers
+  const { data: customersData } = useQuery(
+    ["customers"],
+    async () => {
+      const res = await userRequest.get("/customers");
+      return res.data?.data || [];
+    },
+    { keepPreviousData: true }
+  );
+  const customers = customersData || [];
+
+  // Fetch products
+  const { data: productsData } = useQuery(
+    ["products"],
+    async () => {
+      const res = await userRequest.get("/products");
+      return res.data?.data || [];
+    },
+    { keepPreviousData: true }
+  );
+  const products = productsData || [];
+
+  // Fetch warehouses
+  const { data: warehousesData } = useQuery(
+    ["warehouses"],
+    async () => {
+      const res = await userRequest.get("/warehouses");
+      return res.data?.data || [];
+    },
+    { keepPreviousData: true }
+  );
+  const warehouses = warehousesData || [];
+
+  // Fetch shops
+  const { data: shopsData } = useQuery(
+    ["shops"],
+    async () => {
+      const res = await userRequest.get("/shops");
+      return res.data?.data || [];
+    },
+    { keepPreviousData: true }
+  );
+  const shops = shopsData || [];
 
   useEffect(() => {
     const fetchSale = async () => {
@@ -81,11 +126,52 @@ const UpdateSale = () => {
   }, [items, calculatedGrandTotal]);
 
   const updateItem = (index, key, value) => {
-    setItems((prev) => prev.map((it, i) => (i === index ? { ...it, [key]: value } : it)));
+    setItems((prev) => {
+      const updated = prev.map((it, i) => {
+        if (i === index) {
+          const newItem = { ...it, [key]: value };
+          // If product changed, update price from product data
+          if (key === "product" && value) {
+            const selectedProduct = products.find((p) => p._id === value);
+            if (selectedProduct) {
+              newItem.price = selectedProduct.price || selectedProduct.retailRate || 0;
+            }
+          }
+          return newItem;
+        }
+        return it;
+      });
+      return updated;
+    });
   };
 
   const addItem = () => setItems((prev) => [...prev, { product: "", quantity: 1, price: 0 }]);
   const removeItem = (index) => setItems((prev) => prev.filter((_, i) => i !== index));
+
+  // Get display name helpers
+  const getCustomerName = (customerId) => {
+    if (!customerId) return "";
+    const found = customers.find((c) => c._id === customerId);
+    return found ? found.name : customerId;
+  };
+
+  const getProductName = (productId) => {
+    if (!productId) return "";
+    const found = products.find((p) => p._id === productId);
+    return found ? found.name : productId;
+  };
+
+  const getWarehouseName = (warehouseId) => {
+    if (!warehouseId) return "";
+    const found = warehouses.find((w) => w._id === warehouseId);
+    return found ? found.name : warehouseId;
+  };
+
+  const getShopName = (shopId) => {
+    if (!shopId) return "";
+    const found = shops.find((s) => s._id === shopId);
+    return found ? found.name : shopId;
+  };
 
   const handleSubmit = async () => {
     try {
@@ -145,20 +231,59 @@ const UpdateSale = () => {
           <CardBody className="grid gap-4">
             <Select
               label="Customer"
+              placeholder="Select customer"
               selectedKeys={customer ? [customer] : []}
-              onChange={(e) => setCustomer(e.target.value)}
+              onSelectionChange={(keys) => {
+                const selectedId = Array.from(keys)[0];
+                setCustomer(selectedId || "");
+              }}
             >
-              {/* Expect options to be filled elsewhere or via a separate component; keeping manual input fallback */}
-              {customer && <SelectItem key={customer} value={customer}>{customer}</SelectItem>}
+              {customers.map((cust) => (
+                <SelectItem key={cust._id} value={cust._id} textValue={cust.name}>
+                  {cust.name} {cust.phoneNumber ? `(${cust.phoneNumber})` : ""}
+                </SelectItem>
+              ))}
             </Select>
 
-            <Input label="Warehouse ID" value={warehouse} onChange={(e) => setWarehouse(e.target.value)} />
-            <Input label="Shop ID (optional)" value={shop} onChange={(e) => setShop(e.target.value)} />
+            <Select
+              label="Warehouse"
+              placeholder="Select warehouse"
+              selectedKeys={warehouse ? [warehouse] : []}
+              onSelectionChange={(keys) => {
+                const selectedId = Array.from(keys)[0];
+                setWarehouse(selectedId || "");
+              }}
+            >
+              {warehouses.map((wh) => (
+                <SelectItem key={wh._id} value={wh._id} textValue={wh.name}>
+                  {wh.name}
+                </SelectItem>
+              ))}
+            </Select>
+
+            <Select
+              label="Shop (optional)"
+              placeholder="Select shop"
+              selectedKeys={shop ? [shop] : []}
+              onSelectionChange={(keys) => {
+                const selectedId = Array.from(keys)[0];
+                setShop(selectedId || "");
+              }}
+            >
+              {shops.map((s) => (
+                <SelectItem key={s._id} value={s._id} textValue={s.name}>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </Select>
 
             <Select
               label="Payment Status"
               selectedKeys={[paymentStatus]}
-              onChange={(e) => setPaymentStatus(e.target.value)}
+              onSelectionChange={(keys) => {
+                const selected = Array.from(keys)[0];
+                setPaymentStatus(selected || "unpaid");
+              }}
             >
               <SelectItem key="paid" value="paid">Paid</SelectItem>
               <SelectItem key="partially_paid" value="partially_paid">Partially Paid</SelectItem>
@@ -212,16 +337,27 @@ const UpdateSale = () => {
             {items.map((it, idx) => (
               <div key={idx} className="grid grid-cols-12 gap-2 items-end">
                 <div className="col-span-5">
-                  <Input
-                    label="Product ID"
-                    value={it.product}
-                    onChange={(e) => updateItem(idx, "product", e.target.value)}
-                  />
+                  <Select
+                    label="Product"
+                    placeholder="Select product"
+                    selectedKeys={it.product ? [it.product] : []}
+                    onSelectionChange={(keys) => {
+                      const selectedId = Array.from(keys)[0];
+                      updateItem(idx, "product", selectedId || "");
+                    }}
+                  >
+                    {products.map((prod) => (
+                      <SelectItem key={prod._id} value={prod._id} textValue={prod.name}>
+                        {prod.name} - {prod.price || prod.retailRate || 0}
+                      </SelectItem>
+                    ))}
+                  </Select>
                 </div>
                 <div className="col-span-2">
                   <Input
                     label="Qty"
                     type="number"
+                    min="1"
                     value={String(it.quantity)}
                     onChange={(e) => updateItem(idx, "quantity", Number(e.target.value))}
                   />
@@ -230,6 +366,7 @@ const UpdateSale = () => {
                   <Input
                     label="Price"
                     type="number"
+                    min="0"
                     value={String(it.price)}
                     onChange={(e) => updateItem(idx, "price", Number(e.target.value))}
                   />
