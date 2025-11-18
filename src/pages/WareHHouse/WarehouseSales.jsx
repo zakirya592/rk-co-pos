@@ -3,6 +3,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   Button,
   Chip,
+  Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  Select,
+  SelectItem,
   Spinner,
   Table,
   TableBody,
@@ -10,8 +18,10 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
+  Textarea,
 } from "@nextui-org/react";
 import userRequest from "../../utils/userRequest";
+import toast from "react-hot-toast";
 
 const formatDateTime = (value) => {
   if (!value) return "—";
@@ -28,7 +38,7 @@ const formatCurrency = (amount, currencyCode = "USD") => {
   }).format(Number(amount) || 0);
 };
 
-const summarizeItems = (items = []) => {
+  const summarizeItems = (items = []) => {
   if (!items.length) return "—";
   return items
     .map((item) => {
@@ -37,6 +47,18 @@ const summarizeItems = (items = []) => {
       return `${name} (x${qty})`;
     })
     .join(", ");
+};
+
+const summarizeReturnProducts = (products = []) => {
+  if (!products.length) return "—";
+  return products
+    .map((entry) => {
+      const name = entry?.product?.name || entry?.productName || "Unknown";
+      const qty = entry?.quantity ?? entry?.returnQuantity ?? 0;
+      const reason = entry?.returnReason || entry?.reason;
+      return `${name} (x${qty}${reason ? `, ${reason}` : ""})`;
+    })
+    .join("; ");
 };
 
 const WarehouseSales = () => {
@@ -51,6 +73,12 @@ const WarehouseSales = () => {
   const [salesError, setSalesError] = useState("");
   const [returnsError, setReturnsError] = useState("");
   const [locationInfo, setLocationInfo] = useState(null);
+  const [returnModalSale, setReturnModalSale] = useState(null);
+  const [returnSelections, setReturnSelections] = useState([]);
+  const [returnReason, setReturnReason] = useState("customer_changed_mind");
+  const [returnCondition, setReturnCondition] = useState("new");
+  const [returnNotes, setReturnNotes] = useState("");
+  const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
 
   const title = useMemo(() => {
     return `${locationType === "shop" ? "Shop" : "Warehouse"} Sales`;
@@ -83,7 +111,11 @@ const WarehouseSales = () => {
         `/product-returns/by-location/${locationType}/${id}`
       );
       const payload = res?.data || {};
-      setReturns(payload?.data || []);
+      const data = payload?.data || [];
+      setReturns(data);
+      if (!locationInfo && payload?.location) {
+        setLocationInfo(payload.location);
+      }
     } catch (err) {
       setReturns([]);
       setReturnsError(
@@ -97,6 +129,24 @@ const WarehouseSales = () => {
     fetchSales();
     fetchReturns();
   }, [locationType, id]);
+
+  useEffect(() => {
+    if (!returnModalSale) {
+      setReturnSelections([]);
+      return;
+    }
+    const initialSelections = (returnModalSale.items || []).map((item) => ({
+      productId: item?.product?._id || item?.product,
+      name: item?.product?.name || "Unknown",
+      maxQuantity: item?.quantity || 0,
+      quantity: 0,
+      selected: false,
+    }));
+    setReturnSelections(initialSelections);
+    setReturnReason("customer_changed_mind");
+    setReturnCondition("new");
+    setReturnNotes("");
+  }, [returnModalSale]);
 
   const getPaymentStatusColor = (status) => {
     switch (status) {
@@ -115,6 +165,84 @@ const WarehouseSales = () => {
     if (sale?.currency?.code) return sale.currency.code;
     if (sale?.currencyCode) return sale.currencyCode;
     return "USD";
+  };
+
+  const handleQuantityChange = (productId, value) => {
+    setReturnSelections((prev) =>
+      prev.map((entry) =>
+        entry.productId === productId
+          ? {
+              ...entry,
+              quantity: Math.min(
+                entry.maxQuantity,
+                Math.max(0, Number(value) || 0)
+              ),
+              selected: Number(value) > 0,
+            }
+          : entry
+      )
+    );
+  };
+
+  const toggleProductSelection = (productId, selected) => {
+    setReturnSelections((prev) =>
+      prev.map((entry) =>
+        entry.productId === productId
+          ? {
+              ...entry,
+              selected,
+              quantity: selected
+                ? entry.quantity || entry.maxQuantity
+                : 0,
+            }
+          : entry
+      )
+    );
+  };
+
+  const closeReturnModal = () => {
+    if (isSubmittingReturn) return;
+    setReturnModalSale(null);
+  };
+
+  const submitReturnRequest = async () => {
+    if (!returnModalSale) return;
+    const chosen = returnSelections.filter(
+      (entry) => entry.selected && entry.quantity > 0
+    );
+    if (!chosen.length) {
+      toast.error("Select at least one product with quantity.");
+      return;
+    }
+
+    const payload = {
+      customer: returnModalSale.customer?._id || returnModalSale.customer,
+      products: chosen.map((entry) => entry.productId),
+      productQuantities: chosen.map((entry) => entry.quantity),
+      returnReason,
+      condition: returnCondition,
+      notes: returnNotes,
+    };
+
+    if (locationType === "warehouse") {
+      payload.warehouse = id;
+    } else if (locationType === "shop") {
+      payload.shop = id;
+    }
+
+    setIsSubmittingReturn(true);
+    try {
+      await userRequest.post("/product-returns", payload);
+      toast.success("Return submitted");
+      closeReturnModal();
+      fetchReturns();
+    } catch (err) {
+      const message =
+        err?.response?.data?.message || "Failed to submit return request";
+      toast.error(message);
+    } finally {
+      setIsSubmittingReturn(false);
+    }
   };
 
   return (
@@ -155,6 +283,7 @@ const WarehouseSales = () => {
             <TableColumn>Grand Total</TableColumn>
             <TableColumn>Payment</TableColumn>
             <TableColumn>Created</TableColumn>
+            <TableColumn>Actions</TableColumn>
           </TableHeader>
           <TableBody
             isLoading={salesLoading}
@@ -212,6 +341,15 @@ const WarehouseSales = () => {
                     </Chip>
                   </TableCell>
                   <TableCell>{formatDateTime(sale.createdAt)}</TableCell>
+                  <TableCell>
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      onClick={() => setReturnModalSale(sale)}
+                    >
+                      Process Return
+                    </Button>
+                  </TableCell>
                 </TableRow>
               );
             })}
@@ -232,12 +370,13 @@ const WarehouseSales = () => {
           className="w-full overflow-x-auto"
         >
           <TableHeader>
-            <TableColumn>Product</TableColumn>
+            <TableColumn>Return #</TableColumn>
             <TableColumn>Customer</TableColumn>
-            <TableColumn>Quantity</TableColumn>
-            <TableColumn>Reason</TableColumn>
-            <TableColumn>Reference</TableColumn>
-            <TableColumn>Created</TableColumn>
+            <TableColumn>Products</TableColumn>
+            <TableColumn>Total Qty</TableColumn>
+            <TableColumn>Status</TableColumn>
+            <TableColumn>Refund</TableColumn>
+            <TableColumn>Processed At</TableColumn>
           </TableHeader>
           <TableBody
             isLoading={returnsLoading}
@@ -252,39 +391,175 @@ const WarehouseSales = () => {
               </div>
             }
           >
-            {returns.map((entry) => (
-              <TableRow key={entry._id}>
-                <TableCell>
-                  {entry.product?.name ||
-                    entry.productName ||
-                    entry.item?.product?.name ||
-                    "Unknown"}
-                </TableCell>
-                <TableCell>
-                  {entry.customer?.name ||
-                    entry.customerName ||
-                    entry.sale?.customer?.name ||
-                    "Walk-in"}
-                </TableCell>
-                <TableCell>
-                  {entry.quantity ??
-                    entry.returnQuantity ??
-                    entry.item?.quantity ??
-                    0}
-                </TableCell>
-                <TableCell>{entry.reason || entry.notes || "—"}</TableCell>
-                <TableCell>
-                  {entry.sale?.invoiceNumber ||
-                    entry.referenceNumber ||
-                    entry?.saleId ||
-                    "—"}
-                </TableCell>
-                <TableCell>{formatDateTime(entry.createdAt)}</TableCell>
-              </TableRow>
-            ))}
+            {returns.map((entry) => {
+              const totalQty = (entry.products || []).reduce(
+                (sum, prod) => sum + (prod?.quantity || 0),
+                0
+              );
+              return (
+                <TableRow key={entry._id}>
+                  <TableCell className="font-semibold">
+                    {entry.returnNumber || entry._id}
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      {entry.customer?.name || "Walk-in"}
+                      {entry.customer?.email && (
+                        <div className="text-xs text-gray-500">
+                          {entry.customer.email}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm max-w-xs">
+                    {summarizeReturnProducts(entry.products)}
+                  </TableCell>
+                  <TableCell>{totalQty}</TableCell>
+                  <TableCell>
+                    <Chip
+                      size="sm"
+                      variant="flat"
+                      color={
+                        entry.status === "processed"
+                          ? "success"
+                          : entry.status === "pending"
+                          ? "warning"
+                          : "default"
+                      }
+                      className="capitalize"
+                    >
+                      {entry.status || "unknown"}
+                    </Chip>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      {formatCurrency(entry.totalRefundAmount)}
+                      <div className="text-xs text-gray-500 capitalize">
+                        {entry.refundMethod || "credit"} —{" "}
+                        {entry.refundStatus || "pending"}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{formatDateTime(entry.processedAt || entry.createdAt)}</TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </section>
+
+      <Modal
+        size="2xl"
+        isOpen={Boolean(returnModalSale)}
+        onOpenChange={closeReturnModal}
+        isDismissable={!isSubmittingReturn}
+        isKeyboardDismissDisabled={isSubmittingReturn}
+      >
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">
+            Process Return{" "}
+            {returnModalSale?.invoiceNumber
+              ? `— ${returnModalSale.invoiceNumber}`
+              : ""}
+          </ModalHeader>
+          <ModalBody className="space-y-4">
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500">
+                Select the products and enter quantities you are receiving back.
+              </p>
+              <div className="space-y-3 max-h-60 overflow-y-auto border rounded-lg p-3">
+                {returnSelections.length === 0 && (
+                  <p className="text-sm text-gray-400">
+                    No products found on this sale.
+                  </p>
+                )}
+                {returnSelections.map((entry) => (
+                  <div
+                    key={entry.productId}
+                    className="flex items-center gap-3 border-b pb-2 last:border-b-0"
+                  >
+                    <label className="flex items-center gap-2 w-1/2">
+                      <input
+                        type="checkbox"
+                        className="form-checkbox h-4 w-4"
+                        checked={entry.selected}
+                        onChange={(e) =>
+                          toggleProductSelection(entry.productId, e.target.checked)
+                        }
+                      />
+                      <span className="text-sm">
+                        {entry.name}{" "}
+                        <span className="text-xs text-gray-500">
+                          (sold: {entry.maxQuantity})
+                        </span>
+                      </span>
+                    </label>
+                    <Input
+                      type="number"
+                      label="Quantity"
+                      min={0}
+                      max={entry.maxQuantity}
+                      value={entry.quantity}
+                      disabled={!entry.selected}
+                      onChange={(e) =>
+                        handleQuantityChange(entry.productId, e.target.value)
+                      }
+                      className="w-1/2"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Select
+              label="Return Reason"
+              selectedKeys={[returnReason]}
+              onChange={(e) => setReturnReason(e.target.value)}
+            >
+              <SelectItem key="customer_changed_mind">
+                Customer changed mind
+              </SelectItem>
+              <SelectItem key="defective">Defective / damaged</SelectItem>
+              <SelectItem key="wrong_item">Wrong item shipped</SelectItem>
+              <SelectItem key="other">Other</SelectItem>
+            </Select>
+
+            <Select
+              label="Condition"
+              selectedKeys={[returnCondition]}
+              onChange={(e) => setReturnCondition(e.target.value)}
+            >
+              <SelectItem key="new">New / unopened</SelectItem>
+              <SelectItem key="used">Used</SelectItem>
+              <SelectItem key="damaged">Damaged</SelectItem>
+              <SelectItem key="defective">Defective</SelectItem>
+            </Select>
+
+            <Textarea
+              label="Notes (optional)"
+              placeholder="Any extra detail about this return..."
+              value={returnNotes}
+              onChange={(e) => setReturnNotes(e.target.value)}
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="light"
+              onClick={closeReturnModal}
+              isDisabled={isSubmittingReturn}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              onClick={submitReturnRequest}
+              isLoading={isSubmittingReturn}
+            >
+              Submit Return
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 };
