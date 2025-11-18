@@ -96,6 +96,7 @@ import PurchaseDetails from "../pages/Purchase/PurchaseDetails";
 import MasterData from "../pages/MasterData/MasterData";
 import DamageProducts from "../pages/DamageProducts/DamageProducts";
 import TransfersByLocation from "../pages/WareHHouse/TransfersByLocation";
+import WarehouseSales from "../pages/WareHHouse/WarehouseSales";
 
 const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
@@ -243,6 +244,10 @@ const Layout = () => {
                   <Route
                     path="stock-transfers/:type/:id"
                     element={<TransfersByLocation />}
+                  />
+                  <Route
+                    path="warehouse-sales/:type/:id"
+                    element={<WarehouseSales />}
                   />
 
                   {/* Settings */}

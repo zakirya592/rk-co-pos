@@ -15,7 +15,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import userRequest from "../../utils/userRequest";
 
 const WarehouseDetails = () => {
-  const { id } = useParams();
+  const { id, type } = useParams();
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -189,6 +189,12 @@ const WarehouseDetails = () => {
           Warehouse Products
         </h1>
         <div className="flex gap-3">
+          <Button
+            className="bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold"
+            onClick={() => navigate(`/warehouse-sales/${type || "warehouse"}/${id}`)}
+          >
+            Sales From
+          </Button>
           <Button
             className="bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold"
             onClick={() => navigate(`/damage-products/warehouse/${id}`)}
