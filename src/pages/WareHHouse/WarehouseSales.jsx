@@ -77,6 +77,7 @@ const WarehouseSales = () => {
   const [returnSelections, setReturnSelections] = useState([]);
   const [returnReason, setReturnReason] = useState("customer_changed_mind");
   const [returnCondition, setReturnCondition] = useState("new");
+  const [refundMethod, setRefundMethod] = useState("cash");
   const [returnNotes, setReturnNotes] = useState("");
   const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
 
@@ -135,17 +136,33 @@ const WarehouseSales = () => {
       setReturnSelections([]);
       return;
     }
-    const initialSelections = (returnModalSale.items || []).map((item) => ({
-      productId: item?.product?._id || item?.product,
-      name: item?.product?.name || "Unknown",
-      maxQuantity: item?.quantity || 0,
-      quantity: 0,
-      selected: false,
-    }));
+    const initialSelections = (returnModalSale.items || []).map((item) => {
+      const productId = item?.product?._id || item?.product;
+      const derivedUnitPrice =
+        item?.price ??
+        (item?.total && item?.quantity
+          ? Number(item.total) / Number(item.quantity || 1)
+          : 0);
+      const numericPrice =
+        typeof derivedUnitPrice === "number"
+          ? derivedUnitPrice
+          : Number(derivedUnitPrice) || 0;
+      const unitPrice = Number(numericPrice.toFixed(2));
+      return {
+        productId,
+        name: item?.product?.name || "Unknown",
+        maxQuantity: item?.quantity || 0,
+        quantity: 0,
+        selected: false,
+        unitPrice: Number.isFinite(unitPrice) ? unitPrice : 0,
+        refundTotal: 0,
+      };
+    });
     setReturnSelections(initialSelections);
     setReturnReason("customer_changed_mind");
     setReturnCondition("new");
     setReturnNotes("");
+    setRefundMethod("cash");
   }, [returnModalSale]);
 
   const getPaymentStatusColor = (status) => {
@@ -178,6 +195,10 @@ const WarehouseSales = () => {
                 Math.max(0, Number(value) || 0)
               ),
               selected: Number(value) > 0,
+            refundTotal:
+              Number(value) > 0
+                ? Number((entry.unitPrice * Number(value)).toFixed(2))
+                : 0,
             }
           : entry
       )
@@ -187,18 +208,45 @@ const WarehouseSales = () => {
   const toggleProductSelection = (productId, selected) => {
     setReturnSelections((prev) =>
       prev.map((entry) =>
-        entry.productId === productId
-          ? {
+      entry.productId === productId
+        ? (() => {
+            const newQuantity = selected
+              ? entry.quantity || entry.maxQuantity || 0
+              : 0;
+            return {
               ...entry,
               selected,
-              quantity: selected
-                ? entry.quantity || entry.maxQuantity
+              quantity: newQuantity,
+              refundTotal: selected
+                ? Number((entry.unitPrice * newQuantity).toFixed(2))
                 : 0,
-            }
-          : entry
+            };
+          })()
+        : entry
       )
     );
   };
+
+const handleRefundTotalChange = (productId, value) => {
+  setReturnSelections((prev) =>
+    prev.map((entry) =>
+      entry.productId === productId
+        ? {
+            ...entry,
+            refundTotal: Math.max(0, Number(value) || 0),
+            unitPrice:
+              entry.quantity > 0
+                ? Number(
+                    (
+                      Math.max(0, Number(value) || 0) / entry.quantity
+                    ).toFixed(2)
+                  )
+                : entry.unitPrice,
+          }
+        : entry
+    )
+  );
+};
 
   const closeReturnModal = () => {
     if (isSubmittingReturn) return;
@@ -217,11 +265,24 @@ const WarehouseSales = () => {
 
     const payload = {
       customer: returnModalSale.customer?._id || returnModalSale.customer,
-      products: chosen.map((entry) => entry.productId),
-      productQuantities: chosen.map((entry) => entry.quantity),
+      originalSale: returnModalSale._id,
       returnReason,
-      condition: returnCondition,
-      notes: returnNotes,
+      products: chosen.map((entry) => ({
+        product: entry.productId,
+        quantity: entry.quantity,
+        originalPrice:
+          entry.quantity > 0
+            ? Number(
+                (
+                  (entry.refundTotal || 0) / entry.quantity
+                ).toFixed(2)
+              )
+            : entry.unitPrice,
+        returnReason,
+        condition: returnCondition,
+      })),
+      refundMethod,
+      customerNotes: returnNotes,
     };
 
     if (locationType === "warehouse") {
@@ -465,7 +526,7 @@ const WarehouseSales = () => {
           <ModalBody className="space-y-4">
             <div className="space-y-2">
               <p className="text-sm text-gray-500">
-                Select the products and enter quantities you are receiving back.
+                Select products, return quantities, and override refund prices if needed.
               </p>
               <div className="space-y-3 max-h-60 overflow-y-auto border rounded-lg p-3">
                 {returnSelections.length === 0 && (
@@ -504,7 +565,19 @@ const WarehouseSales = () => {
                       onChange={(e) =>
                         handleQuantityChange(entry.productId, e.target.value)
                       }
-                      className="w-1/2"
+                      className="w-1/4"
+                    />
+                    <Input
+                      type="number"
+                      label="Refund Price"
+                      min={0}
+                      step="0.01"
+                      value={entry.originalPrice}
+                      disabled={!entry.selected}
+                      onChange={(e) =>
+                        handlePriceChange(entry.productId, e.target.value)
+                      }
+                      className="w-1/4"
                     />
                   </div>
                 ))}
@@ -541,6 +614,17 @@ const WarehouseSales = () => {
               value={returnNotes}
               onChange={(e) => setReturnNotes(e.target.value)}
             />
+
+            <Select
+              label="Refund Method"
+              selectedKeys={[refundMethod]}
+              onChange={(e) => setRefundMethod(e.target.value)}
+            >
+              <SelectItem key="cash">Cash</SelectItem>
+              <SelectItem key="credit">Credit</SelectItem>
+              <SelectItem key="bank_transfer">Bank Transfer</SelectItem>
+              <SelectItem key="store_credit">Store Credit</SelectItem>
+            </Select>
           </ModalBody>
           <ModalFooter>
             <Button
