@@ -41,6 +41,49 @@ const AddProductForm = () => {
   const [selectedQuantityUnit, setSelectedQuantityUnit] = useState("");
   const [selectedPackingUnit, setSelectedPackingUnit] = useState("");
   const [selectedPouch, setSelectedPouch] = useState("");
+  const [purchasingErrors, setPurchasingErrors] = useState({});
+
+  const purchasingFieldMeta = [
+    { key: "currency", label: "Currency" },
+    { key: "purchaseRate", label: "Purchase Rate" },
+    { key: "wholesaleRate", label: "Whole Sale Rate" },
+    { key: "retailRate", label: "Retail Rate" },
+    { key: "countInStock", label: "Stock Quantity" },
+  ];
+
+  const hasSupplierSelected = Boolean(newProduct.supplier);
+  const hasInventoryLocationSelected = Boolean(
+    newProduct.Warehouses || newProduct.shop
+  );
+  const shouldRequirePurchasingFields =
+    hasSupplierSelected && hasInventoryLocationSelected;
+
+  useEffect(() => {
+    if (!shouldRequirePurchasingFields && Object.keys(purchasingErrors).length) {
+      setPurchasingErrors({});
+    }
+  }, [shouldRequirePurchasingFields, purchasingErrors]);
+
+  const getLabel = (text, showRequired) => (
+    <span>
+      {text}{" "}
+      {showRequired ? <span className="text-red-500 font-bold">*</span> : null}
+    </span>
+  );
+
+  const handlePurchasingFieldChange = (key, value) => {
+    setNewProduct((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+    if (purchasingErrors[key]) {
+      setPurchasingErrors((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    }
+  };
 
   // Add this fetch function
   const fetchCategories = async () => {
@@ -150,6 +193,29 @@ const AddProductForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log(newProduct.currency, "newProduct.currency");
+
+    if (shouldRequirePurchasingFields) {
+      const missingPurchasingFields = purchasingFieldMeta.filter(({ key }) => {
+        const value = newProduct[key];
+        return value === undefined || value === null || value === "";
+      });
+
+      if (missingPurchasingFields.length) {
+        const errorPayload = missingPurchasingFields.reduce(
+          (acc, { key, label }) => ({
+            ...acc,
+            [key]: `${label} is required when supplier and warehouse are selected.`,
+          }),
+          {}
+        );
+        setPurchasingErrors(errorPayload);
+        return;
+      }
+    }
+
+    if (Object.keys(purchasingErrors).length) {
+      setPurchasingErrors({});
+    }
 
     setLoading(true);
     try {
@@ -425,21 +491,19 @@ const AddProductForm = () => {
             <div className="grid grid-cols-1 md:grid-cols-7 gap-4 mt-10">
               <Select
                 // label="Currency"
-                label={
-                  <span>
-                    Currency
-                    
-                  </span>
-                }
+                label={getLabel("Currency", shouldRequirePurchasingFields)}
                 labelPlacement="outside"
                 placeholder="Select currency"
                 value={newProduct.currency}
                 onChange={(e) =>
-                  setNewProduct({ ...newProduct, currency: e.target.value })
+                  handlePurchasingFieldChange("currency", e.target.value)
                 }
                 variant="bordered"
                 className="md:col-span-2"
+                required={shouldRequirePurchasingFields}
                 showSearch
+                isInvalid={Boolean(purchasingErrors.currency)}
+                errorMessage={purchasingErrors.currency}
               >
                 {currencies.map((currency) => (
                   <SelectItem
@@ -536,24 +600,19 @@ const AddProductForm = () => {
               {/* Pricing */}
               <Input
                 // label="Purchase Rate"
-                label={
-                  <span>
-                    purchase Rate
-                    
-                  </span>
-                }
+                label={getLabel("Purchase Rate", shouldRequirePurchasingFields)}
                 labelPlacement="outside"
                 placeholder="0.00"
                 type="number"
                 value={newProduct.purchaseRate}
                 onChange={(e) =>
-                  setNewProduct({
-                    ...newProduct,
-                    purchaseRate: e.target.value,
-                  })
+                  handlePurchasingFieldChange("purchaseRate", e.target.value)
                 }
                 // startContent={selectedCurrencySymbol}
                 variant="bordered"
+                required={shouldRequirePurchasingFields}
+                isInvalid={Boolean(purchasingErrors.purchaseRate)}
+                errorMessage={purchasingErrors.purchaseRate}
               />
               {/* <Input
                 label={
@@ -572,61 +631,49 @@ const AddProductForm = () => {
                 variant="bordered"
               /> */}
               <Input
-                label={
-                  <span>
-                    Whole Sale Rate
-                    
-                  </span>
-                }
+                label={getLabel("Whole Sale Rate", shouldRequirePurchasingFields)}
                 labelPlacement="outside"
                 placeholder="0.00"
                 type="number"
                 value={newProduct.wholesaleRate}
                 onChange={(e) =>
-                  setNewProduct({
-                    ...newProduct,
-                    wholesaleRate: e.target.value,
-                  })
+                  handlePurchasingFieldChange("wholesaleRate", e.target.value)
                 }
                 // startContent={selectedCurrencySymbol}
                 variant="bordered"
+                required={shouldRequirePurchasingFields}
+                isInvalid={Boolean(purchasingErrors.wholesaleRate)}
+                errorMessage={purchasingErrors.wholesaleRate}
               />
               <Input
-                label={
-                  <span>
-                    Retail Rate
-                    
-                  </span>
-                }
+                label={getLabel("Retail Rate", shouldRequirePurchasingFields)}
                 labelPlacement="outside"
                 placeholder="0.00"
                 type="number"
                 value={newProduct.retailRate}
                 onChange={(e) =>
-                  setNewProduct({ ...newProduct, retailRate: e.target.value })
+                  handlePurchasingFieldChange("retailRate", e.target.value)
                 }
                 // startContent={selectedCurrencySymbol}
                 variant="bordered"
+                required={shouldRequirePurchasingFields}
+                isInvalid={Boolean(purchasingErrors.retailRate)}
+                errorMessage={purchasingErrors.retailRate}
               />
 
               <Input
-                label={
-                  <span>
-                    Stock Quantity
-                    
-                  </span>
-                }
+                label={getLabel("Stock Quantity", shouldRequirePurchasingFields)}
                 labelPlacement="outside"
                 placeholder="0"
                 type="number"
                 value={newProduct.countInStock}
                 onChange={(e) =>
-                  setNewProduct({
-                    ...newProduct,
-                    countInStock: e.target.value,
-                  })
+                  handlePurchasingFieldChange("countInStock", e.target.value)
                 }
                 variant="bordered"
+                required={shouldRequirePurchasingFields}
+                isInvalid={Boolean(purchasingErrors.countInStock)}
+                errorMessage={purchasingErrors.countInStock}
               />
 
               {/* <Input
