@@ -27,15 +27,12 @@ const AddPurchase = () => {
   const [warehouses, setWarehouses] = useState([])
   const [currencies, setCurrencies] = useState([])
   const [bankAccounts, setBankAccounts] = useState([])
-  const [amountpay, setamountpay] = useState('');
-  const [bankAccount, setBankAccount] = useState('')
   const [transactionReceipt, setTransactionReceipt] = useState(null)
   // Form state
   const [formData, setFormData] = useState({
     supplier: '',
     warehouse: '',
     currency: 'PKR',
-    paymentMethod: 'cash',
     items: [
       {
         product: '',
@@ -49,13 +46,14 @@ const AddPurchase = () => {
     notes: ''
   })
 
-  // Reset bank fields when payment method changes away from bank
-  useEffect(() => {
-    if (formData.paymentMethod !== 'bank') {
-      setBankAccount('')
-      setTransactionReceipt(null)
+  // Multiple payments state
+  const [payments, setPayments] = useState([
+    {
+      method: 'cash',
+      amount: '',
+      bankAccount: ''
     }
-  }, [formData.paymentMethod])
+  ])
 
   // Fetch all necessary data
   useEffect(() => {
@@ -146,6 +144,13 @@ const AddPurchase = () => {
     })
   }
 
+  // Calculate total paid amount from all payments
+  const calculateTotalPaid = () => {
+    return payments.reduce((sum, payment) => {
+      return sum + (parseFloat(payment.amount) || 0);
+    }, 0);
+  };
+
   // Calculate remaining balance
   const calculateRemainingBalance = () => {
     const subtotal = formData.items.reduce((sum, item) => {
@@ -153,7 +158,40 @@ const AddPurchase = () => {
       const rate = parseFloat(item.purchaseRate) || 0;
       return sum + (quantity * rate);
     }, 0);
-    return subtotal - parseFloat(amountpay || 0);
+    return subtotal - calculateTotalPaid();
+  };
+
+  // Handle payment changes
+  const handlePaymentChange = (index, field, value) => {
+    const updatedPayments = [...payments];
+    updatedPayments[index] = {
+      ...updatedPayments[index],
+      [field]: value,
+      // Reset bankAccount when method changes away from bank/online
+      ...(field === 'method' && value !== 'bank' && value !== 'online' 
+        ? { bankAccount: '' } 
+        : {})
+    };
+    setPayments(updatedPayments);
+  };
+
+  // Add new payment method
+  const addPaymentMethod = () => {
+    setPayments([
+      ...payments,
+      {
+        method: 'cash',
+        amount: '',
+        bankAccount: ''
+      }
+    ]);
+  };
+
+  // Remove payment method
+  const removePaymentMethod = (index) => {
+    if (payments.length === 1) return;
+    const updatedPayments = payments.filter((_, i) => i !== index);
+    setPayments(updatedPayments);
   };
 
   // Map payment method to supplier-payments API format
@@ -181,6 +219,21 @@ const AddPurchase = () => {
   const handleSubmit = async e => {
     e.preventDefault()
 
+    // Validate payments
+    const validPayments = payments.filter(p => p.amount && parseFloat(p.amount) > 0);
+    if (validPayments.length === 0) {
+      toast.error('Please add at least one payment method with amount');
+      return;
+    }
+
+    // Validate bank accounts for bank/online methods
+    for (const payment of validPayments) {
+      if ((payment.method === 'bank' || payment.method === 'online') && !payment.bankAccount) {
+        toast.error(`Please select a bank account for ${payment.method} payment`);
+        return;
+      }
+    }
+
     // Calculate remaining balance
     const remainingBalance = calculateRemainingBalance();
     
@@ -189,18 +242,21 @@ const AddPurchase = () => {
     
     // Append basic form fields
     formDataToSend.append('supplier', formData.supplier)
-    formDataToSend.append('warehouse', formData.warehouse)
-    formDataToSend.append('currency', formData.currency)
-    formDataToSend.append('paymentMethod', formData.paymentMethod)
+    if (formData.warehouse) {
+      formDataToSend.append('warehouse', formData.warehouse)
+    }
+    if (formData.currency) {
+      formDataToSend.append('currency', formData.currency)
+    }
     formDataToSend.append('purchaseDate', formData.purchaseDate)
     if (formData.notes) {
       formDataToSend.append('notes', formData.notes)
     }
     
-    // Append items as JSON string (or you can append each item separately)
+    // Append items as JSON string
     formDataToSend.append('items', JSON.stringify(
       formData.items.map(item => ({
-        ...item,
+        product: item.product,
         quantity: Number(item.quantity),
         purchaseRate: Number(item.purchaseRate),
         retailRate: Number(item.retailRate),
@@ -208,20 +264,28 @@ const AddPurchase = () => {
       }))
     ))
     
-    // Append bank transfer specific fields if payment method is bank
-    if (formData.paymentMethod === 'bank') {
-      if (bankAccount) {
-        formDataToSend.append('bankAccount', bankAccount)
+    // Append payments array (multiple payment methods)
+    const paymentsArray = validPayments.map(payment => {
+      const paymentObj = {
+        method: payment.method,
+        amount: parseFloat(payment.amount)
+      };
+      if (payment.bankAccount && (payment.method === 'bank' || payment.method === 'online')) {
+        paymentObj.bankAccount = payment.bankAccount;
       }
-      if (transactionReceipt) {
-        formDataToSend.append('transactionReceipt', transactionReceipt)
-      }
+      return paymentObj;
+    });
+    formDataToSend.append('payments', JSON.stringify(paymentsArray));
+    
+    // Append transaction receipt if exists
+    if (transactionReceipt) {
+      formDataToSend.append('transactionReceipt', transactionReceipt)
     }
 
     try {
       setIsSubmitting(true)
       
-      // First, create the purchase with multipart/form-data
+      // Create the purchase with multipart/form-data
       const purchaseResponse = await userRequest.post('/purchases', formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -229,25 +293,22 @@ const AddPurchase = () => {
       })
 
       if (purchaseResponse.data.status === 'success') {
-        // Prepare supplier payment data
-        const paymentData = {
-          supplier: formData.supplier,
-          amount: parseFloat(amountpay || 0),
-          paymentMethod: mapPaymentMethod(formData.paymentMethod),
-          status: remainingBalance <= 0 ? "completed" : "partial",
-          notes:
-            formData.notes ||
-            `Payment for purchase #${purchaseResponse.data.data._id}`,
-          currency: formData.currency,
-        };
-        // products: formData.items.map((item) => ({
-        //   product: item.product,
-        //   quantity: Number(item.quantity),
-        //   amount: Number(item.purchaseRate),
-        // })),
+        // Create supplier payments for each payment method
+        const totalPaid = calculateTotalPaid();
+        if (totalPaid > 0) {
+          // Create a single supplier payment record with total amount
+          // You can modify this to create multiple payment records if needed
+          const paymentData = {
+            supplier: formData.supplier,
+            amount: totalPaid,
+            paymentMethod: mapPaymentMethod(validPayments[0].method), // Use first payment method
+            status: remainingBalance <= 0 ? "completed" : "partial",
+            notes:
+              formData.notes ||
+              `Payment for purchase #${purchaseResponse.data.data._id}`,
+            currency: formData.currency,
+          };
 
-        // Make the supplier payment if amount is greater than 0
-        if (paymentData.amount > 0) {
           await userRequest.post('/supplier-payments', paymentData)
         }
 
@@ -361,31 +422,6 @@ const AddPurchase = () => {
                 ))}
               </Select>
 
-              <Select
-                label="Payment Method"
-                placeholder="Select payment method"
-                labelPlacement="outside"
-                selectedKeys={[formData.paymentMethod]}
-                onChange={(e) =>
-                  setFormData((p) => ({ ...p, paymentMethod: e.target.value }))
-                }
-              >
-                <SelectItem key="cash" value="cash">
-                  Cash
-                </SelectItem>
-                <SelectItem key="bank" value="bank">
-                  Bank Transfer
-                </SelectItem>
-                <SelectItem key="credit" value="credit">
-                  Credit
-                </SelectItem>
-                <SelectItem key="check" value="check">
-                  check
-                </SelectItem>
-                <SelectItem key="online" value="online">
-                  online
-                </SelectItem>
-              </Select>
 
               <Input
                 type="date"
@@ -500,115 +536,196 @@ const AddPurchase = () => {
 
             <Divider className="my-6" />
 
+            {/* Payment Methods Section */}
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">Payment Methods</h2>
+                <Button
+                  color="primary"
+                  variant="flat"
+                  startContent={<FaPlus />}
+                  onPress={addPaymentMethod}
+                >
+                  Add Payment Method
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                {payments.map((payment, index) => (
+                  <Card key={index} className="p-4">
+                    <CardBody className="p-0">
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                        <div className="md:col-span-4">
+                          <Select
+                            label="Payment Method"
+                            placeholder="Select payment method"
+                            labelPlacement="outside"
+                            selectedKeys={[payment.method]}
+                            onChange={(e) => handlePaymentChange(index, 'method', e.target.value)}
+                          >
+                            <SelectItem key="cash" value="cash">
+                              Cash
+                            </SelectItem>
+                            <SelectItem key="bank" value="bank">
+                              Bank Transfer
+                            </SelectItem>
+                            <SelectItem key="credit" value="credit">
+                              Credit
+                            </SelectItem>
+                            <SelectItem key="check" value="check">
+                              Check
+                            </SelectItem>
+                            <SelectItem key="online" value="online">
+                              Online
+                            </SelectItem>
+                          </Select>
+                        </div>
+
+                        <div className="md:col-span-3">
+                          <Input
+                            type="number"
+                            label="Amount"
+                            placeholder="Enter amount"
+                            labelPlacement="outside"
+                            value={payment.amount}
+                            onChange={(e) => handlePaymentChange(index, 'amount', e.target.value)}
+                            min="0"
+                            step="0.01"
+                            isRequired
+                          />
+                        </div>
+
+                        {(payment.method === 'bank' || payment.method === 'online') && (
+                          <div className="md:col-span-4">
+                            <Select
+                              label="Bank Account"
+                              placeholder="Select bank account"
+                              labelPlacement="outside"
+                              selectedKeys={payment.bankAccount ? new Set([payment.bankAccount]) : new Set()}
+                              onSelectionChange={(keys) => {
+                                const selectedKey = Array.from(keys)[0]
+                                handlePaymentChange(index, 'bankAccount', selectedKey || '')
+                              }}
+                              isRequired
+                            >
+                              {bankAccounts.map((account) => {
+                                const displayText = `${account.bankName} - ${account.accountName} (${account.branchCode})`
+                                return (
+                                  <SelectItem 
+                                    key={account._id} 
+                                    value={account._id}
+                                    textValue={displayText}
+                                  >
+                                    {displayText}
+                                  </SelectItem>
+                                )
+                              })}
+                            </Select>
+                          </div>
+                        )}
+
+                        <div className="md:col-span-1">
+                          <Button
+                            isIconOnly
+                            color="danger"
+                            variant="light"
+                            onPress={() => removePaymentMethod(index)}
+                            isDisabled={payments.length === 1}
+                          >
+                            <FaTrash />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            <Divider className="my-6" />
+
             {/* Summary Section */}
-            <div className="flex justify-between gap-3">
-              <Input
-                type="number"
-                label="Amount"
-                placeholder="Amount you pay"
-                name="amount"
-                labelPlacement="outside"
-                value={amountpay}
-                onChange={(e) => setamountpay(e.target.value)}
-                isRequired
-              />
-            <div className="flex flex-col gap-4 mb-6 w-full">
-              {/* Subtotal */}
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Subtotal:</span>
-                <span className="font-semibold">
-                  {formData.items
-                    .reduce((sum, item) => {
-                      const quantity = parseFloat(item.quantity) || 0;
-                      const rate = parseFloat(item.purchaseRate) || 0;
-                      return sum + quantity * rate;
-                    }, 0)
-                    .toFixed(2)}
-                </span>
-              </div>
+            <Card className="mb-6">
+              <CardBody>
+                <h3 className="text-lg font-semibold mb-4">Payment Summary</h3>
+                <div className="flex flex-col gap-3">
+                  {/* Subtotal */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Subtotal:</span>
+                    <span className="font-semibold">
+                      {formData.items
+                        .reduce((sum, item) => {
+                          const quantity = parseFloat(item.quantity) || 0;
+                          const rate = parseFloat(item.purchaseRate) || 0;
+                          return sum + quantity * rate;
+                        }, 0)
+                        .toFixed(2)}
+                    </span>
+                  </div>
 
-              {/* Paid Amount */}
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Paid Amount:</span>
-                <span className="font-semibold">
-                  {parseFloat(amountpay || 0).toFixed(2)}
-                </span>
-              </div>
+                  {/* Total Paid Amount */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Total Paid:</span>
+                    <span className="font-semibold text-green-600">
+                      {calculateTotalPaid().toFixed(2)}
+                    </span>
+                  </div>
 
-              {/* Total */}
-              <div className="flex justify-between items-center border-t pt-2 mt-2">
-                <span className="text-gray-800 font-semibold">
-                  Remaining Balance:
-                </span>
-                <span
-                  className={`text-lg font-bold ${
-                    formData.items.reduce((sum, item) => {
-                      const quantity = parseFloat(item.quantity) || 0;
-                      const rate = parseFloat(item.purchaseRate) || 0;
-                      return sum + quantity * rate;
-                    }, 0) -
-                      parseFloat(amountpay || 0) >
-                    0
-                      ? "text-red-600"
-                      : "text-green-600"
-                  }`}
-                >
-                  {(
-                    formData.items.reduce((sum, item) => {
-                      const quantity = parseFloat(item.quantity) || 0;
-                      const rate = parseFloat(item.purchaseRate) || 0;
-                      return sum + quantity * rate;
-                    }, 0) - parseFloat(amountpay || 0)
-                  ).toFixed(2)}
-                </span>
-              </div>
-            </div>
-            </div>
-
-            {/* Bank Transfer specific fields */}
-            {formData.paymentMethod === 'bank' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 mt-6">
-                <Select
-                  label="Bank Account"
-                  placeholder="Select bank account"
-                  labelPlacement="outside"
-                  selectedKeys={bankAccount ? new Set([bankAccount]) : new Set()}
-                  onSelectionChange={(keys) => {
-                    const selectedKey = Array.from(keys)[0]
-                    setBankAccount(selectedKey || '')
-                  }}
-                >
-                  {bankAccounts.map((account) => {
-                    const displayText = `${account.bankName} - ${account.accountName} (${account.branchCode})`
-                    return (
-                      <SelectItem 
-                        key={account._id} 
-                        value={account._id}
-                        textValue={displayText}
-                      >
-                        {displayText}
-                      </SelectItem>
-                    )
-                  })}
-                </Select>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Transaction Receipt
-                  </label>
-                  <Input
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={handleReceiptChange}
-                    className="cursor-pointer"
-                  />
-                  {transactionReceipt && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Selected: {transactionReceipt.name}
-                    </p>
+                  {/* Payment Breakdown */}
+                  {payments.filter(p => p.amount && parseFloat(p.amount) > 0).length > 0 && (
+                    <div className="mt-2 pt-3 border-t">
+                      <p className="text-sm text-gray-500 mb-2">Payment Breakdown:</p>
+                      {payments
+                        .filter(p => p.amount && parseFloat(p.amount) > 0)
+                        .map((payment, idx) => (
+                          <div key={idx} className="flex justify-between items-center text-sm mb-1">
+                            <span className="text-gray-500 capitalize">
+                              {payment.method}:
+                            </span>
+                            <span className="font-medium">
+                              {parseFloat(payment.amount || 0).toFixed(2)}
+                            </span>
+                          </div>
+                        ))}
+                    </div>
                   )}
+
+                  {/* Remaining Balance */}
+                  <div className="flex justify-between items-center border-t pt-3 mt-2">
+                    <span className="text-gray-800 font-semibold">
+                      Remaining Balance:
+                    </span>
+                    <span
+                      className={`text-lg font-bold ${
+                        calculateRemainingBalance() > 0
+                          ? "text-red-600"
+                          : "text-green-600"
+                      }`}
+                    >
+                      {calculateRemainingBalance().toFixed(2)}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            )}
+              </CardBody>
+            </Card>
+
+            {/* Transaction Receipt Upload */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Transaction Receipt (Optional)
+              </label>
+              <Input
+                type="file"
+                accept="image/*,.pdf"
+                onChange={handleReceiptChange}
+                className="cursor-pointer"
+              />
+              {transactionReceipt && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Selected: {transactionReceipt.name}
+                </p>
+              )}
+            </div>
 
             <Divider className="my-6" />
 
