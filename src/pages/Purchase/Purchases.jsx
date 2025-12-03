@@ -191,6 +191,14 @@ const Purchases = () => {
     <div className="p-4">
       <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold mb-4 my-auto">Purchases</h1>
+        <div className="flex gap-2 items-center">
+          <Button
+            variant="flat"
+            onPress={() => navigate('/Navigation')}
+          >
+            Dashboard
+          </Button>
+        </div>
         <div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Object.entries(paymentMethodTotals).map(([method, total]) => (

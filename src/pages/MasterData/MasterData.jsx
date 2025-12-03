@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Tabs, Tab, Card, CardBody } from '@nextui-org/react';
+import { Tabs, Tab, Card, CardBody, Button } from '@nextui-org/react';
 import { useQuery } from 'react-query';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import QuantityUnitsTable from './components/QuantityUnitsTable';
 import PackingUnitsTable from './components/PackingUnitsTable';
@@ -8,6 +9,7 @@ import userRequest from '../../utils/userRequest';
 import PochuesTable from './components/PochuesTable';
 
 const MasterData = () => {
+  const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState("quantity-units");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -63,7 +65,15 @@ const MasterData = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Master Data Management</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Master Data Management</h1>
+        <Button
+          variant="flat"
+          onPress={() => navigate('/Navigation')}
+        >
+          Dashboard
+        </Button>
+      </div>
 
       <Card className="w-full">
         <CardBody className="p-0">

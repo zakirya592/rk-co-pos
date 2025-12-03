@@ -397,6 +397,14 @@ const SuppliersDetails = () => {
 
   return (
     <div className="p-1 sm:p-1 md:p-5 lg:p-5 space-y-6">
+      <div className="flex justify-end">
+        <Button
+          variant="flat"
+          onPress={() => navigate('/Navigation')}
+        >
+          Dashboard
+        </Button>
+      </div>
       {/* suppliers Information Header */}
       <Card className="mb-8">
         <CardHeader className="flex flex-col gap-2">

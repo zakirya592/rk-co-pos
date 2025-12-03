@@ -98,6 +98,12 @@ const SalesDistributionExpenseDetails = () => {
         </div>
 
         <div className="flex gap-2">
+          <Button
+            variant="flat"
+            onPress={() => navigate('/Navigation')}
+          >
+            Dashboard
+          </Button>
           <Button color="primary" variant="flat" startContent={<FaEdit />} onPress={() => navigate(`/expenses/sales-distribution/edit/${id}`)}>
             Edit
           </Button>

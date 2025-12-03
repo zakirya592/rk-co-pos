@@ -16,6 +16,7 @@ import {
 } from '@nextui-org/react';
 import { FaPlus, FaSearch, FaEdit, FaTrash, FaEye } from 'react-icons/fa';
 import { useQuery } from 'react-query';
+import { useNavigate } from 'react-router-dom';
 import ViewUserDetails from './ViewUserDetails';
 import AddUser from './AddUser';
 import UpdateUser from './UpdateUser';
@@ -29,6 +30,7 @@ const fetchUsers = async () => {
 };
 
 const User = () => {
+    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -150,13 +152,21 @@ const User = () => {
                     <h1 className="text-3xl font-bold text-gray-800">Users</h1>
                     <p className="text-gray-600">Manage user accounts and roles</p>
                 </div>
-                <Button
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold"
-                    startContent={<FaPlus />}
-                    onClick={() => setShowAddModal(true)}
-                >
-                    Add User
-                </Button>
+                <div className="flex gap-2">
+                    <Button
+                        variant="flat"
+                        onPress={() => navigate('/Navigation')}
+                    >
+                        Dashboard
+                    </Button>
+                    <Button
+                        className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold"
+                        startContent={<FaPlus />}
+                        onClick={() => setShowAddModal(true)}
+                    >
+                        Add User
+                    </Button>
+                </div>
             </div>
 
             {/* Search */}

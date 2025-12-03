@@ -89,6 +89,12 @@ const MiscellaneousExpenseDetails = () => {
         </div>
 
         <div className="flex gap-2">
+          <Button
+            variant="flat"
+            onPress={() => navigate('/Navigation')}
+          >
+            Dashboard
+          </Button>
           <Button color="primary" variant="flat" startContent={<FaEdit />} onPress={() => navigate(`/expenses/miscellaneous/edit/${id}`)}>
             Edit
           </Button>

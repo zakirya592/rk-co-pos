@@ -187,6 +187,14 @@ const History = () => {
 
         <div className="text-right space-y-2 flex flex-row flex-wrap">
           <div className="mt-7 me-3">
+            <Button
+              variant="flat"
+              onPress={() => navigate('/Navigation')}
+            >
+              Dashboard
+            </Button>
+          </div>
+          <div className="mt-7 me-3">
             <Button color="success" onPress={exportToExcel}>
               Export Excel
             </Button>

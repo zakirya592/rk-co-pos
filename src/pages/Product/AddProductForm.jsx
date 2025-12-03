@@ -288,16 +288,25 @@ const AddProductForm = () => {
           <form onSubmit={handleSubmit}>
             <div className="flex flex-wrap  justify-between items-center mb-6">
               <h2 className="text-xl font-bold">Add New Product</h2>
-              <Button
-                type="submit"
-                color="primary"
-                //   className="w-auto mt-3 md:mt-0 sm:mt-3"
-                className="bg-gradient-to-r w-auto from-blue-500 to-purple-600 text-white font-semibold"
-                startContent={<FaPlus />}
-                isLoading={loading}
-              >
-                Add Product
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="flat"
+                  onPress={() => navigate('/Navigation')}
+                  isDisabled={loading}
+                >
+                  Dashboard
+                </Button>
+                <Button
+                  type="submit"
+                  color="primary"
+                  //   className="w-auto mt-3 md:mt-0 sm:mt-3"
+                  className="bg-gradient-to-r w-auto from-blue-500 to-purple-600 text-white font-semibold"
+                  startContent={<FaPlus />}
+                  isLoading={loading}
+                >
+                  Add Product
+                </Button>
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input

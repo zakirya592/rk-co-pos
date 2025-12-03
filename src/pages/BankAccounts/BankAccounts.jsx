@@ -220,13 +220,21 @@ const BankAccounts = () => {
           <FaUniversity className="text-2xl mr-2 text-primary" />
           <h1 className="text-2xl font-bold">Bank Accounts</h1>
         </div>
-        <Button
-          color="primary"
-          onPress={() => navigate('/bank-accounts/add')}
-          startContent={<FaPlus />}
-        >
-          Add New Account
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="flat"
+            onPress={() => navigate('/Navigation')}
+          >
+            Dashboard
+          </Button>
+          <Button
+            color="primary"
+            onPress={() => navigate('/bank-accounts/add')}
+            startContent={<FaPlus />}
+          >
+            Add New Account
+          </Button>
+        </div>
       </div>
 
       <Card className="mb-4">

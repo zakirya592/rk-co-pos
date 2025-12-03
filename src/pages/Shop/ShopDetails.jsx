@@ -101,6 +101,12 @@ const ShopDetails = () => {
         </h1>
         <div className="flex gap-3">
           <Button
+            variant="flat"
+            onPress={() => navigate('/Navigation')}
+          >
+            Dashboard
+          </Button>
+          <Button
             className="bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold"
             onClick={() => navigate(`/damage-products/shop/${id}`)}
           >

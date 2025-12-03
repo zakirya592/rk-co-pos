@@ -340,6 +340,14 @@ const POS = () => {
 
   return (
     <div className="p-4 ">
+      <div className="flex justify-end mb-4">
+        <Button
+          variant="flat"
+          onPress={() => navigate('/Navigation')}
+        >
+          Dashboard
+        </Button>
+      </div>
       <div className=" h-full">
         {/* Product Search & Selection */}
         <div className="space-y-4 ">

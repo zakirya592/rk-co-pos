@@ -166,14 +166,21 @@ const Shipment = () => {
               Shipments Management
             </h1>
           </div>
-          
-          <Button
-            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold"
-            startContent={<FaPlus />}
-            onPress={() => navigate("/shipments/add")}
-          >
-            Add Shipment
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="flat"
+              onPress={() => navigate('/Navigation')}
+            >
+              Dashboard
+            </Button>
+            <Button
+              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold"
+              startContent={<FaPlus />}
+              onPress={() => navigate("/shipments/add")}
+            >
+              Add Shipment
+            </Button>
+          </div>
         </div>
       </div>
 

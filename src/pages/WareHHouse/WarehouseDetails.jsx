@@ -190,6 +190,12 @@ const WarehouseDetails = () => {
         </h1>
         <div className="flex gap-3">
           <Button
+            variant="flat"
+            onPress={() => navigate('/Navigation')}
+          >
+            Dashboard
+          </Button>
+          <Button
             className="bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold"
             onClick={() => navigate(`/warehouse-sales/${type || "warehouse"}/${id}`)}
           >

@@ -149,7 +149,16 @@ const Reports = () => {
       {/* Sidebar */}
       <div className="w-[300px] bg-white p-5 border-r border-gray-200 h-full overflow-y-scroll">
         <div className="mb-5 pb-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold">Reports</h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">Reports</h2>
+            <Button
+              variant="flat"
+              size="sm"
+              onPress={() => navigate('/Navigation')}
+            >
+              Dashboard
+            </Button>
+          </div>
         </div>
         <div className="mt-5">
           <Input

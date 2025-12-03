@@ -12,6 +12,7 @@ import { FaPlus, FaSearch, FaEdit, FaTrash, FaMoneyBillWave, FaMoneyBillWaveAlt 
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import { useQuery } from 'react-query';
+import { useNavigate } from 'react-router-dom';
 import userRequest from '../../utils/userRequest';
 import AddCurrencyModal from "./AddCurrencyModal";
 import UpdateCurrencyModal from './UpdateCurrencyModal';
@@ -24,6 +25,7 @@ const fetchCurrencies = async () => {
 };
 
 const Currency = () => {
+  const navigate = useNavigate();
   const { data: currencies = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['currencies'],
     queryFn: fetchCurrencies
@@ -131,7 +133,13 @@ const Currency = () => {
           </div>
           <p className="text-gray-600">Manage currencies and exchange rates</p>
         </div>
-        <div className="flex">
+        <div className="flex gap-2">
+          <Button
+            variant="flat"
+            onPress={() => navigate('/Navigation')}
+          >
+            Dashboard
+          </Button>
           <Chip
             color="primary"
             variant="flat"

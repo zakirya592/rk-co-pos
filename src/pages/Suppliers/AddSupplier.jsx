@@ -83,6 +83,13 @@ const AddSupplier = () => {
         <div className="flex justify-end gap-4">
           <Button
             variant="flat"
+            onPress={() => navigate('/Navigation')}
+            isDisabled={loading}
+          >
+            Dashboard
+          </Button>
+          <Button
+            variant="flat"
             startContent={<FaArrowLeft />}
             onPress={() => navigate("/suppliers")}
             isDisabled={loading}

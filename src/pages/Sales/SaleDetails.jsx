@@ -143,6 +143,12 @@ const SaleDetails = () => {
             </div>
             <div className="flex gap-2">
               <Button
+                variant="flat"
+                onPress={() => navigate('/Navigation')}
+              >
+                Dashboard
+              </Button>
+              <Button
                 color="primary"
                 variant="flat"
                 startContent={<FaPrint />}

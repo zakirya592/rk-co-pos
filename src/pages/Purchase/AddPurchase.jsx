@@ -351,6 +351,13 @@ const AddPurchase = () => {
           <div className="flex justify-end gap-4">
             <Button
               variant="flat"
+              onPress={() => navigate('/Navigation')}
+              isDisabled={isSubmitting}
+            >
+              Dashboard
+            </Button>
+            <Button
+              variant="flat"
               onPress={() => navigate(-1)}
               isDisabled={isSubmitting}
             >

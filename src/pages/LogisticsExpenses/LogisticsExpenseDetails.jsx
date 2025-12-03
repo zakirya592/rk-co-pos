@@ -60,9 +60,17 @@ const LogisticsExpenseDetails = () => {
           </Button>
           <h1 className="text-2xl font-bold">Logistics Expense Details</h1>
         </div>
-        <Button color="primary" startContent={<FaEdit />} as={Link} to={`/expenses/logistics/edit/${expense._id}`}>
-          Edit
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="flat"
+            onPress={() => navigate('/Navigation')}
+          >
+            Dashboard
+          </Button>
+          <Button color="primary" startContent={<FaEdit />} as={Link} to={`/expenses/logistics/edit/${expense._id}`}>
+            Edit
+          </Button>
+        </div>
       </div>
 
       <Card>

@@ -120,13 +120,21 @@ const Transporters = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Transporters Management</h1>
         </div>
-        <Button
-          className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold"
-          startContent={<FaPlus />}
-          onPress={() => navigate("/add-transporter")}
-        >
-          Add Transporter
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="flat"
+            onPress={() => navigate('/Navigation')}
+          >
+            Dashboard
+          </Button>
+          <Button
+            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold"
+            startContent={<FaPlus />}
+            onPress={() => navigate("/add-transporter")}
+          >
+            Add Transporter
+          </Button>
+        </div>
       </div>
 
       {/* Search */}

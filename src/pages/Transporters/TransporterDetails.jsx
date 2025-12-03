@@ -116,6 +116,12 @@ const TransporterDetails = () => {
         </div>
         <div className="flex space-x-2">
           <Button
+            variant="flat"
+            onPress={() => navigate('/Navigation')}
+          >
+            Dashboard
+          </Button>
+          <Button
             color="primary"
             variant="light"
             startContent={<FaEdit />}

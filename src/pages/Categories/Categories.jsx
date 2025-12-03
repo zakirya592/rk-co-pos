@@ -12,6 +12,7 @@ import { FaPlus, FaSearch, FaEdit, FaTrash, FaTags } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import { useQuery } from 'react-query';
+import { useNavigate } from 'react-router-dom';
 import userRequest from '../../utils/userRequest';
 import AddCategoryModal from './AddCategoryModal';
 import UpdateCategoryModal from './UpdateCategoryModal';
@@ -30,6 +31,7 @@ const fetchProducts = async () => {
 };
 
 const Categories = () => {
+  const navigate = useNavigate();
 
   const { data: categoriess = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['categories'],
@@ -142,7 +144,13 @@ const Categories = () => {
           </div>
           <p className="text-gray-600">Manage product categories</p>
         </div>
-        <div className="flex">
+        <div className="flex gap-2">
+          <Button
+            variant="flat"
+            onPress={() => navigate('/Navigation')}
+          >
+            Dashboard
+          </Button>
           <Chip
             color="primary"
             variant="flat"

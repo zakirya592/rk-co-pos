@@ -114,13 +114,21 @@ const Customers = () => {
             Manage customer information and purchase history
           </p>
         </div>
-        <Button
-          className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold mt-3 sm:mt-3 md:mt-0 lg:mt-0"
-          startContent={<FaPlus />}
-          onPress={() => navigate("/customers/add")}
-        >
-          Add Customer
-        </Button>
+        <div className="flex gap-2 mt-3 sm:mt-3 md:mt-0 lg:mt-0">
+          <Button
+            variant="flat"
+            onPress={() => navigate('/Navigation')}
+          >
+            Dashboard
+          </Button>
+          <Button
+            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold"
+            startContent={<FaPlus />}
+            onPress={() => navigate("/customers/add")}
+          >
+            Add Customer
+          </Button>
+        </div>
       </div>
 
       {/* Search */}

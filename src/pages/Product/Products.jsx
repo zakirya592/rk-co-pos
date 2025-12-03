@@ -216,6 +216,12 @@ const Products = () => {
           <p className="text-gray-600">Manage your product inventory</p>
         </div>
         <div className="flex gap-3">
+          <Button
+            variant="flat"
+            onPress={() => navigator('/Navigation')}
+          >
+            Dashboard
+          </Button>
           <Chip
             color="primary"
             variant="flat"

@@ -137,14 +137,22 @@ const Sales = () => {
           <h1 className="text-2xl font-bold text-gray-900">Sales Management</h1>
           <p className="text-gray-600">Manage and view all sales transactions</p>
         </div>
-        <Button
-          color="primary"
-          size="lg"
-          startContent={<FaPlus />}
-          onPress={goToPOS}
-        >
-          Add New Sale
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="flat"
+            onPress={() => navigate('/Navigation')}
+          >
+            Dashboard
+          </Button>
+          <Button
+            color="primary"
+            size="lg"
+            startContent={<FaPlus />}
+            onPress={goToPOS}
+          >
+            Add New Sale
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

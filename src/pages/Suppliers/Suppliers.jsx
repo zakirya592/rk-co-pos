@@ -76,7 +76,13 @@ const Suppliers = () => {
             </div>
             <p className="text-gray-600">Manage suppliers information</p>
           </div>
-          <div className="flex">
+          <div className="flex gap-2">
+            <Button
+              variant="flat"
+              onPress={() => navigate('/Navigation')}
+            >
+              Dashboard
+            </Button>
             <Chip
               color="primary"
               variant="flat"

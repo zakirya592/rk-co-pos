@@ -81,6 +81,13 @@ const AddCustomerPage = () => {
         </Link> */}
         <div className="flex justify-end gap-4 mt-6">
           <Button
+            variant="flat"
+            onPress={() => navigate('/Navigation')}
+            isDisabled={loading}
+          >
+            Dashboard
+          </Button>
+          <Button
             color="danger"
             onPress={() => navigate("/customers")}
             variant="flat"
