@@ -8,7 +8,7 @@ import {
   Spinner,
   Tooltip
 } from '@nextui-org/react';
-import { FaPlus, FaSearch, FaEdit, FaTrash, FaMoneyBillWave, FaMoneyBillWaveAlt } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaEdit, FaTrash, FaMoneyBillWave, FaMoneyBillWaveAlt, FaHistory } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import { useQuery } from 'react-query';
@@ -17,6 +17,7 @@ import userRequest from '../../utils/userRequest';
 import AddCurrencyModal from "./AddCurrencyModal";
 import UpdateCurrencyModal from './UpdateCurrencyModal';
 import CurrencyConverterModal from "./CurrencyConverterModal";
+import CurrencyHistoryModal from "./CurrencyHistoryModal";
 
 
 const fetchCurrencies = async () => {
@@ -35,6 +36,7 @@ const Currency = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState(null);
   const [showConverterModal, setShowConverterModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   const [newCurrency, setNewCurrency] = useState({
     name: "",
@@ -217,6 +219,19 @@ const Currency = () => {
                     >
                       <FaEdit />
                     </Button>
+                    <Tooltip content="View Exchange History">
+                      <Button
+                        isIconOnly
+                        variant="light"
+                        className="text-amber-500"
+                        onPress={() => {
+                          setSelectedCurrency(currency);
+                          setShowHistoryModal(true);
+                        }}
+                      >
+                        <FaHistory />
+                      </Button>
+                    </Tooltip>
                     <Button
                       isIconOnly
                       variant="light"
@@ -267,6 +282,11 @@ const Currency = () => {
         isOpen={showConverterModal}
         onClose={() => setShowConverterModal(false)}
         // currencies={currencies}
+      />
+      <CurrencyHistoryModal
+        isOpen={showHistoryModal}
+        onClose={() => setShowHistoryModal(false)}
+        currency={selectedCurrency}
       />
     </div>
   );
