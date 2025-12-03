@@ -15,6 +15,7 @@ const AddProductForm = () => {
     name: "",
     countInStock: "",
     category: "",
+    subCategory: "",
     purchaseRate: "",
     Warehouses: "",
     // saleRate: "",
@@ -91,6 +92,11 @@ const AddProductForm = () => {
     return res.data.data || [];
   };
 
+  const fetchSubcategories = async () => {
+    const res = await userRequest.get("/subcategories");
+    return res.data.data || [];
+  };
+
   // Add suppliers fetch function
   const fetchSuppliers = async () => {
     const res = await userRequest.get("/suppliers");
@@ -111,6 +117,11 @@ const AddProductForm = () => {
   const { data: categories = [], isLoading: isCategoriesLoading } = useQuery(
     ["categories"],
     fetchCategories
+  );
+
+  const { data: subcategories = [] } = useQuery(
+    ["subcategories"],
+    fetchSubcategories
   );
 
   const { data: suppliers = [], isLoading: isSuppliersLoading } = useQuery(
@@ -235,6 +246,9 @@ const AddProductForm = () => {
       formData.append("pochues", newProduct.pochues);
       formData.append("description", newProduct.description);
       formData.append("category", newProduct.category);
+      if (newProduct.subCategory) {
+        formData.append("subCategory", newProduct.subCategory);
+      }
       formData.append("countInStock", newProduct.countInStock);
       formData.append("currency", newProduct.currency);
       formData.append("supplier", newProduct.supplier);
@@ -347,6 +361,37 @@ const AddProductForm = () => {
                     {category.name}
                   </SelectItem>
                 ))}
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <Select
+                label="Subcategory"
+                labelPlacement="outside"
+                placeholder={
+                  newProduct.category
+                    ? "Select subcategory"
+                    : "Select a category first"
+                }
+                isDisabled={!newProduct.category}
+                value={newProduct.subCategory}
+                onChange={(e) =>
+                  setNewProduct({
+                    ...newProduct,
+                    subCategory: e.target.value,
+                  })
+                }
+                variant="bordered"
+              >
+                {subcategories
+                  .filter(
+                    (sub) => sub.category && sub.category._id === newProduct.category
+                  )
+                  .map((sub) => (
+                    <SelectItem key={sub._id} value={sub._id}>
+                      {sub.name}
+                    </SelectItem>
+                  ))}
               </Select>
             </div>
 
