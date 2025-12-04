@@ -558,9 +558,28 @@ const POS = () => {
                       labelPlacement="outside"
                       type="number"
                       placeholder="1"
-                      value={row.quantity || 1}
+                      value={row.quantity === undefined || row.quantity === null ? "" : row.quantity}
                       onChange={(e) => {
-                        const newQty = parseInt(e.target.value) || 1;
+                        const inputValue = e.target.value;
+                        
+                        // Allow empty input for smooth editing
+                        if (inputValue === "") {
+                          const updatedRows = [...itemRows];
+                          updatedRows[index] = {
+                            ...updatedRows[index],
+                            quantity: "",
+                          };
+                          setItemRows(updatedRows);
+                          return;
+                        }
+                        
+                        const newQty = parseInt(inputValue);
+                        
+                        // Validate if it's a valid number
+                        if (isNaN(newQty) || newQty < 1) {
+                          return;
+                        }
+                        
                         if (
                           selectedProduct &&
                           newQty > selectedProduct.currentStock
@@ -588,11 +607,33 @@ const POS = () => {
                           ));
                         }
                       }}
+                      onBlur={(e) => {
+                        // Set default to 1 if empty when user leaves the field
+                        const inputValue = e.target.value;
+                        if (inputValue === "" || isNaN(parseInt(inputValue)) || parseInt(inputValue) < 1) {
+                          const updatedRows = [...itemRows];
+                          updatedRows[index] = {
+                            ...updatedRows[index],
+                            quantity: 1,
+                          };
+                          setItemRows(updatedRows);
+                          
+                          // Also update the cart
+                          if (row.productId) {
+                            setCart(cart.map(item => 
+                              item._id === row.productId 
+                                ? { ...item, quantity: 1 }
+                                : item
+                            ));
+                          }
+                        }
+                      }}
+                      min="1"
                       max={selectedProduct?.currentStock || 9999}
                       variant="bordered"
                     />
                     <div className="my-auto">
-                      <Input value={row.quantity * row.price} variant="bordered"
+                      <Input value={(row.quantity || 1) * (row.price || 0)} variant="bordered"
                       readOnly 
                       label='Total'
                       placeholder='Total'

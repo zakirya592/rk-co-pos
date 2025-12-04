@@ -93,14 +93,14 @@ const LogisticsExpenseDetails = () => {
         <CardBody className="space-y-4">
           <h2 className="text-lg font-semibold">Financials</h2>
           <Divider />
-          <Row label="Freight Cost" value={`${expense.currency?.symbol ?? '$'} ${((expense.freightCost ?? 0).toLocaleString?.()) ?? String(expense.freightCost ?? 0)}`} />
-          <Row label="Border Crossing" value={`${expense.currency?.symbol ?? '$'} ${((expense.borderCrossingCharges ?? 0).toLocaleString?.()) ?? String(expense.borderCrossingCharges ?? 0)}`} />
-          <Row label="Transporter Commission" value={`${expense.currency?.symbol ?? '$'} ${((expense.transporterCommission ?? 0).toLocaleString?.()) ?? String(expense.transporterCommission ?? 0)}`} />
-          <Row label="Service Fee" value={`${expense.currency?.symbol ?? '$'} ${((expense.serviceFee ?? 0).toLocaleString?.()) ?? String(expense.serviceFee ?? 0)}`} />
-          <Row label="Transit Warehouse" value={`${expense.currency?.symbol ?? '$'} ${((expense.transitWarehouseCharges ?? 0).toLocaleString?.()) ?? String(expense.transitWarehouseCharges ?? 0)}`} />
-          <Row label="Local Transport" value={`${expense.currency?.symbol ?? '$'} ${((expense.localTransportCharges ?? 0).toLocaleString?.()) ?? String(expense.localTransportCharges ?? 0)}`} />
+          <Row label="Freight Cost" value={`${expense.currency?.symbol ?? 'Rs'} ${((expense.freightCost ?? 0).toLocaleString?.()) ?? String(expense.freightCost ?? 0)}`} />
+          <Row label="Border Crossing" value={`${expense.currency?.symbol ?? 'Rs'} ${((expense.borderCrossingCharges ?? 0).toLocaleString?.()) ?? String(expense.borderCrossingCharges ?? 0)}`} />
+          <Row label="Transporter Commission" value={`${expense.currency?.symbol ?? 'Rs'} ${((expense.transporterCommission ?? 0).toLocaleString?.()) ?? String(expense.transporterCommission ?? 0)}`} />
+          <Row label="Service Fee" value={`${expense.currency?.symbol ?? 'Rs'} ${((expense.serviceFee ?? 0).toLocaleString?.()) ?? String(expense.serviceFee ?? 0)}`} />
+          <Row label="Transit Warehouse" value={`${expense.currency?.symbol ?? 'Rs'} ${((expense.transitWarehouseCharges ?? 0).toLocaleString?.()) ?? String(expense.transitWarehouseCharges ?? 0)}`} />
+          <Row label="Local Transport" value={`${expense.currency?.symbol ?? 'Rs'} ${((expense.localTransportCharges ?? 0).toLocaleString?.()) ?? String(expense.localTransportCharges ?? 0)}`} />
           <Divider />
-          <Row label="Total Cost" value={`${expense.currency?.symbol ?? '$'} ${((expense.totalCost ?? 0).toLocaleString?.()) ?? String(expense.totalCost ?? 0)}`} />
+          <Row label="Total Cost" value={`${expense.currency?.symbol ?? 'Rs'} ${((expense.totalCost ?? 0).toLocaleString?.()) ?? String(expense.totalCost ?? 0)}`} />
           <Row label="Amount in PKR" value={`PKR ${((expense.amountInPKR ?? 0).toLocaleString?.()) ?? String(expense.amountInPKR ?? 0)}`} />
         </CardBody>
       </Card>

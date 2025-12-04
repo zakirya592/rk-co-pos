@@ -101,7 +101,7 @@ const OperationalExpenses = () => {
         return (
           <div className="flex flex-col">
             <p className="text-bold text-sm">
-              {(expense.currency?.symbol || '$')} {Number(expense.totalCost || 0).toLocaleString()}
+              {(expense.currency?.symbol || 'Rs')} {Number(expense.totalCost || 0).toLocaleString()}
             </p>
             <p className="text-xs text-gray-500">PKR {Number(expense.amountInPKR || 0).toLocaleString()}</p>
           </div>

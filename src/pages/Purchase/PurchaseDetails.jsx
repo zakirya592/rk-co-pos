@@ -237,17 +237,17 @@ const PurchaseDetails = () => {
                     <TableCell className="font-medium">{item.quantity || 0}</TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span>{purchase.currency?.symbol || "$"}{item.purchaseRate?.toLocaleString() || "0.00"}</span>
+                        <span>{purchase.currency?.symbol || "Rs"}{item.purchaseRate?.toLocaleString() || "0.00"}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      {purchase.currency?.symbol || "$"}{item.retailRate?.toLocaleString() || "0.00"}
+                      {purchase.currency?.symbol || "Rs"}{item.retailRate?.toLocaleString() || "0.00"}
                     </TableCell>
                     <TableCell>
-                      {purchase.currency?.symbol || "$"}{item.wholesaleRate?.toLocaleString() || "0.00"}
+                      {purchase.currency?.symbol || "Rs"}{item.wholesaleRate?.toLocaleString() || "0.00"}
                     </TableCell>
                     <TableCell className="font-medium">
-                      {purchase.currency?.symbol || "$"}{item.itemTotal?.toLocaleString() || "0.00"}
+                      {purchase.currency?.symbol || "Rs"}{item.itemTotal?.toLocaleString() || "0.00"}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -268,7 +268,7 @@ const PurchaseDetails = () => {
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total Amount:</span>
                   <span className="text-primary">
-                    {purchase.currency?.symbol || "$"}
+                    {purchase.currency?.symbol || "Rs"}
                     {purchase.totalAmount?.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2

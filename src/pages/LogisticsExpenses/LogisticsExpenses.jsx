@@ -104,7 +104,7 @@ const LogisticsExpenses = () => {
         return (
           <div className="flex flex-col">
             <p className="text-bold text-sm">
-              {(expense.currency?.symbol || '$')} {(expense.totalCost?.toLocaleString?.() ?? (expense.totalCost || 0))}
+              {(expense.currency?.symbol || 'Rs')} {(expense.totalCost?.toLocaleString?.() ?? (expense.totalCost || 0))}
             </p>
             <p className="text-xs text-gray-500">
               PKR {(expense.amountInPKR?.toLocaleString?.() ?? (expense.amountInPKR || 0))}

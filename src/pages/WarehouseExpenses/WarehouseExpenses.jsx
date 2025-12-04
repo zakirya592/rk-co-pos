@@ -130,7 +130,7 @@ const WarehouseExpenses = () => {
         return (
           <div className="flex flex-col">
             <p className="text-bold text-sm">
-              {expense.currency?.symbol || '$'} {expense.totalCost?.toLocaleString() || '0'}
+              {expense.currency?.symbol || 'Rs'} {expense.totalCost?.toLocaleString() || '0'}
             </p>
             <p className="text-xs text-gray-500">
               PKR {expense.amountInPKR?.toLocaleString() || '0'}

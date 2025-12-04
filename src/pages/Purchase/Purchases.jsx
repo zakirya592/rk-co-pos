@@ -208,7 +208,7 @@ const Purchases = () => {
                     {formatPaymentMethod(method)}
                   </p>
                   <p className="text-lg font-semibold">
-                    {purchases[0]?.currency?.symbol || "$"}
+                    {purchases[0]?.currency?.symbol || "Rs"}
                     {total?.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
@@ -322,25 +322,25 @@ const Purchases = () => {
                 </TableCell>
                 <TableCell>
                   <div className="text-sm">
-                    {purchase.currency?.symbol || "$"}
+                    {purchase.currency?.symbol || "Rs"}
                     {purchase.items?.[0]?.purchaseRate?.toFixed(2) || "N/A"}
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className="text-sm">
-                    {purchase.currency?.symbol || "$"}
+                    {purchase.currency?.symbol || "Rs"}
                     {purchase.items?.[0]?.retailRate?.toFixed(2) || "N/A"}
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className="text-sm">
-                    {purchase.currency?.symbol || "$"}
+                    {purchase.currency?.symbol || "Rs"}
                     {purchase.items?.[0]?.wholesaleRate?.toFixed(2) || "N/A"}
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className="font-medium">
-                    {purchase.currency?.symbol || "$"}
+                    {purchase.currency?.symbol || "Rs"}
                     {purchase.totalAmount?.toLocaleString()}
                   </div>
                 </TableCell>

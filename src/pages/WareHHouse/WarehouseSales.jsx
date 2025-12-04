@@ -32,10 +32,11 @@ const formatDateTime = (value) => {
 
 const formatCurrency = (amount, currencyCode = "USD") => {
   if (amount === null || amount === undefined) return "—";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: currencyCode,
-  }).format(Number(amount) || 0);
+  // Use Rs format instead of currency code
+  return `Rs ${new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Number(amount) || 0)}`;
 };
 
   const summarizeItems = (items = []) => {
@@ -181,7 +182,7 @@ const WarehouseSales = () => {
   const getCurrencyCode = (sale) => {
     if (sale?.currency?.code) return sale.currency.code;
     if (sale?.currencyCode) return sale.currencyCode;
-    return "USD";
+    return "PKR";
   };
 
   const handleQuantityChange = (productId, value) => {
