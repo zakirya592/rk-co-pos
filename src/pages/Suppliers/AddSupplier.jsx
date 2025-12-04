@@ -57,6 +57,37 @@ const AddSupplier = () => {
     }
   };
 
+  // Handle Enter key: move to next field, or submit on last
+  const handleEnterKey = (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    const form = e.target.closest('form') || e.target.closest('.p-6');
+    if (!form) return;
+
+    const elements = Array.from(form.querySelectorAll('input:not([type="file"]), select, textarea')).filter(
+      (el) =>
+        !el.disabled &&
+        el.type !== "hidden" &&
+        el.tabIndex !== -1 &&
+        typeof el.focus === "function"
+    );
+
+    const index = elements.indexOf(e.target);
+    if (index === -1) return;
+
+    const next = elements[index + 1];
+    if (next) {
+      next.focus();
+    } else {
+      // Last field: trigger submit button
+      const submitButton = form.querySelector('button[class*="bg-gradient"]');
+      if (submitButton && !loading) {
+        submitButton.click();
+      }
+    }
+  };
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -124,6 +155,7 @@ const AddSupplier = () => {
                 onChange={(e) =>
                   setNewSupplier({ ...newSupplier, name: e.target.value })
                 }
+                onKeyDown={handleEnterKey}
                 variant="bordered"
                 required
               />
@@ -136,6 +168,7 @@ const AddSupplier = () => {
                 onChange={(e) =>
                   setNewSupplier({ ...newSupplier, email: e.target.value })
                 }
+                onKeyDown={handleEnterKey}
                 variant="bordered"
               />
               <Input
@@ -150,6 +183,7 @@ const AddSupplier = () => {
                     phoneNumber: e.target.value,
                   })
                 }
+                onKeyDown={handleEnterKey}
                 variant="bordered"
               />
               <Input
@@ -160,6 +194,7 @@ const AddSupplier = () => {
                 onChange={(e) =>
                   setNewSupplier({ ...newSupplier, cncn: e.target.value })
                 }
+                onKeyDown={handleEnterKey}
                 variant="bordered"
               />
             </div>
@@ -193,6 +228,7 @@ const AddSupplier = () => {
                 onChange={(e) =>
                   setNewSupplier({ ...newSupplier, manager: e.target.value })
                 }
+                onKeyDown={handleEnterKey}
                 variant="bordered"
               />
             </div>
@@ -211,6 +247,7 @@ const AddSupplier = () => {
                   onChange={(e) =>
                     setNewSupplier({ ...newSupplier, country: e.target.value })
                   }
+                  onKeyDown={handleEnterKey}
                   variant="bordered"
                 />
                 <Input
@@ -221,6 +258,7 @@ const AddSupplier = () => {
                   onChange={(e) =>
                     setNewSupplier({ ...newSupplier, state: e.target.value })
                   }
+                  onKeyDown={handleEnterKey}
                   variant="bordered"
                 />
                 <Input
@@ -231,6 +269,7 @@ const AddSupplier = () => {
                   onChange={(e) =>
                     setNewSupplier({ ...newSupplier, city: e.target.value })
                   }
+                  onKeyDown={handleEnterKey}
                   variant="bordered"
                 />
               </div>
@@ -243,6 +282,7 @@ const AddSupplier = () => {
                 onChange={(e) =>
                   setNewSupplier({ ...newSupplier, address: e.target.value })
                 }
+                onKeyDown={handleEnterKey}
                 variant="bordered"
               />
               <div className="mt-10">
@@ -257,6 +297,7 @@ const AddSupplier = () => {
                       Deliveryaddress: e.target.value,
                     })
                   }
+                  onKeyDown={handleEnterKey}
                   variant="bordered"
                 />
               </div>

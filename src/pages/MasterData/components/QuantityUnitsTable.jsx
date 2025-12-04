@@ -96,6 +96,15 @@ const QuantityUnitsTable = ({ data, onRefresh }) => {
     }
   };
 
+  // Handle Enter key: submit form
+  const handleEnterKey = (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (newUnit.trim() && !isCreating) {
+      handleCreate();
+    }
+  };
+
   const handleCreate = async () => {
     if (!newUnit.trim()) {
       toast.error("Please enter a unit name");
@@ -228,6 +237,7 @@ const QuantityUnitsTable = ({ data, onRefresh }) => {
           placeholder="New unit name"
           value={newUnit}
           onChange={(e) => setNewUnit(e.target.value)}
+          onKeyDown={handleEnterKey}
           className="w-full sm:w-64"
         />
         <Button

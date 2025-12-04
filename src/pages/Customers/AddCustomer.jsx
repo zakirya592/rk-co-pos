@@ -25,6 +25,37 @@ const AddCustomer = ({ isOpen, onClose, refetch }) => {
     type: "retail",
   });
 
+  // Handle Enter key: move to next field, or submit on last
+  const handleEnterKey = (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    const form = e.target.closest('form') || e.target.closest('[role="dialog"]');
+    if (!form) return;
+
+    const elements = Array.from(form.querySelectorAll('input, select, textarea')).filter(
+      (el) =>
+        !el.disabled &&
+        el.type !== "hidden" &&
+        el.tabIndex !== -1 &&
+        typeof el.focus === "function"
+    );
+
+    const index = elements.indexOf(e.target);
+    if (index === -1) return;
+
+    const next = elements[index + 1];
+    if (next) {
+      next.focus();
+    } else {
+      // Last field: trigger submit button
+      const submitButton = form.querySelector('button[class*="bg-gradient"]');
+      if (submitButton && !loading) {
+        submitButton.click();
+      }
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setnewCustomer((prev) => ({
@@ -79,6 +110,7 @@ const AddCustomer = ({ isOpen, onClose, refetch }) => {
               placeholder="Enter customer name"
               value={newCustomer.name}
               onChange={handleInputChange}
+              onKeyDown={handleEnterKey}
               name="name"
               startContent={<FaUser />}
               variant="bordered"
@@ -90,6 +122,7 @@ const AddCustomer = ({ isOpen, onClose, refetch }) => {
               placeholder="03001234567"
               value={newCustomer.contact}
               onChange={handleInputChange}
+              onKeyDown={handleEnterKey}
               name="contact"
               startContent={<FaPhone />}
               variant="bordered"
@@ -103,6 +136,7 @@ const AddCustomer = ({ isOpen, onClose, refetch }) => {
               type="email"
               value={newCustomer.email}
               onChange={handleInputChange}
+              onKeyDown={handleEnterKey}
               name="email"
               variant="bordered"
             />
@@ -111,6 +145,7 @@ const AddCustomer = ({ isOpen, onClose, refetch }) => {
               label="Customer Type"
               value={newCustomer.type}
               onChange={handleInputChange}
+              onKeyDown={handleEnterKey}
               startContent={<FaUser />}
               name="type"
               variant="bordered"
@@ -129,6 +164,7 @@ const AddCustomer = ({ isOpen, onClose, refetch }) => {
               placeholder="Enter customer address"
               value={newCustomer.address}
               onChange={handleInputChange}
+              onKeyDown={handleEnterKey}
               name="address"
               startContent={<FaMapMarkerAlt />}
               variant="bordered"

@@ -56,6 +56,37 @@ const PochuesTable = ({ data: initialData, packingUnits = [], onRefresh }) => {
     onOpenChange: onEditModalChange,
   } = useDisclosure();
 
+  // Handle Enter key: move to next field or submit
+  const handleEnterKey = (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    const form = e.target.closest('[role="dialog"]');
+    if (!form) return;
+
+    const elements = Array.from(form.querySelectorAll('input, select')).filter(
+      (el) =>
+        !el.disabled &&
+        el.type !== "hidden" &&
+        el.tabIndex !== -1 &&
+        typeof el.focus === "function"
+    );
+
+    const index = elements.indexOf(e.target);
+    if (index === -1) return;
+
+    const next = elements[index + 1];
+    if (next) {
+      next.focus();
+    } else {
+      // Last field: trigger submit button
+      const submitButton = form.querySelector('button[color="primary"]');
+      if (submitButton && !isSubmitting && newPochue.name.trim() && newPochue.packingUnit) {
+        handleAdd();
+      }
+    }
+  };
+
   const handleAdd = async () => {
     if (!newPochue.packingUnit) {
       toast.error("Please select a packing unit");
@@ -256,6 +287,7 @@ const PochuesTable = ({ data: initialData, packingUnits = [], onRefresh }) => {
                     onChange={(e) =>
                       setNewPochue({ ...newPochue, name: e.target.value })
                     }
+                    onKeyDown={handleEnterKey}
                   />
                   <Select
                     label="Packing Unit"
@@ -265,6 +297,7 @@ const PochuesTable = ({ data: initialData, packingUnits = [], onRefresh }) => {
                     onChange={(e) =>
                       setNewPochue({ ...newPochue, packingUnit: e.target.value })
                     }
+                    onKeyDown={handleEnterKey}
                     isRequired
                   >
                     {packingUnits?.map((unit) => (

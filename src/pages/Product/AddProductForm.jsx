@@ -198,7 +198,41 @@ const AddProductForm = () => {
     setNewProduct({ ...newProduct, image: file });
   };
 
+  // Handle Enter key: move to next field, or submit on last
+  const handleEnterKey = (e) => {
+    if (e.key !== "Enter") return;
 
+    // Prevent default Enter behavior (like submitting immediately)
+    e.preventDefault();
+
+    const form = e.target.form;
+    if (!form) return;
+
+    const elements = Array.from(form.elements).filter(
+      (el) =>
+        !el.disabled &&
+        el.type !== "hidden" &&
+        el.tabIndex !== -1 &&
+        typeof el.focus === "function"
+    );
+
+    const index = elements.indexOf(e.target);
+
+    // If current element isn't found, do nothing
+    if (index === -1) return;
+
+    const next = elements[index + 1];
+
+    if (next) {
+      next.focus();
+    } else {
+      // Last field: trigger submit button if present
+      const submitButton = form.querySelector('button[type="submit"]');
+      if (submitButton) {
+        submitButton.click();
+      }
+    }
+  };
 
   //  Handle add product
   const handleSubmit = async (e) => {
@@ -337,6 +371,7 @@ const AddProductForm = () => {
                 onChange={(e) =>
                   setNewProduct({ ...newProduct, name: e.target.value })
                 }
+                onKeyDown={handleEnterKey}
                 variant="bordered"
                 required
               />
@@ -625,6 +660,7 @@ const AddProductForm = () => {
                 onChange={(e) =>
                   setNewProduct({ ...newProduct, size: e.target.value })
                 }
+                onKeyDown={handleEnterKey}
                 variant="bordered"
                 disabled={!isCustomSize}
                 className={`transition-colors ${
@@ -642,6 +678,7 @@ const AddProductForm = () => {
                 onChange={(e) =>
                   setNewProduct({ ...newProduct, color: e.target.value })
                 }
+                onKeyDown={handleEnterKey}
                 variant="bordered"
                 disabled={!isCustomColor}
                 className={`transition-colors ${
@@ -662,6 +699,7 @@ const AddProductForm = () => {
                 onChange={(e) =>
                   handlePurchasingFieldChange("purchaseRate", e.target.value)
                 }
+                onKeyDown={handleEnterKey}
                 // startContent={selectedCurrencySymbol}
                 variant="bordered"
                 required={shouldRequirePurchasingFields}
@@ -693,6 +731,7 @@ const AddProductForm = () => {
                 onChange={(e) =>
                   handlePurchasingFieldChange("wholesaleRate", e.target.value)
                 }
+                onKeyDown={handleEnterKey}
                 // startContent={selectedCurrencySymbol}
                 variant="bordered"
                 required={shouldRequirePurchasingFields}
@@ -708,6 +747,7 @@ const AddProductForm = () => {
                 onChange={(e) =>
                   handlePurchasingFieldChange("retailRate", e.target.value)
                 }
+                onKeyDown={handleEnterKey}
                 // startContent={selectedCurrencySymbol}
                 variant="bordered"
                 required={shouldRequirePurchasingFields}
@@ -724,6 +764,7 @@ const AddProductForm = () => {
                 onChange={(e) =>
                   handlePurchasingFieldChange("countInStock", e.target.value)
                 }
+                onKeyDown={handleEnterKey}
                 variant="bordered"
                 required={shouldRequirePurchasingFields}
                 isInvalid={Boolean(purchasingErrors.countInStock)}

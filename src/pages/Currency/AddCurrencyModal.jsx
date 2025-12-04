@@ -10,6 +10,37 @@ const AddCurrencyModal = ({
 }) => {
   const [loading, setLoading] = useState(false);
 
+  // Handle Enter key: move to next field, or submit on last
+  const handleEnterKey = (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    const form = e.target.closest('form') || e.target.closest('[role="dialog"]');
+    if (!form) return;
+
+    const elements = Array.from(form.querySelectorAll('input, select, textarea')).filter(
+      (el) =>
+        !el.disabled &&
+        el.type !== "hidden" &&
+        el.tabIndex !== -1 &&
+        typeof el.focus === "function"
+    );
+
+    const index = elements.indexOf(e.target);
+    if (index === -1) return;
+
+    const next = elements[index + 1];
+    if (next) {
+      next.focus();
+    } else {
+      // Last field: trigger submit button
+      const submitButton = form.querySelector('button[class*="bg-gradient"]');
+      if (submitButton && !loading) {
+        submitButton.click();
+      }
+    }
+  };
+
   const handleAdd = async () => {
     setLoading(true);
     await onAddCurrency();
@@ -35,6 +66,7 @@ const AddCurrencyModal = ({
               onChange={(e) =>
                 setNewCurrency({ ...newCurrency, name: e.target.value })
               }
+              onKeyDown={handleEnterKey}
               variant="bordered"
               required
             />
@@ -45,6 +77,7 @@ const AddCurrencyModal = ({
               onChange={(e) =>
                 setNewCurrency({ ...newCurrency, code: e.target.value })
               }
+              onKeyDown={handleEnterKey}
               variant="bordered"
               required
             />
@@ -55,6 +88,7 @@ const AddCurrencyModal = ({
               onChange={(e) =>
                 setNewCurrency({ ...newCurrency, symbol: e.target.value })
               }
+              onKeyDown={handleEnterKey}
               variant="bordered"
               required
             />
@@ -66,6 +100,7 @@ const AddCurrencyModal = ({
               onChange={(e) =>
                 setNewCurrency({ ...newCurrency, exchangeRate: e.target.value })
               }
+              onKeyDown={handleEnterKey}
               variant="bordered"
               required
             />

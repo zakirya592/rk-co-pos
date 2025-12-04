@@ -31,6 +31,37 @@ const AddCustomerPage = () => {
     cnicNumber: ""
   });
 
+  // Handle Enter key: move to next field, or submit on last
+  const handleEnterKey = (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    const form = e.target.closest('form') || e.target.closest('.container');
+    if (!form) return;
+
+    const elements = Array.from(form.querySelectorAll('input, select, textarea')).filter(
+      (el) =>
+        !el.disabled &&
+        el.type !== "hidden" &&
+        el.tabIndex !== -1 &&
+        typeof el.focus === "function"
+    );
+
+    const index = elements.indexOf(e.target);
+    if (index === -1) return;
+
+    const next = elements[index + 1];
+    if (next) {
+      next.focus();
+    } else {
+      // Last field: trigger submit button
+      const submitButton = form.querySelector('button[color="primary"]');
+      if (submitButton && !loading) {
+        submitButton.click();
+      }
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setnewCustomer((prev) => ({
@@ -108,6 +139,7 @@ const AddCustomerPage = () => {
               placeholder="Enter customer name"
               value={newCustomer.name}
               onChange={handleInputChange}
+              onKeyDown={handleEnterKey}
               name="name"
               startContent={<FaUser />}
               variant="bordered"
@@ -119,6 +151,7 @@ const AddCustomerPage = () => {
               placeholder="03001234567"
               value={newCustomer.contact}
               onChange={handleInputChange}
+              onKeyDown={handleEnterKey}
               name="contact"
               startContent={<FaPhone />}
               variant="bordered"
@@ -130,6 +163,7 @@ const AddCustomerPage = () => {
               placeholder="customer@example.com"
               value={newCustomer.email}
               onChange={handleInputChange}
+              onKeyDown={handleEnterKey}
               name="email"
               startContent={<MdEmail />}
               variant="bordered"
@@ -149,6 +183,7 @@ const AddCustomerPage = () => {
               label="Customer Type"
               value={newCustomer.type}
               onChange={(e) => handleInputChange(e)}
+              onKeyDown={handleEnterKey}
               name="type"
               startContent={<FaBox />}
               variant="bordered"
@@ -170,6 +205,7 @@ const AddCustomerPage = () => {
               onChange={(e) =>
                 setnewCustomer({ ...newCustomer, cnicNumber: e.target.value })
               }
+              onKeyDown={handleEnterKey}
               variant="bordered"
             />
             <Input
@@ -180,6 +216,7 @@ const AddCustomerPage = () => {
               onChange={(e) =>
                 setnewCustomer({ ...newCustomer, manager: e.target.value })
               }
+              onKeyDown={handleEnterKey}
               variant="bordered"
             />
             {/* <Select
@@ -216,6 +253,7 @@ const AddCustomerPage = () => {
                 onChange={(e) =>
                   setnewCustomer({ ...newCustomer, country: e.target.value })
                 }
+                onKeyDown={handleEnterKey}
                 variant="bordered"
               />
               <Input
@@ -225,6 +263,7 @@ const AddCustomerPage = () => {
                 onChange={(e) =>
                   setnewCustomer({ ...newCustomer, state: e.target.value })
                 }
+                onKeyDown={handleEnterKey}
                 variant="bordered"
               />
               <Input
@@ -234,6 +273,7 @@ const AddCustomerPage = () => {
                 onChange={(e) =>
                   setnewCustomer({ ...newCustomer, city: e.target.value })
                 }
+                onKeyDown={handleEnterKey}
                 variant="bordered"
               />
             </div>
@@ -245,6 +285,7 @@ const AddCustomerPage = () => {
               onChange={(e) =>
                 setnewCustomer({ ...newCustomer, address: e.target.value })
               }
+              onKeyDown={handleEnterKey}
               variant="bordered"
             />
             <div className="mt-10">
@@ -258,6 +299,7 @@ const AddCustomerPage = () => {
                     deliveryAddress: e.target.value,
                   })
                 }
+                onKeyDown={handleEnterKey}
                 variant="bordered"
               />
             </div>

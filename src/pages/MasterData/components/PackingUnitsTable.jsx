@@ -68,6 +68,37 @@ const PackingUnitsTable = ({ data, quantityUnits, onRefresh }) => {
     }
   };
 
+  // Handle Enter key: move to next field or submit
+  const handleEnterKey = (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    const container = e.target.closest('.space-y-4');
+    if (!container) return;
+
+    const elements = Array.from(container.querySelectorAll('input, select')).filter(
+      (el) =>
+        !el.disabled &&
+        el.type !== "hidden" &&
+        el.tabIndex !== -1 &&
+        typeof el.focus === "function"
+    );
+
+    const index = elements.indexOf(e.target);
+    if (index === -1) return;
+
+    const next = elements[index + 1];
+    if (next) {
+      next.focus();
+    } else {
+      // Last field: trigger submit button
+      const submitButton = container.querySelector('button[color="primary"]');
+      if (submitButton && !isCreating && newUnit.name.trim() && newUnit.quantityUnit) {
+        handleCreate();
+      }
+    }
+  };
+
   const handleCreate = async () => {
     if (!newUnit.name.trim() || !newUnit.quantityUnit) {
       toast.error('Please fill in all fields');
@@ -178,6 +209,7 @@ const PackingUnitsTable = ({ data, quantityUnits, onRefresh }) => {
           placeholder="New packing unit name"
           value={newUnit.name}
           onChange={(e) => setNewUnit({ ...newUnit, name: e.target.value })}
+          onKeyDown={handleEnterKey}
           className="w-full"
         />
         <Select
@@ -186,6 +218,7 @@ const PackingUnitsTable = ({ data, quantityUnits, onRefresh }) => {
           className="w-full"
           selectedKeys={newUnit.quantityUnit ? [newUnit.quantityUnit] : []}
           onChange={(e) => setNewUnit({ ...newUnit, quantityUnit: e.target.value })}
+          onKeyDown={handleEnterKey}
         >
           {quantityUnits.map((unit) => (
             <SelectItem key={unit._id} value={unit._id}>
