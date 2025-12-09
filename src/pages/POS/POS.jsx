@@ -57,6 +57,8 @@ const POS = () => {
     note: "",
     description: "",
     currency: "",
+    paymentDate: new Date().toISOString().slice(0, 16),
+    transactionId: "",
   });
   // Fetch customers using react-query
   const { data: customerData, isLoading: customersLoading } = useQuery(
@@ -187,7 +189,10 @@ const POS = () => {
   };
 
   const addPaymentMethod = () => {
-    setPaymentMethods([...paymentMethods, { method: "cash", amount: 0 }]);
+    setPaymentMethods([
+      ...paymentMethods,
+      { method: "cash", amount: 0, bankAccount: "", proofFile: null },
+    ]);
   };
 
   const updatePaymentMethod = (index, field, value) => {
@@ -200,30 +205,87 @@ const POS = () => {
     );
   };
 
-  const handleSalepaymets = () => {
-    try {
-      userRequest.post("/payments/customer", {
-        customerId: selectedCustomer?._id,
-        amount: totalPaid,
-        paymentMethod: paymentMethods[0]?.method || "cash",
-        status:
-          totalPaid === total
-            ? "completed"
-            : totalPaid > 0
-            ? "partial"
-            : "pending",
-        currency: saleDataadd.currency,
-        notes: saleDataadd.description,
-        distributionStrategy: "oldest-first",
-      });
-      toast.success("Sale completed successfully!");
-    } catch (error) {
-      toast.error(
-        error?.response?.data?.message ||
-          error.message ||
-          "Failed to add customer."
-      );
+  const handleSalepaymets = async (saleId) => {
+    const validPayments = paymentMethods.filter(
+      (p) => p.amount && parseFloat(p.amount) > 0
+    );
+
+    if (!validPayments.length) {
+      throw new Error("Please add at least one payment method with amount");
     }
+
+    for (const payment of validPayments) {
+      if (
+        payment.method === "bank_transfer" ||
+        payment.method === "online_payment" ||
+        payment.method === "bank"
+      ) {
+        if (!payment.bankAccount) {
+          throw new Error("Please select a bank account for bank/online payment");
+        }
+      }
+    }
+
+    const status =
+      totalPaid === total
+        ? "completed"
+        : totalPaid > 0
+        ? "partial"
+        : "pending";
+
+    const paymentDateIso = saleDataadd.paymentDate
+      ? new Date(saleDataadd.paymentDate).toISOString()
+      : new Date().toISOString();
+
+    const paymentsPayload = validPayments.map((payment) => ({
+      method: payment.method,
+      amount: Number(payment.amount),
+      ...(payment.bankAccount
+        ? { bankAccount: payment.bankAccount }
+        : undefined),
+    }));
+
+    const formData = new FormData();
+    formData.append("paymentType", "sale_payment");
+    if (saleId) formData.append("sale", saleId);
+    if (selectedCustomer?._id) formData.append("customer", selectedCustomer._id);
+    formData.append("payments", JSON.stringify(paymentsPayload));
+    formData.append("paymentDate", paymentDateIso);
+    if (saleDataadd.transactionId) {
+      formData.append("transactionId", saleDataadd.transactionId);
+    }
+    formData.append("status", status);
+    if (saleDataadd.description) {
+      formData.append("notes", saleDataadd.description);
+    }
+    if (saleDataadd.currency) {
+      formData.append("currency", saleDataadd.currency);
+    }
+    formData.append("isAdvancePayment", "false");
+    const metadata = {
+      source: "pos",
+      deviceInfo: navigator?.platform || "pos-device",
+      ipAddress: saleDataadd.ipAddress || "",
+      userAgent: navigator?.userAgent || "",
+    };
+    formData.append("metadata", JSON.stringify(metadata));
+
+    const paymentsWithProof = validPayments.filter((p) => p.proofFile);
+    if (paymentsWithProof.length) {
+      paymentsWithProof.forEach((payment) => {
+        formData.append("attachments", payment.proofFile);
+      });
+      const attachmentsMeta = paymentsWithProof.map((payment) => ({
+        name: payment.proofFile?.name,
+        type: payment.proofFile?.type || "application/octet-stream",
+        method: payment.method,
+      }));
+      formData.append("attachmentsMeta", JSON.stringify(attachmentsMeta));
+    }
+
+    await userRequest.post("/payments", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
   };
 
   const completeSale = async () => {
@@ -254,16 +316,26 @@ const POS = () => {
 
       const response = await userRequest.post("/sales", saleData);
 
-      // Call handleSalepaymets after successful sale
-      await handleSalepaymets();
+      const saleId = response?.data?.data?._id || response?.data?._id;
+      if (!saleId) {
+        throw new Error("Sale created but no sale id returned.");
+      }
+
+      await handleSalepaymets(saleId);
       refetch();
       setCart([]);
       setDiscount(0);
       setPaymentMethods([]);
       setTotalPaid(0);
+      setSaleDataadd((prev) => ({
+        ...prev,
+        description: "",
+        transactionId: "",
+        paymentDate: new Date().toISOString().slice(0, 16),
+      }));
       setShowPaymentModal(false);
       navigate("/Navigation");
-      
+      toast.success("Sale and payment completed successfully!");
     } catch (error) {
       toast.error(
         error?.response?.data?.message ||

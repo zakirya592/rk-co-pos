@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   ModalContent,
@@ -32,6 +32,10 @@ const PaymentModal = ({
 }) => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const fetchBankAccounts = async () => {
+    const res = await userRequest.get("/bank-accounts");
+    return res?.data?.data?.bankAccounts || res?.data?.data || [];
+  };
 
   const fetchCurrencies = async () => {
     const res = await userRequest.get("/currencies");
@@ -41,6 +45,19 @@ const PaymentModal = ({
     ["currencies"],
     fetchCurrencies
   );
+  const { data: bankAccounts = [] } = useQuery(
+    ["bank-accounts"],
+    fetchBankAccounts
+  );
+
+  useEffect(() => {
+    if (!saleData?.currency && currencies.length) {
+      updateSaleData((prev) => ({
+        ...prev,
+        currency: prev?.currency || currencies[0]?._id || "",
+      }));
+    }
+  }, [currencies, saleData?.currency, updateSaleData]);
 
   const handleAdvancePayment = async () => {
     Swal.fire({
@@ -139,7 +156,7 @@ const PaymentModal = ({
                         <SelectItem key="debit_card" value="debit_card">
                           Debit Card
                         </SelectItem>
-                        <SelectItem key="'bank_transfer" value="'bank_transfer">
+                        <SelectItem key="bank_transfer" value="bank_transfer">
                           Bank Transfer
                         </SelectItem>
                         <SelectItem key="online_payment" value="online_payment">
@@ -159,6 +176,54 @@ const PaymentModal = ({
                         className="flex-1"
                       />
                     </div>
+                    {payment.method === "bank_transfer" && (
+                      <div className="flex flex-col gap-2">
+                        <Select
+                          placeholder="Select Bank Account"
+                          value={payment.bankAccount}
+                          onChange={(e) =>
+                            updatePaymentMethod(
+                              index,
+                              "bankAccount",
+                              e.target.value
+                            )
+                          }
+                          className="w-full"
+                        >
+                          {bankAccounts.map((account) => (
+                            <SelectItem
+                              key={account._id}
+                              value={account._id}
+                              textValue={`${account.bankName} - ${account.accountName}`}
+                            >
+                              {account.bankName} ({account.accountName})
+                            </SelectItem>
+                          ))}
+                        </Select>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-sm text-gray-600">
+                            Upload proof (image/pdf)
+                          </label>
+                          <input
+                            type="file"
+                            accept="image/*,application/pdf"
+                            onChange={(e) =>
+                              updatePaymentMethod(
+                                index,
+                                "proofFile",
+                                e.target.files?.[0] || null
+                              )
+                            }
+                            className="block w-full text-sm text-gray-700"
+                          />
+                          {payment?.proofFile?.name && (
+                            <span className="text-xs text-gray-500">
+                              Selected: {payment.proofFile.name}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
                 <div className="space-y-4">
@@ -199,6 +264,33 @@ const PaymentModal = ({
                     }
                     className="w-full"
                     rows={3}
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    type="datetime-local"
+                    label="Payment Date & Time"
+                    labelPlacement="outside"
+                    value={saleData.paymentDate}
+                    onChange={(e) =>
+                      updateSaleData((prev) => ({
+                        ...prev,
+                        paymentDate: e.target.value,
+                      }))
+                    }
+                  />
+                  <Input
+                    type="text"
+                    label="Transaction ID"
+                    labelPlacement="outside"
+                    placeholder="Enter transaction/reference ID"
+                    value={saleData.transactionId}
+                    onChange={(e) =>
+                      updateSaleData((prev) => ({
+                        ...prev,
+                        transactionId: e.target.value,
+                      }))
+                    }
                   />
                 </div>
 
