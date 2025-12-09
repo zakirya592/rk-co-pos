@@ -106,7 +106,7 @@ const PaymentModal = ({
         <ModalContent>
           <ModalHeader>
             <span className="flex items-center gap-2 me-4">
-              Sale Payment
+              Sale Reciept
             </span>
             {/* <Button
               color="primary"
@@ -266,34 +266,6 @@ const PaymentModal = ({
                     rows={3}
                   />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    type="datetime-local"
-                    label="Payment Date & Time"
-                    labelPlacement="outside"
-                    value={saleData.paymentDate}
-                    onChange={(e) =>
-                      updateSaleData((prev) => ({
-                        ...prev,
-                        paymentDate: e.target.value,
-                      }))
-                    }
-                  />
-                  <Input
-                    type="text"
-                    label="Transaction ID"
-                    labelPlacement="outside"
-                    placeholder="Enter transaction/reference ID"
-                    value={saleData.transactionId}
-                    onChange={(e) =>
-                      updateSaleData((prev) => ({
-                        ...prev,
-                        transactionId: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-
                 <div className="bg-blue-50 p-2 rounded">
                   <div className="flex justify-between">
                     <span>Total Paid:</span>

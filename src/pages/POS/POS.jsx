@@ -57,8 +57,6 @@ const POS = () => {
     note: "",
     description: "",
     currency: "",
-    paymentDate: new Date().toISOString().slice(0, 16),
-    transactionId: "",
   });
   // Fetch customers using react-query
   const { data: customerData, isLoading: customersLoading } = useQuery(
@@ -233,10 +231,6 @@ const POS = () => {
         ? "partial"
         : "pending";
 
-    const paymentDateIso = saleDataadd.paymentDate
-      ? new Date(saleDataadd.paymentDate).toISOString()
-      : new Date().toISOString();
-
     const paymentsPayload = validPayments.map((payment) => ({
       method: payment.method,
       amount: Number(payment.amount),
@@ -250,10 +244,6 @@ const POS = () => {
     if (saleId) formData.append("sale", saleId);
     if (selectedCustomer?._id) formData.append("customer", selectedCustomer._id);
     formData.append("payments", JSON.stringify(paymentsPayload));
-    formData.append("paymentDate", paymentDateIso);
-    if (saleDataadd.transactionId) {
-      formData.append("transactionId", saleDataadd.transactionId);
-    }
     formData.append("status", status);
     if (saleDataadd.description) {
       formData.append("notes", saleDataadd.description);
@@ -330,8 +320,6 @@ const POS = () => {
       setSaleDataadd((prev) => ({
         ...prev,
         description: "",
-        transactionId: "",
-        paymentDate: new Date().toISOString().slice(0, 16),
       }));
       setShowPaymentModal(false);
       navigate("/Navigation");
