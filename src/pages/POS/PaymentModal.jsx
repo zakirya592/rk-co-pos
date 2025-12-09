@@ -106,7 +106,7 @@ const PaymentModal = ({
         <ModalContent>
           <ModalHeader>
             <span className="flex items-center gap-2 me-4">
-              Payment Details
+              Sale Payment
             </span>
             {/* <Button
               color="primary"
