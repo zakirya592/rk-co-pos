@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Card,
   CardBody,
@@ -60,6 +60,31 @@ const Sales = () => {
   const totalPages = salesData?.totalPages || 1;
   const totalSales = salesData?.totalSales || 0;
   const currentPageData = salesData?.currentPage || 1;
+
+  const filteredSales = useMemo(() => {
+    const normalizedStart = startDate ? new Date(startDate) : null;
+    const normalizedEnd = endDate ? new Date(endDate) : null;
+
+    if (normalizedEnd) {
+      normalizedEnd.setHours(23, 59, 59, 999); // make end date inclusive
+    }
+
+    const term = searchTerm.trim().toLowerCase();
+
+    return sales.filter((sale) => {
+      const created = sale.createdAt ? new Date(sale.createdAt) : null;
+
+      const matchesStart = normalizedStart ? (created ? created >= normalizedStart : false) : true;
+      const matchesEnd = normalizedEnd ? (created ? created <= normalizedEnd : false) : true;
+      const matchesStatus = paymentStatus ? sale.paymentStatus === paymentStatus : true;
+      const matchesSearch = term
+        ? (sale.invoiceNumber?.toLowerCase().includes(term) ||
+          sale.customer?.name?.toLowerCase().includes(term))
+        : true;
+
+      return matchesStart && matchesEnd && matchesStatus && matchesSearch;
+    });
+  }, [sales, startDate, endDate, paymentStatus, searchTerm]);
 
   // Handle filter changes
   const handleFilterChange = () => {
@@ -217,7 +242,7 @@ const Sales = () => {
         <CardBody>
           <div className="flex justify-between items-center mb-4">
             <div className="text-sm text-gray-600">
-              Showing {sales.length} of {totalSales} sales
+              Showing {filteredSales.length} of {totalSales} sales
             </div>
             <div className="text-sm text-gray-600">
               Page {currentPageData} of {totalPages}
@@ -241,7 +266,7 @@ const Sales = () => {
                   <TableColumn>ACTIONS</TableColumn>
                 </TableHeader>
                 <TableBody emptyContent="No sales found">
-                  {sales.map((sale) => (
+                  {filteredSales.map((sale) => (
                     <TableRow key={sale._id}>
                       <TableCell>
                         <div className="font-medium">{sale.invoiceNumber}</div>
