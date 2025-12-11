@@ -17,7 +17,7 @@ import { useNavigate } from 'react-router-dom';
 const AddCustomerPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [newCustomer, setnewCustomer] = useState({
+  const initialCustomerState = {
     name: "",
     contact: "",
     email: "",
@@ -28,8 +28,10 @@ const AddCustomerPage = () => {
     deliveryAddress: "",
     manager: "",
     type: "retail",
-    cnicNumber: ""
-  });
+    cnicNumber: "",
+  };
+
+  const [newCustomer, setnewCustomer] = useState(initialCustomerState);
 
   // Handle Enter key: move to next field, or submit on last
   const handleEnterKey = (e) => {
@@ -87,13 +89,7 @@ const AddCustomerPage = () => {
         manager: newCustomer.manager,
       });
 
-      setnewCustomer({
-        name: "",
-        contact: "",
-        email: "",
-        address: "",
-        type: "retail",
-      });
+      setnewCustomer(initialCustomerState);
       toast.success("Customer added successfully!");
       navigate('/customers');
       setLoading(false);

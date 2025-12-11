@@ -29,6 +29,7 @@ const UpdateCustomerPage = () => {
     deliveryAddress: "",
     type: "retail",
     cnicNumber: "",
+    referCode: "",
   });
 
   useEffect(() => {
@@ -47,6 +48,7 @@ const UpdateCustomerPage = () => {
           city: response.data.data.city || "",
           deliveryAddress: response.data.data.deliveryAddress || "",
           manager: response.data.data.manager || "",
+          referCode: response.data.data.referCode || "",
         });
         
       } catch (error) {
@@ -180,6 +182,16 @@ const UpdateCustomerPage = () => {
               onChange={handleInputChange}
               variant="bordered"
             />
+          <Input
+            label="Refer Code"
+            labelPlacement="outside"
+            name="referCode"
+            placeholder="CM-0003"
+            value={customer.referCode}
+            isReadOnly
+            isDisabled
+            variant="bordered"
+          />
             <Input
               label="Manager Name"
               labelPlacement="outside"

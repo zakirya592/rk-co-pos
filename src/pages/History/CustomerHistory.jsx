@@ -381,6 +381,10 @@ const CustomerHistory = () => {
               <FaMapMarkerAlt />
               <span>{customerInfo.address}</span>
             </div>
+            <div className="flex items-center gap-2 px-3 py-1 bg-[#CFD1D4] text-[#236FC7] rounded-lg">
+              <span className="font-semibold">Refer Code:</span>
+              <span>{customerInfo.referCode || "N/A"}</span>
+            </div>
           </div>
         </CardHeader>
       </Card>

@@ -23,6 +23,7 @@ const UpdateCustomer = ({ isOpen, onClose, onSubmit, customer }) => {
     contact: '',
     email: '',
     address: '',
+    referCode: '',
     type: 'retail'
   });
 
@@ -33,6 +34,7 @@ const UpdateCustomer = ({ isOpen, onClose, onSubmit, customer }) => {
         contact: customer.phoneNumber,
         email: customer.email,
         address: customer.address,
+        referCode: customer.referCode,
         type: customer.customerType,
       });
     }
@@ -62,6 +64,7 @@ const UpdateCustomer = ({ isOpen, onClose, onSubmit, customer }) => {
         contact: "",
         email: "",
         address: "",
+        referCode: "",
         type: "retail",
       });
 
@@ -97,6 +100,16 @@ const UpdateCustomer = ({ isOpen, onClose, onSubmit, customer }) => {
               startContent={<FaUser />}
               variant="bordered"
               required
+            />
+            <Input
+              label="Refer Code"
+              placeholder="CM-0003"
+              value={updatedCustomer.referCode}
+              isReadOnly
+              isDisabled
+              name="referCode"
+              startContent={<FaUser />}
+              variant="bordered"
             />
 
             <Input

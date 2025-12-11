@@ -25,7 +25,15 @@ import userRequest from '../../utils/userRequest';
 import { TbListDetails } from 'react-icons/tb';
 
 const fetchCustomers = async (search = '', page = 1) => {
-  const res = await userRequest.get(`/customers?search=${search}&page=${page}`);
+  const normalized = (search || '').trim();
+  const normalizedRef = normalized.toUpperCase(); // backend codes look like CM-0001
+  const query = new URLSearchParams({
+    search: normalized,
+    referCode: normalizedRef, // send referCode explicitly so backend can filter by code
+    page: String(page),
+  });
+
+  const res = await userRequest.get(`/customers?${query.toString()}`);
   return res.data;
 };
 
@@ -135,7 +143,7 @@ const Customers = () => {
       <Card>
         <CardBody>
           <Input
-            placeholder="Search customers by name or contact..."
+            placeholder="Search customers by name, contact, or refer code..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             startContent={<FaSearch className="text-gray-400" />}
@@ -151,6 +159,7 @@ const Customers = () => {
             <TableHeader>
               <TableColumn>Sl No</TableColumn>
               <TableColumn>CUSTOMER</TableColumn>
+              <TableColumn>REFER CODE</TableColumn>
               <TableColumn>CONTACT</TableColumn>
               <TableColumn>TYPE</TableColumn>
               <TableColumn>MANAGER</TableColumn>
@@ -182,6 +191,9 @@ const Customers = () => {
                         {customer.email}
                       </div>
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    {customer.referCode || "-"}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">

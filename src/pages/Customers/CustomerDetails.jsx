@@ -70,6 +70,10 @@ const CustomerDetails = ({ isOpen, onClose, customer }) => {
                       <h4 className="font-semibold text-gray-700">Contact</h4>
                       <p>{customer.phoneNumber}</p>
                     </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-700">Refer Code</h4>
+                    <p>{customer.referCode || "-"}</p>
+                  </div>
                     <div>
                       <h4 className="font-semibold text-gray-700">Email</h4>
                       <p>{customer.email}</p>
