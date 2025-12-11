@@ -307,6 +307,7 @@ const Products = () => {
           <TableColumn>ID</TableColumn>
           <TableColumn>IMAGE</TableColumn>
           <TableColumn>NAME</TableColumn>
+          <TableColumn>REFER CODE</TableColumn>
           <TableColumn>CATEGORY</TableColumn>
           <TableColumn>SUPPLIERS</TableColumn>
           <TableColumn>CURRENCE</TableColumn>
@@ -347,6 +348,10 @@ const Products = () => {
 
               <TableCell className="font-semibold whitespace-nowrap">
                 {product?.name || ""}
+              </TableCell>
+
+              <TableCell className="font-mono text-sm whitespace-nowrap">
+                {product?.referCode || "-"}
               </TableCell>
 
               <TableCell>
