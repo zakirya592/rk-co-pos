@@ -54,6 +54,20 @@ const CurrencyConverterModal = ({ isOpen, onClose }) => {
     handleConvert();
   }, [fromCurrency, toCurrency, amount]);
 
+  const singleSelection = (value) =>
+    value ? new Set([value]) : new Set();
+
+  const onSelectChange = (setter) => (keys) => {
+    const [firstKey] = Array.from(keys);
+    setter(firstKey || "");
+  };
+
+  const renderSelectedCurrency = (value) => {
+    const cur = currencies.find((c) => c._id === value);
+    if (!cur) return null;
+    return `${cur.name} (${cur.code})`;
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
       <ModalContent>
@@ -64,14 +78,13 @@ const CurrencyConverterModal = ({ isOpen, onClose }) => {
           <div className="flex gap-4">
             <Select
               label="From"
-              value={fromCurrency}
-              onChange={(e) => {
-                setFromCurrency(e.target.value);
-              }}
+              selectedKeys={singleSelection(fromCurrency)}
+              onSelectionChange={onSelectChange(setFromCurrency)}
+              renderValue={() => renderSelectedCurrency(fromCurrency)}
               className="flex-1"
             >
               {currencies.map((c) => (
-                <SelectItem key={c._id} value={c._id}>
+                <SelectItem key={c._id}>
                   {c.name} ({c.code})
                 </SelectItem>
               ))}
@@ -87,12 +100,13 @@ const CurrencyConverterModal = ({ isOpen, onClose }) => {
           <div className="flex gap-4">
             <Select
               label="To"
-              value={toCurrency}
-              onChange={(e) => setToCurrency(e.target.value)}
+              selectedKeys={singleSelection(toCurrency)}
+              onSelectionChange={onSelectChange(setToCurrency)}
+              renderValue={() => renderSelectedCurrency(toCurrency)}
               className="flex-1"
             >
               {currencies.map((c) => (
-                <SelectItem key={c._id} value={c._id}>
+                <SelectItem key={c._id}>
                   {c.name} ({c.code})
                 </SelectItem>
               ))}
