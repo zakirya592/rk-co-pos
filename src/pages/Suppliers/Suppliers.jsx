@@ -111,6 +111,7 @@ const Suppliers = () => {
             <TableColumn>Sl No</TableColumn>
             <TableColumn>Image</TableColumn>
             <TableColumn>Name</TableColumn>
+            <TableColumn>Refer Code</TableColumn>
             <TableColumn>Email</TableColumn>
             <TableColumn>Phone</TableColumn>
             <TableColumn>Manager</TableColumn>
@@ -146,6 +147,9 @@ const Suppliers = () => {
                   )}
                 </TableCell>
                 <TableCell>{supplier.name}</TableCell>
+            <TableCell className="font-mono text-sm whitespace-nowrap">
+              {supplier?.referCode || "-"}
+            </TableCell>
                 <TableCell>{supplier.email}</TableCell>
                 <TableCell>{supplier.phoneNumber}</TableCell>
                 <TableCell>{supplier.manager}</TableCell>
