@@ -59,7 +59,8 @@ const Shop = () => {
     return shops.filter(
       (shop) =>
         shop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (shop.email && shop.email.toLowerCase().includes(searchTerm.toLowerCase()))
+        (shop.email && shop.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (shop.referCode && shop.referCode.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [shops, searchTerm]);
 
@@ -154,6 +155,7 @@ const Shop = () => {
         <TableHeader>
           <TableColumn>S.No</TableColumn>
           <TableColumn>NAME</TableColumn>
+          <TableColumn>REFER CODE</TableColumn>
           <TableColumn>EMAIL</TableColumn>
           <TableColumn>CODE</TableColumn>
           <TableColumn>SHOP TYPE</TableColumn>
@@ -182,6 +184,11 @@ const Shop = () => {
               <TableCell>
                 <div className="font-semibold whitespace-nowrap">
                   {shop?.name || ""}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="font-semibold text-blue-600 whitespace-nowrap">
+                  {shop?.referCode || "N/A"}
                 </div>
               </TableCell>
               <TableCell>
