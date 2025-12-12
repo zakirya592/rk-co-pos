@@ -79,7 +79,8 @@ const Sales = () => {
       const matchesStatus = paymentStatus ? sale.paymentStatus === paymentStatus : true;
       const matchesSearch = term
         ? (sale.invoiceNumber?.toLowerCase().includes(term) ||
-          sale.customer?.name?.toLowerCase().includes(term))
+          sale.customer?.name?.toLowerCase().includes(term) ||
+          sale.referCode?.toLowerCase().includes(term))
         : true;
 
       return matchesStart && matchesEnd && matchesStatus && matchesSearch;
@@ -258,6 +259,7 @@ const Sales = () => {
               <Table aria-label="Sales table">
                 <TableHeader>
                   <TableColumn>INVOICE</TableColumn>
+                  <TableColumn>REFER CODE</TableColumn>
                   <TableColumn>CUSTOMER</TableColumn>
                   <TableColumn>ITEMS</TableColumn>
                   <TableColumn>TOTAL AMOUNT</TableColumn>
@@ -271,6 +273,9 @@ const Sales = () => {
                       <TableCell>
                         <div className="font-medium">{sale.invoiceNumber}</div>
                         <div className="text-sm text-gray-500">ID: {sale.id}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-semibold text-blue-600">{sale.referCode || 'N/A'}</div>
                       </TableCell>
                       <TableCell>
                         <div>

@@ -339,6 +339,7 @@ const handleRefundTotalChange = (productId, value) => {
         >
           <TableHeader>
             <TableColumn>Invoice</TableColumn>
+            <TableColumn>Refer Code</TableColumn>
             <TableColumn>Customer</TableColumn>
             <TableColumn>Products</TableColumn>
             <TableColumn>Total Qty</TableColumn>
@@ -372,6 +373,9 @@ const handleRefundTotalChange = (productId, value) => {
                 <TableRow key={sale._id}>
                   <TableCell className="font-semibold">
                     {sale.invoiceNumber || "—"}
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-semibold text-blue-600">{sale.referCode || "—"}</div>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">

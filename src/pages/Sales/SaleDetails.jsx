@@ -139,6 +139,9 @@ const SaleDetails = () => {
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">{sale.invoiceNumber}</h1>
                 <p className="text-gray-600">Sale ID: {sale.id}</p>
+                {sale.referCode && (
+                  <p className="text-gray-600 font-semibold text-blue-600">Refer Code: {sale.referCode}</p>
+                )}
               </div>
             </div>
             <div className="flex gap-2">
@@ -177,6 +180,15 @@ const SaleDetails = () => {
                   </Chip>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {sale.referCode && (
+                    <div className="flex items-center gap-3">
+                      <FaBoxes className="text-indigo-500" />
+                      <div>
+                        <p className="text-sm text-gray-600">Refer Code</p>
+                        <p className="font-medium text-blue-600">{sale.referCode}</p>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-center gap-3">
                     <FaCalendarAlt className="text-blue-500" />
                     <div>
