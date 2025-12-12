@@ -59,7 +59,8 @@ const Warehouse = () => {
     return warehouses.filter(
       (warehouse) =>
         warehouse.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (warehouse.email && warehouse.email.toLowerCase().includes(searchTerm.toLowerCase()))
+        (warehouse.email && warehouse.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (warehouse.referCode && warehouse.referCode.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [warehouses, searchTerm]);
 
@@ -162,6 +163,7 @@ const Warehouse = () => {
         <TableHeader>
           <TableColumn>S.No</TableColumn>
           <TableColumn>NAME</TableColumn>
+          <TableColumn>REFER CODE</TableColumn>
           <TableColumn>EMAIL</TableColumn>
           <TableColumn>CODE</TableColumn>
           <TableColumn>BRANCH</TableColumn>
@@ -191,6 +193,11 @@ const Warehouse = () => {
               <TableCell>
                 <div className="font-semibold whitespace-nowrap">
                   {warehouse?.name || ""}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="font-semibold text-blue-600 whitespace-nowrap">
+                  {warehouse?.referCode || "N/A"}
                 </div>
               </TableCell>
               <TableCell>
