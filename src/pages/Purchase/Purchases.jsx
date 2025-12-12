@@ -252,6 +252,7 @@ const Purchases = () => {
         >
           <TableHeader>
             <TableColumn>INVOICE #</TableColumn>
+            <TableColumn>REFER CODE</TableColumn>
             <TableColumn>DATE</TableColumn>
             <TableColumn>SUPPLIER</TableColumn>
             <TableColumn>WAREHOUSE</TableColumn>
@@ -283,6 +284,9 @@ const Purchases = () => {
               <TableRow key={purchase._id}>
                 <TableCell>
                   <div className="font-medium">{purchase.invoiceNumber || "N/A"}</div>
+                </TableCell>
+                <TableCell>
+                  <div className="font-semibold text-blue-600">{purchase.referCode || "N/A"}</div>
                 </TableCell>
                 <TableCell>
                   <div className="text-sm">{formatDate(purchase.purchaseDate)}</div>

@@ -126,6 +126,11 @@ const PurchaseDetails = () => {
                   <p className="text-sm text-default-500">
                     ID: {purchase._id}
                   </p>
+                  {purchase.referCode && (
+                    <p className="text-sm font-semibold text-blue-600">
+                      Refer Code: {purchase.referCode}
+                    </p>
+                  )}
                 </div>
                 <Chip
                   color={getStatusColor(purchase.status)}
@@ -174,6 +179,14 @@ const PurchaseDetails = () => {
             <div>
               <h3 className="font-semibold mb-2">Purchase Details</h3>
               <div className="space-y-2">
+                {purchase.referCode && (
+                  <div>
+                    <p className="text-sm text-default-500">Refer Code</p>
+                    <p className="text-default-800 font-semibold text-blue-600">
+                      {purchase.referCode}
+                    </p>
+                  </div>
+                )}
                 <div>
                   <p className="text-sm text-default-500">Purchase Date</p>
                   <p className="text-default-800">
