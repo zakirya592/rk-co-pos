@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardBody,
@@ -7,7 +7,7 @@ import {
   Spinner,
   Divider
 } from '@nextui-org/react';
-import { FaArrowLeft, FaPrint, FaEdit, FaCalendarAlt, FaUser, FaBoxes, FaMoneyBill } from 'react-icons/fa';
+import { FaArrowLeft, FaPrint, FaCalendarAlt, FaUser, FaBoxes, FaMoneyBill } from 'react-icons/fa';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from "react-query";
 import userRequest from '../../utils/userRequest';
@@ -19,19 +19,19 @@ const SaleDetails = () => {
   const [sale, setSale] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch sale details
+  // Fetch invoice details
   const fetchSaleDetails = async () => {
     try {
-      const response = await userRequest.get(`/sales/${id}`);
+      const response = await userRequest.get(`/sales/invoice/${id}`);
       return response.data;
     } catch (error) {
-      toast.error('Failed to fetch sale details');
+      toast.error('Failed to fetch invoice details');
       throw error;
     }
   };
 
-  const { data: saleData, isLoading, error } = useQuery(
-    ['saleDetails', id],
+  const { data: invoiceData, isLoading, error } = useQuery(
+    ['invoiceDetails', id],
     fetchSaleDetails,
     {
       enabled: !!id,
@@ -101,7 +101,7 @@ const SaleDetails = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Spinner size="lg" />
-          <p className="mt-4 text-gray-600">Loading sale details...</p>
+          <p className="mt-4 text-gray-600">Loading invoice details...</p>
         </div>
       </div>
     );
@@ -111,8 +111,8 @@ const SaleDetails = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Sale Not Found</h2>
-          <p className="text-gray-600 mb-6">The requested sale could not be found.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Invoice Not Found</h2>
+          <p className="text-gray-600 mb-6">The requested invoice could not be found.</p>
           <Button color="primary" onPress={handleGoBack}>
             Back to Sales
           </Button>
@@ -122,11 +122,11 @@ const SaleDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6 print:p-0 print:bg-white">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
+        {/* Header with Actions */}
+        <div className="mb-6 print:hidden">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4">
               <Button
                 isIconOnly
@@ -137,11 +137,8 @@ const SaleDetails = () => {
                 Back
               </Button>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">{sale.invoiceNumber}</h1>
-                <p className="text-gray-600">Sale ID: {sale.id}</p>
-                {sale.referCode && (
-                  <p className="text-gray-600 font-semibold text-blue-600">Refer Code: {sale.referCode}</p>
-                )}
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Invoice Details</h1>
+                <p className="text-gray-600 text-sm">View and manage invoice information</p>
               </div>
             </div>
             <div className="flex gap-2">
@@ -157,265 +154,213 @@ const SaleDetails = () => {
                 startContent={<FaPrint />}
                 onPress={handlePrint}
               >
-                Print
+                Print Invoice
               </Button>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Sale Status Card */}
-            <Card>
-              <CardBody className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-gray-900">Sale Information</h2>
+        {/* Invoice Card */}
+        <Card className="shadow-xl border-0">
+          <CardBody className="p-6 md:p-8">
+            {/* Invoice Header */}
+            <div className="border-b-2 border-gray-200 pb-6 mb-6">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                    {sale.invoiceNumber}
+                  </h2>
+                  {sale.referCode && (
+                    <p className="text-lg font-semibold text-blue-600">Refer Code: {sale.referCode}</p>
+                  )}
+                </div>
+                <div className="text-right">
                   <Chip
                     color={getPaymentStatusColor(sale.paymentStatus)}
                     variant="flat"
                     size="lg"
+                    className="text-base px-4 py-2"
                   >
                     {sale.paymentStatus?.toUpperCase() || 'UNKNOWN'}
                   </Chip>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {sale.referCode && (
-                    <div className="flex items-center gap-3">
-                      <FaBoxes className="text-indigo-500" />
-                      <div>
-                        <p className="text-sm text-gray-600">Refer Code</p>
-                        <p className="font-medium text-blue-600">{sale.referCode}</p>
-                      </div>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-3">
-                    <FaCalendarAlt className="text-blue-500" />
-                    <div>
-                      <p className="text-sm text-gray-600">Created</p>
-                      <p className="font-medium">{formatDate(sale.createdAt)}</p>
-                    </div>
+              </div>
+            </div>
+
+            {/* Invoice Info Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              {/* Invoice Dates */}
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <FaCalendarAlt className="text-blue-600" />
+                  <h3 className="font-semibold text-gray-900">Invoice Dates</h3>
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs text-gray-600">Invoice Date</p>
+                    <p className="font-medium">{formatDate(sale.invoiceDate)}</p>
                   </div>
-                  {sale.updatedAt && sale.updatedAt !== sale.createdAt && (
-                    <div className="flex items-center gap-3">
-                      <FaCalendarAlt className="text-green-500" />
-                      <div>
-                        <p className="text-sm text-gray-600">Updated</p>
-                        <p className="font-medium">{formatDate(sale.updatedAt)}</p>
-                      </div>
-                    </div>
-                  )}
                   {sale.dueDate && (
-                    <div className="flex items-center gap-3">
-                      <FaCalendarAlt className="text-orange-500" />
-                      <div>
-                        <p className="text-sm text-gray-600">Due Date</p>
-                        <p className="font-medium">{formatDate(sale.dueDate)}</p>
-                      </div>
-                    </div>
-                  )}
-                  {sale.user && (
-                    <div className="flex items-center gap-3">
-                      <FaUser className="text-purple-500" />
-                      <div>
-                        <p className="text-sm text-gray-600">Created By</p>
-                        <p className="font-medium">{sale.user.name}</p>
-                      </div>
+                    <div>
+                      <p className="text-xs text-gray-600">Due Date</p>
+                      <p className="font-medium">{formatDate(sale.dueDate)}</p>
                     </div>
                   )}
                 </div>
-              </CardBody>
-            </Card>
+              </div>
 
-            {/* Customer Information */}
-            <Card>
-              <CardBody className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <FaUser className="text-blue-500" />
-                  <h2 className="text-xl font-semibold text-gray-900">Customer Information</h2>
+              {/* Customer Information */}
+              <div className="bg-green-50 p-4 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <FaUser className="text-green-600" />
+                  <h3 className="font-semibold text-gray-900">Bill To</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Name</p>
-                    <p className="font-medium text-lg">{sale.customer?.name || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Email</p>
-                    <p className="font-medium">{sale.customer?.email || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Phone</p>
-                    <p className="font-medium">{sale.customer?.phoneNumber || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Address</p>
-                    <p className="font-medium">{sale.customer?.address || 'N/A'}</p>
-                  </div>
+                <div className="space-y-1">
+                  <p className="font-semibold text-gray-900">{sale.customer?.name || 'N/A'}</p>
+                  {sale.customer?.email && (
+                    <p className="text-sm text-gray-600">{sale.customer.email}</p>
+                  )}
+                  {sale.customer?.phoneNumber && (
+                    <p className="text-sm text-gray-600">{sale.customer.phoneNumber}</p>
+                  )}
+                  {sale.customer?.address && sale.customer.address !== 'N/A' && (
+                    <p className="text-sm text-gray-600">{sale.customer.address}</p>
+                  )}
                 </div>
-              </CardBody>
-            </Card>
+              </div>
 
-            {/* Items */}
-            <Card>
-              <CardBody className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <FaBoxes className="text-green-500" />
-                  <h2 className="text-xl font-semibold text-gray-900">Items ({sale.items?.length || 0})</h2>
+              {/* Warehouse Information */}
+              {sale.warehouse && (
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <FaBoxes className="text-purple-600" />
+                    <h3 className="font-semibold text-gray-900">Warehouse</h3>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-semibold text-gray-900">{sale.warehouse.name}</p>
+                    {sale.warehouse.address && (
+                      <p className="text-sm text-gray-600">{sale.warehouse.address}</p>
+                    )}
+                    {sale.warehouse.phoneNumber && (
+                      <p className="text-sm text-gray-600">{sale.warehouse.phoneNumber}</p>
+                    )}
+                    {sale.warehouse.email && (
+                      <p className="text-sm text-gray-600">{sale.warehouse.email}</p>
+                    )}
+                  </div>
                 </div>
-                <div className="space-y-4">
-                  {sale.items?.map((item, index) => (
-                    <div key={index} className="bg-gray-50 p-4 rounded-lg border">
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div>
-                          <p className="text-sm text-gray-600">Product</p>
-                          <div className="flex items-center gap-2">
-                            {item.product && typeof item.product === 'object' && item.product.image && (
-                              <img 
-                                src={item.product.image} 
-                                alt={item.product.name}
-                                className="w-8 h-8 rounded object-cover"
-                                onError={(e) => {
-                                  e.target.style.display = 'none';
-                                }}
-                              />
-                            )}
-                            <div>
-                              <p className="font-medium">{getProductName(item.product)}</p>
-                              {item.product && typeof item.product === 'object' && item.product._id && (
-                                <p className="text-xs text-gray-500">ID: {item.product._id}</p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Quantity</p>
-                          <p className="font-medium text-lg">{item.quantity}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Unit Price</p>
+              )}
+            </div>
+
+            {/* Items Table */}
+            <div className="mb-8">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Items</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gray-100 border-b-2 border-gray-200">
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Product</th>
+                      <th className="text-center py-3 px-4 font-semibold text-gray-700">Barcode</th>
+                      <th className="text-center py-3 px-4 font-semibold text-gray-700">Quantity</th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-700">Unit Price</th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-700">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sale.items?.map((item, index) => (
+                      <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <td className="py-4 px-4">
+                          <p className="font-medium text-gray-900">{item.productName || 'N/A'}</p>
+                        </td>
+                        <td className="py-4 px-4 text-center">
+                          <p className="text-sm text-gray-600">{item.barcode || '-'}</p>
+                        </td>
+                        <td className="py-4 px-4 text-center">
+                          <p className="font-medium">{item.quantity}</p>
+                        </td>
+                        <td className="py-4 px-4 text-right">
                           <p className="font-medium">{formatCurrency(item.price)}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">Total</p>
-                          <p className="font-bold text-xl text-green-600">{formatCurrency(item.total)}</p>
-                        </div>
+                        </td>
+                        <td className="py-4 px-4 text-right">
+                          <p className="font-semibold text-gray-900">{formatCurrency(item.total)}</p>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Totals and Payment Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Financial Totals */}
+              <Card className="bg-gradient-to-br from-gray-50 to-gray-100">
+                <CardBody className="p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <FaMoneyBill className="text-green-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">Financial Summary</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Subtotal:</span>
+                      <span className="font-semibold text-gray-900">{formatCurrency(sale.totals?.subtotal || 0)}</span>
+                    </div>
+                    {sale.totals?.discount > 0 && (
+                      <div className="flex justify-between items-center text-green-600">
+                        <span>Discount:</span>
+                        <span className="font-semibold">-{formatCurrency(sale.totals.discount)}</span>
                       </div>
-                      {item.discount > 0 && (
-                        <div className="mt-3 p-2 bg-green-100 rounded text-green-700">
-                          <strong>Discount:</strong> {formatCurrency(item.discount)}
-                        </div>
-                      )}
+                    )}
+                    {sale.totals?.tax > 0 && (
+                      <div className="flex justify-between items-center text-blue-600">
+                        <span>Tax:</span>
+                        <span className="font-semibold">{formatCurrency(sale.totals.tax)}</span>
+                      </div>
+                    )}
+                    <Divider className="my-2" />
+                    <div className="flex justify-between items-center pt-2">
+                      <span className="text-xl font-bold text-gray-900">Grand Total:</span>
+                      <span className="text-2xl font-bold text-green-600">{formatCurrency(sale.totals?.grandTotal || 0)}</span>
                     </div>
-                  ))}
-                </div>
-              </CardBody>
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Financial Summary */}
-            <Card>
-              <CardBody className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <FaMoneyBill className="text-green-500" />
-                  <h2 className="text-xl font-semibold text-gray-900">Financial Summary</h2>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Subtotal:</span>
-                    <span className="font-medium">{formatCurrency(sale.totalAmount)}</span>
                   </div>
-                  {sale.discount > 0 && (
-                    <div className="flex justify-between text-green-600">
-                      <span>Discount:</span>
-                      <span className="font-medium">{formatCurrency(sale.discount)}</span>
+                </CardBody>
+              </Card>
+
+              {/* Payment Information */}
+              <Card className="bg-gradient-to-br from-blue-50 to-indigo-50">
+                <CardBody className="p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <FaMoneyBill className="text-blue-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">Payment Summary</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Total Paid:</span>
+                      <span className="font-bold text-green-600 text-lg">{formatCurrency(sale.payment?.totalPaid || 0)}</span>
                     </div>
-                  )}
-                  {sale.tax > 0 && (
-                    <div className="flex justify-between text-blue-600">
-                      <span>Tax:</span>
-                      <span className="font-medium">{formatCurrency(sale.tax)}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Remaining Balance:</span>
+                      <span className="font-bold text-red-600 text-lg">{formatCurrency(sale.payment?.remainingBalance || 0)}</span>
                     </div>
-                  )}
-                  <Divider />
-                  <div className="flex justify-between font-bold text-2xl text-gray-900">
-                    <span>Grand Total:</span>
-                    <span>{formatCurrency(sale.grandTotal)}</span>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-
-            {/* Payment Information */}
-            <Card>
-              <CardBody className="p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Payment Information</h2>
-                
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Status:</span>
-                    <Chip
-                      color={getPaymentStatusColor(sale.paymentStatus)}
-                      variant="flat"
-                      size="lg"
-                    >
-                      {sale.paymentStatus?.toUpperCase() || 'UNKNOWN'}
-                    </Chip>
-                  </div>
-
-                  {/* Payment Summary */}
-                  {sale.payments?.summary && (
-                    <div className="space-y-3">
-                      <Divider />
-                      <h3 className="font-semibold text-gray-700">Payment Summary</h3>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Total Paid:</span>
-                          <span className="font-bold text-green-600">{formatCurrency(sale.payments.summary.totalPaid)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Remaining:</span>
-                          <span className="font-bold text-red-600">{formatCurrency(sale.payments.summary.remainingBalance)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Percentage:</span>
-                          <span className="font-bold text-blue-600">{sale.payments.summary.paymentPercentage}%</span>
-                        </div>
+                    <Divider className="my-2" />
+                    <div className="bg-white p-3 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Payment Status:</span>
+                        <Chip
+                          color={getPaymentStatusColor(sale.paymentStatus)}
+                          variant="flat"
+                          size="md"
+                        >
+                          {sale.paymentStatus?.toUpperCase() || 'UNKNOWN'}
+                        </Chip>
                       </div>
                     </div>
-                  )}
-
-                  {/* Payment Records */}
-                  {sale.payments?.records && sale.payments.records.length > 0 && (
-                    <div className="space-y-3">
-                      <Divider />
-                      <h3 className="font-semibold text-gray-700">Payment Records</h3>
-                      <div className="space-y-2">
-                        {sale.payments.records.map((payment, index) => (
-                          <div key={index} className="bg-gray-50 p-3 rounded border">
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <p className="font-medium">{formatCurrency(payment.amount)}</p>
-                                <p className="text-sm text-gray-600">{payment.method}</p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-sm">{formatDate(payment.createdAt)}</p>
-                                <Chip size="sm" color={payment.status === 'completed' ? 'success' : 'warning'}>
-                                  {payment.status}
-                                </Chip>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardBody>
-            </Card>
-          </div>
-        </div>
+                  </div>
+                </CardBody>
+              </Card>
+            </div>
+          </CardBody>
+        </Card>
       </div>
     </div>
   );
