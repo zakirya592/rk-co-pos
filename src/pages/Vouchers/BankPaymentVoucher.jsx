@@ -16,6 +16,13 @@ import {
   FaFileUpload,
   FaTimes,
   FaSave,
+  FaPlus,
+  FaInfoCircle,
+  FaCalendarAlt,
+  FaUniversity,
+  FaUser,
+  FaMoneyBillWave,
+  FaFileInvoice,
 } from 'react-icons/fa';
 import userRequest from '../../utils/userRequest';
 import toast from 'react-hot-toast';
@@ -305,37 +312,73 @@ const BankPaymentVoucher = ({ onBack }) => {
   }, [currencies]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <Button
-              isIconOnly
-              variant="light"
-              onPress={() => (onBack ? onBack() : navigate('/vouchers'))}
-              startContent={<FaArrowLeft />}
-            >
-              Back
-            </Button>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                Bank Payment Voucher
-              </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Create a new bank payment voucher
-              </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Enhanced Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-lg">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                isIconOnly
+                variant="light"
+                className="text-white hover:bg-white/20"
+                onPress={() => (onBack ? onBack() : navigate('/vouchers'))}
+                startContent={<FaArrowLeft />}
+              >
+                Back
+              </Button>
+              <div className="flex items-center gap-4">
+                <div className="bg-white/20 p-3 rounded-xl">
+                  <FaPlus className="text-white text-3xl" />
+                </div>
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-white">
+                    Create Bank Payment Voucher
+                  </h1>
+                  <p className="text-blue-100 text-sm md:text-base mt-1">
+                    Add a new bank payment transaction • Complete all required fields
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="hidden md:flex items-center gap-3">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+                <p className="text-white text-xs font-medium">New Voucher</p>
+                <p className="text-blue-100 text-sm font-semibold">Draft Status</p>
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Form Card */}
-        <Card className="shadow-xl border-0">
-          <CardBody className="p-6 md:p-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+          {/* Main Form - Takes 3 columns */}
+          <div className="xl:col-span-3">
+            <Card className="shadow-xl border-0">
+              <CardBody className="p-6 md:p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Form Header */}
+              <div className="mb-6 pb-4 border-b-2 border-gray-200">
+                <div className="flex items-center gap-3">
+                  <div className="bg-blue-100 p-2 rounded-lg">
+                    <FaPlus className="text-blue-600 text-xl" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      New Voucher Details
+                    </h2>
+                    <p className="text-sm text-gray-600">
+                      Fill in all required information to create the voucher
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Basic Information */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
+                  <FaCalendarAlt className="text-blue-500" />
                   Basic Information
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -364,7 +407,8 @@ const BankPaymentVoucher = ({ onBack }) => {
 
               {/* Bank Account & Payee */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
+                  <FaUniversity className="text-green-500" />
                   Payment Details
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -445,7 +489,8 @@ const BankPaymentVoucher = ({ onBack }) => {
 
               {/* Amount & Currency */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
+                  <FaMoneyBillWave className="text-purple-500" />
                   Amount & Currency
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -500,7 +545,8 @@ const BankPaymentVoucher = ({ onBack }) => {
 
               {/* Payment Method & References */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
+                  <FaFileInvoice className="text-orange-500" />
                   Payment Method & References
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -710,9 +756,10 @@ const BankPaymentVoucher = ({ onBack }) => {
               <Divider />
 
               {/* Submit Button */}
-              <div className="flex justify-end gap-4">
+              <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
                 <Button
                   variant="flat"
+                  size="lg"
                   onPress={() => (onBack ? onBack() : navigate('/vouchers'))}
                   disabled={isSubmitting}
                 >
@@ -721,8 +768,10 @@ const BankPaymentVoucher = ({ onBack }) => {
                 <Button
                   color="primary"
                   type="submit"
+                  size="lg"
                   isLoading={isSubmitting}
                   startContent={!isSubmitting && <FaSave />}
+                  className="bg-gradient-to-r from-blue-500 to-blue-600"
                 >
                   {isSubmitting ? 'Creating...' : 'Create Voucher'}
                 </Button>
@@ -730,6 +779,108 @@ const BankPaymentVoucher = ({ onBack }) => {
             </form>
           </CardBody>
         </Card>
+          </div>
+
+          {/* Right Sidebar - Help & Information */}
+          <div className="xl:col-span-1 space-y-6">
+            {/* Information Card */}
+            <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 to-indigo-50">
+              <CardBody className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <FaInfoCircle className="text-blue-600 text-xl" />
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Quick Guide
+                  </h3>
+                </div>
+                <div className="space-y-4">
+                  <div className="bg-white p-4 rounded-lg">
+                    <p className="text-sm font-semibold text-gray-900 mb-2">
+                      Required Fields
+                    </p>
+                    <ul className="text-xs text-gray-600 space-y-1">
+                      <li>• Voucher Date</li>
+                      <li>• Bank Account</li>
+                      <li>• Payee Type & Payee</li>
+                      <li>• Amount</li>
+                      <li>• Currency</li>
+                    </ul>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg">
+                    <p className="text-sm font-semibold text-gray-900 mb-2">
+                      Optional Fields
+                    </p>
+                    <ul className="text-xs text-gray-600 space-y-1">
+                      <li>• Check Number</li>
+                      <li>• Reference Number</li>
+                      <li>• Related Transactions</li>
+                      <li>• Description & Notes</li>
+                      <li>• Attachments</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* Tips Card */}
+            <Card className="shadow-lg border-0">
+              <CardBody className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <FaFileInvoice className="text-green-500" />
+                  Tips
+                </h3>
+                <div className="space-y-3">
+                  <div className="p-3 bg-green-50 rounded-lg">
+                    <p className="text-sm text-gray-700">
+                      <strong>Double-check</strong> the bank account and amount before submitting.
+                    </p>
+                  </div>
+                  <div className="p-3 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-gray-700">
+                      <strong>Attach</strong> receipts or documents for better record keeping.
+                    </p>
+                  </div>
+                  <div className="p-3 bg-purple-50 rounded-lg">
+                    <p className="text-sm text-gray-700">
+                      <strong>Link</strong> related purchases or sales for better tracking.
+                    </p>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* Payment Methods Info */}
+            <Card className="shadow-lg border-0">
+              <CardBody className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <FaMoneyBillWave className="text-orange-500" />
+                  Payment Methods
+                </h3>
+                <div className="space-y-2">
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm font-semibold text-gray-900">
+                      Bank Transfer
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      Direct bank-to-bank transfer
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm font-semibold text-gray-900">Check</p>
+                    <p className="text-xs text-gray-600">
+                      Physical or digital check payment
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm font-semibold text-gray-900">Online</p>
+                    <p className="text-xs text-gray-600">
+                      Online payment gateway
+                    </p>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -16,6 +16,14 @@ import {
   FaFileUpload,
   FaTimes,
   FaSave,
+  FaEdit,
+  FaInfoCircle,
+  FaCalendarAlt,
+  FaUniversity,
+  FaUser,
+  FaMoneyBillWave,
+  FaFileInvoice,
+  FaEye,
 } from 'react-icons/fa';
 import userRequest from '../../utils/userRequest';
 import toast from 'react-hot-toast';
@@ -31,6 +39,7 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
   const [attachment, setAttachment] = useState(null);
   const [attachmentPreview, setAttachmentPreview] = useState(null);
   const [existingAttachments, setExistingAttachments] = useState([]);
+  const [voucherInfo, setVoucherInfo] = useState(null);
 
   const [formData, setFormData] = useState({
     voucherDate: new Date().toISOString().split('T')[0],
@@ -60,6 +69,9 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
         setIsLoading(true);
         const response = await userRequest.get(`/bank-payment-vouchers/${actualId}`);
         const voucher = response.data.data;
+
+        // Store full voucher info for display
+        setVoucherInfo(voucher);
 
         setFormData({
           voucherDate: voucher.voucherDate
@@ -321,38 +333,98 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
     );
   }
 
+  // Format currency
+  const formatCurrency = (amount, currency) => {
+    if (!amount) return 'N/A';
+    const symbol = currency?.symbol || 'Rs';
+    return `${symbol} ${new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount || 0)}`;
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <Button
-              isIconOnly
-              variant="light"
-              onPress={() => (onBack ? onBack() : navigate('/vouchers'))}
-              startContent={<FaArrowLeft />}
-            >
-              Back
-            </Button>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                Update Bank Payment Voucher
-              </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Edit bank payment voucher details
-              </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Enhanced Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-lg">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                isIconOnly
+                variant="light"
+                className="text-white hover:bg-white/20"
+                onPress={() => (onBack ? onBack() : navigate('/vouchers'))}
+                startContent={<FaArrowLeft />}
+              >
+                Back
+              </Button>
+              <div className="flex items-center gap-4">
+                <div className="bg-white/20 p-3 rounded-xl">
+                  <FaEdit className="text-white text-3xl" />
+                </div>
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-white">
+                    Update Bank Payment Voucher
+                  </h1>
+                  <p className="text-blue-100 text-sm md:text-base mt-1">
+                    {voucherInfo?.voucherNumber || voucherInfo?.referCode || 'Edit voucher details'}
+                  </p>
+                </div>
+              </div>
             </div>
+            {voucherInfo && (
+              <div className="hidden md:flex items-center gap-3">
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+                  <p className="text-white text-xs font-medium">Current Status</p>
+                  <p className="text-blue-100 text-sm font-semibold capitalize">
+                    {voucherInfo.status || 'Draft'}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+      </div>
 
-        {/* Form Card - Same structure as create form */}
-        <Card className="shadow-xl border-0">
-          <CardBody className="p-6 md:p-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+          {/* Main Form - Takes 3 columns */}
+          <div className="xl:col-span-3">
+            <Card className="shadow-xl border-0">
+              <CardBody className="p-6 md:p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Form Header */}
+              <div className="mb-6 pb-4 border-b-2 border-gray-200">
+                <div className="flex items-center gap-3">
+                  <div className="bg-blue-100 p-2 rounded-lg">
+                    <FaEdit className="text-blue-600 text-xl" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      Edit Voucher Details
+                    </h2>
+                    <p className="text-sm text-gray-600">
+                      Update the information below and save changes
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Basic Information */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
+                  <FaCalendarAlt className="text-blue-500" />
                   Basic Information
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -381,7 +453,8 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
 
               {/* Bank Account & Payee */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
+                  <FaUniversity className="text-green-500" />
                   Payment Details
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -462,7 +535,8 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
 
               {/* Amount & Currency */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
+                  <FaMoneyBillWave className="text-purple-500" />
                   Amount & Currency
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -517,7 +591,8 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
 
               {/* Payment Method & References */}
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
+                  <FaFileInvoice className="text-orange-500" />
                   Payment Method & References
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -773,9 +848,10 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
               <Divider />
 
               {/* Submit Button */}
-              <div className="flex justify-end gap-4">
+              <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
                 <Button
                   variant="flat"
+                  size="lg"
                   onPress={() => (onBack ? onBack() : navigate('/vouchers'))}
                   disabled={isSubmitting}
                 >
@@ -784,8 +860,10 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
                 <Button
                   color="primary"
                   type="submit"
+                  size="lg"
                   isLoading={isSubmitting}
                   startContent={!isSubmitting && <FaSave />}
+                  className="bg-gradient-to-r from-blue-500 to-blue-600"
                 >
                   {isSubmitting ? 'Updating...' : 'Update Voucher'}
                 </Button>
@@ -793,6 +871,227 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
             </form>
           </CardBody>
         </Card>
+          </div>
+
+          {/* Right Sidebar - Voucher Information */}
+          <div className="xl:col-span-1 space-y-6">
+            {/* Current Voucher Info */}
+            {voucherInfo && (
+              <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 to-indigo-50">
+                <CardBody className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <FaInfoCircle className="text-blue-600 text-xl" />
+                    <h3 className="text-lg font-bold text-gray-900">
+                      Voucher Information
+                    </h3>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="bg-white p-4 rounded-lg">
+                      <p className="text-xs text-gray-600 mb-1">Voucher Number</p>
+                      <p className="font-bold text-lg text-blue-600">
+                        {voucherInfo.voucherNumber || 'N/A'}
+                      </p>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg">
+                      <p className="text-xs text-gray-600 mb-1">Refer Code</p>
+                      <p className="font-semibold text-gray-900">
+                        {voucherInfo.referCode || 'N/A'}
+                      </p>
+                    </div>
+                    {voucherInfo.transactionId && (
+                      <div className="bg-white p-4 rounded-lg">
+                        <p className="text-xs text-gray-600 mb-1">Transaction ID</p>
+                        <p className="font-medium text-sm text-gray-700 break-all">
+                          {voucherInfo.transactionId}
+                        </p>
+                      </div>
+                    )}
+                    <div className="bg-white p-4 rounded-lg">
+                      <p className="text-xs text-gray-600 mb-1">Current Amount</p>
+                      <p className="font-bold text-xl text-green-600">
+                        {formatCurrency(voucherInfo.amount, voucherInfo.currency)}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {voucherInfo.currency?.code || ''}
+                      </p>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg">
+                      <p className="text-xs text-gray-600 mb-1">Status</p>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-3 h-3 rounded-full ${
+                            voucherInfo.status === 'approved'
+                              ? 'bg-green-500'
+                              : voucherInfo.status === 'pending'
+                              ? 'bg-yellow-500'
+                              : voucherInfo.status === 'rejected'
+                              ? 'bg-red-500'
+                              : 'bg-gray-500'
+                          }`}
+                        ></div>
+                        <p className="font-semibold capitalize text-gray-900">
+                          {voucherInfo.status || 'Draft'}
+                        </p>
+                      </div>
+                    </div>
+                    {voucherInfo.user && (
+                      <div className="bg-white p-4 rounded-lg">
+                        <p className="text-xs text-gray-600 mb-1">Created By</p>
+                        <p className="font-medium text-gray-900">
+                          {voucherInfo.user.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {voucherInfo.user.email}
+                        </p>
+                      </div>
+                    )}
+                    <div className="bg-white p-4 rounded-lg">
+                      <p className="text-xs text-gray-600 mb-1">Created Date</p>
+                      <p className="font-medium text-gray-900">
+                        {formatDate(voucherInfo.createdAt)}
+                      </p>
+                      {voucherInfo.updatedAt && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Updated: {formatDate(voucherInfo.updatedAt)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+            )}
+
+            {/* Quick Actions */}
+            <Card className="shadow-lg border-0">
+              <CardBody className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <FaFileInvoice className="text-purple-500" />
+                  Quick Actions
+                </h3>
+                <div className="space-y-3">
+                  <Button
+                    variant="flat"
+                    className="w-full justify-start"
+                    onPress={() => {
+                      if (voucherInfo) {
+                        window.open(
+                          `/vouchers/view/${voucherInfo._id}`,
+                          '_blank'
+                        );
+                      }
+                    }}
+                  >
+                    <FaEye className="mr-2" />
+                    View Details
+                  </Button>
+                  <Button
+                    variant="flat"
+                    color="primary"
+                    className="w-full justify-start"
+                    onPress={() => {
+                      // Duplicate voucher functionality
+                      toast.info('Duplicate functionality coming soon');
+                    }}
+                  >
+                    <FaFileUpload className="mr-2" />
+                    Duplicate Voucher
+                  </Button>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* Payment Summary */}
+            {voucherInfo && (
+              <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50 to-emerald-50">
+                <CardBody className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <FaMoneyBillWave className="text-green-600" />
+                    Payment Summary
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 bg-white rounded-lg">
+                      <span className="text-sm text-gray-600">Amount</span>
+                      <span className="font-bold text-green-600">
+                        {formatCurrency(voucherInfo.amount, voucherInfo.currency)}
+                      </span>
+                    </div>
+                    {voucherInfo.paymentMethod && (
+                      <div className="flex justify-between items-center p-3 bg-white rounded-lg">
+                        <span className="text-sm text-gray-600">Method</span>
+                        <span className="font-medium text-gray-900 capitalize">
+                          {voucherInfo.paymentMethod.replace('_', ' ')}
+                        </span>
+                      </div>
+                    )}
+                    {voucherInfo.checkNumber && (
+                      <div className="flex justify-between items-center p-3 bg-white rounded-lg">
+                        <span className="text-sm text-gray-600">Check #</span>
+                        <span className="font-medium text-gray-900">
+                          {voucherInfo.checkNumber}
+                        </span>
+                      </div>
+                    )}
+                    {voucherInfo.referenceNumber && (
+                      <div className="flex justify-between items-center p-3 bg-white rounded-lg">
+                        <span className="text-sm text-gray-600">Reference</span>
+                        <span className="font-medium text-gray-900">
+                          {voucherInfo.referenceNumber}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </CardBody>
+              </Card>
+            )}
+
+            {/* Bank Account Info */}
+            {voucherInfo?.bankAccount && (
+              <Card className="shadow-lg border-0">
+                <CardBody className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <FaUniversity className="text-blue-500" />
+                    Bank Account
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="p-3 bg-blue-50 rounded-lg">
+                      <p className="font-semibold text-gray-900">
+                        {voucherInfo.bankAccount.accountName}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {voucherInfo.bankAccount.accountNumber}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {voucherInfo.bankAccount.bankName}
+                      </p>
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+            )}
+
+            {/* Payee Info */}
+            {voucherInfo?.payee && (
+              <Card className="shadow-lg border-0">
+                <CardBody className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <FaUser className="text-green-500" />
+                    Payee Information
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="p-3 bg-green-50 rounded-lg">
+                      <p className="font-semibold text-gray-900">
+                        {voucherInfo.payee.name || voucherInfo.payeeName}
+                      </p>
+                      <p className="text-sm text-gray-600 capitalize">
+                        Type: {voucherInfo.payeeType}
+                      </p>
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
