@@ -15,6 +15,7 @@ import {
   FaHistory,
   FaUniversity,
   FaDatabase,
+  FaFileInvoice,
 } from "react-icons/fa";
 import { useAuth } from "../../contexts/AuthContext";
 import { Tooltip } from "@nextui-org/react";
@@ -139,6 +140,13 @@ const cardData = [
     title: "Bank Accounts",
     desc: "Manage bank accounts",
     color: "emerald",
+  },
+  {
+    to: "/vouchers",
+    icon: <FaFileInvoice />,
+    title: "Vouchers",
+    desc: "Manage vouchers",
+    color: "sky",
   },
 ];
 

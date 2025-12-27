@@ -97,6 +97,7 @@ import MasterData from "../pages/MasterData/MasterData";
 import DamageProducts from "../pages/DamageProducts/DamageProducts";
 import TransfersByLocation from "../pages/WareHHouse/TransfersByLocation";
 import WarehouseSales from "../pages/WareHHouse/WarehouseSales";
+import Vouchers from "../pages/Vouchers/Vouchers";
 
 const Layout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
@@ -436,6 +437,9 @@ const Layout = () => {
                     path="bank-accounts/update/:id"
                     element={<UpdateBankAccount />}
                   />
+
+                  {/* Vouchers */}
+                  <Route path="vouchers" element={<Vouchers />} />
                 </Routes>
               </ProtectedRoute>
             }
