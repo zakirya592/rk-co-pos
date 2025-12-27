@@ -148,45 +148,64 @@ const Vouchers = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      {/* Header - Enhanced */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-lg">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button
                 isIconOnly
                 variant="light"
+                className="text-white hover:bg-white/20"
                 onPress={() => navigate('/Navigation')}
                 startContent={<FaArrowLeft />}
               >
                 Back
               </Button>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                  Vouchers
-                </h1>
-                <p className="text-sm text-gray-600 mt-1">
-                  Manage and create financial vouchers
-                </p>
+              <div className="flex items-center gap-4">
+                <div className="bg-white/20 p-3 rounded-xl">
+                  <FaFileInvoice className="text-white text-3xl" />
+                </div>
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-white">
+                    Vouchers Management
+                  </h1>
+                  <p className="text-blue-100 text-sm md:text-base mt-1">
+                    Manage and create financial vouchers • Complete financial transaction tracking
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="hidden md:flex items-center gap-3">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+                <p className="text-white text-xs font-medium">Quick Access</p>
+                <p className="text-blue-100 text-xs">All Categories</p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Sidebar */}
-          <aside className="lg:w-80 w-full">
-            <Card className="shadow-lg border-0">
-              <CardBody className="p-4">
-                <div className="mb-4 pb-4 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Voucher Categories
-                  </h2>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Select a category to manage vouchers
-                  </p>
+          {/* Sidebar - Enhanced */}
+          <aside className="lg:w-96 w-full flex-shrink-0">
+            <Card className="shadow-lg border-0 h-fit sticky top-6">
+              <CardBody className="p-5">
+                <div className="mb-5 pb-4 border-b-2 border-gray-200">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="bg-blue-100 p-2 rounded-lg">
+                      <FaFileInvoice className="text-blue-600 text-xl" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-900">
+                        Voucher Categories
+                      </h2>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {voucherCategories.length} categories available
+                      </p>
+                    </div>
+                  </div>
                 </div>
                 <nav className="space-y-2">
                   {voucherCategories.map((category) => {
