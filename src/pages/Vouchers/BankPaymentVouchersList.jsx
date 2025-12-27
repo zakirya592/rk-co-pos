@@ -39,6 +39,8 @@ import {
   FaClock,
   FaCheckCircle,
   FaTimesCircle,
+  FaUser,
+  FaUniversity,
 } from 'react-icons/fa';
 import { useQuery, useQueryClient } from 'react-query';
 import userRequest from '../../utils/userRequest';
@@ -56,6 +58,7 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
   const [showFilters, setShowFilters] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedVoucher, setSelectedVoucher] = useState(null);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
   // Fetch vouchers
   const fetchVouchers = async () => {
@@ -188,10 +191,32 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
     }
   };
 
+  // Fetch voucher details by ID
+  const fetchVoucherDetails = async (voucherId) => {
+    try {
+      setIsLoadingDetails(true);
+      const response = await userRequest.get(`/bank-payment-vouchers/${voucherId}`);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching voucher details:', error);
+      toast.error('Failed to load voucher details');
+      return null;
+    } finally {
+      setIsLoadingDetails(false);
+    }
+  };
+
   // Handle view details
-  const handleView = (voucher) => {
-    setSelectedVoucher(voucher);
+  const handleView = async (voucher) => {
     onOpen();
+    // First show the voucher from list, then fetch full details
+    setSelectedVoucher(voucher);
+    
+    // Fetch complete details from API
+    const fullDetails = await fetchVoucherDetails(voucher._id);
+    if (fullDetails) {
+      setSelectedVoucher(fullDetails);
+    }
   };
 
   if (isLoading) {
@@ -1042,191 +1067,282 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        size="3xl"
+        size="4xl"
         scrollBehavior="inside"
       >
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">
-            <h2 className="text-2xl font-bold">
-              {selectedVoucher?.voucherNumber || 'Voucher Details'}
-            </h2>
-            <p className="text-sm text-gray-500 font-normal">
-              {selectedVoucher?.referCode}
-            </p>
+          <ModalHeader className="flex flex-col gap-1 bg-gradient-to-r from-blue-50 to-indigo-50 pb-4">
+            <div className="flex items-center justify-between w-full">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {selectedVoucher?.voucherNumber || 'Voucher Details'}
+                </h2>
+                <p className="text-sm text-gray-600 font-normal mt-1">
+                  {selectedVoucher?.referCode}
+                </p>
+              </div>
+              {selectedVoucher?.status && (
+                <Chip
+                  color={getStatusColor(selectedVoucher.status)}
+                  variant="flat"
+                  size="lg"
+                  className="font-semibold"
+                >
+                  {selectedVoucher.status?.toUpperCase()}
+                </Chip>
+              )}
+            </div>
           </ModalHeader>
           <ModalBody>
-            {selectedVoucher && (
+            {isLoadingDetails ? (
+              <div className="flex justify-center items-center py-12">
+                <Spinner size="lg" />
+                <p className="ml-4 text-gray-600">Loading voucher details...</p>
+              </div>
+            ) : selectedVoucher ? (
               <div className="space-y-6">
-                {/* Basic Info */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Voucher Date</p>
-                    <p className="font-medium">
+                {/* Enhanced Basic Info */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <p className="text-xs text-gray-600 mb-1">Voucher Date</p>
+                    <p className="font-semibold text-gray-900">
                       {formatDate(selectedVoucher.voucherDate)}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Status</p>
-                    <Chip
-                      color={getStatusColor(selectedVoucher.status)}
-                      variant="flat"
-                      size="sm"
-                    >
-                      {selectedVoucher.status?.toUpperCase()}
-                    </Chip>
-                  </div>
-                </div>
-
-                {/* Bank Account */}
-                <div>
-                  <p className="text-sm text-gray-600 mb-2">Bank Account</p>
-                  <div className="bg-gray-50 p-3 rounded">
-                    <p className="font-medium">
-                      {selectedVoucher.bankAccount?.accountName}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {selectedVoucher.bankAccount?.accountNumber}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {selectedVoucher.bankAccount?.bankName}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Payee */}
-                <div>
-                  <p className="text-sm text-gray-600 mb-2">Payee</p>
-                  <div className="bg-gray-50 p-3 rounded">
-                    <p className="font-medium">
-                      {selectedVoucher.payee?.name || selectedVoucher.payeeName}
-                    </p>
-                    <p className="text-sm text-gray-600 capitalize">
-                      Type: {selectedVoucher.payeeType}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Amount */}
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Amount</p>
-                    <p className="font-bold text-lg">
-                      {formatCurrency(selectedVoucher.amount, selectedVoucher.currency)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Currency</p>
-                    <p className="font-medium">
-                      {selectedVoucher.currency?.code} ({selectedVoucher.currency?.name})
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Exchange Rate</p>
-                    <p className="font-medium">
-                      {selectedVoucher.currencyExchangeRate || '1'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Payment Details */}
-                <div>
-                  <p className="text-sm text-gray-600 mb-2">Payment Details</p>
-                  <div className="bg-gray-50 p-3 rounded space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Method:</span>
-                      <span className="font-medium capitalize">
-                        {selectedVoucher.paymentMethod?.replace('_', ' ')}
-                      </span>
+                  {selectedVoucher.transactionId && (
+                    <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                      <p className="text-xs text-gray-600 mb-1">Transaction ID</p>
+                      <p className="font-semibold text-purple-700 text-sm break-all">
+                        {selectedVoucher.transactionId}
+                      </p>
                     </div>
-                    {selectedVoucher.checkNumber && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Check Number:</span>
-                        <span className="font-medium">
-                          {selectedVoucher.checkNumber}
-                        </span>
-                      </div>
-                    )}
-                    {selectedVoucher.referenceNumber && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Reference:</span>
-                        <span className="font-medium">
-                          {selectedVoucher.referenceNumber}
-                        </span>
-                      </div>
-                    )}
-                    {selectedVoucher.transactionId && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Transaction ID:</span>
-                        <span className="font-medium text-blue-600">
-                          {selectedVoucher.transactionId}
-                        </span>
-                      </div>
-                    )}
+                  )}
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <p className="text-xs text-gray-600 mb-1">Created Date</p>
+                    <p className="font-semibold text-gray-900">
+                      {formatDate(selectedVoucher.createdAt)}
+                    </p>
                   </div>
                 </div>
 
-                {/* Related Purchase */}
-                {selectedVoucher.relatedPurchase && (
+                {/* Bank Account & Payee - Side by Side */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600 mb-2">Related Purchase</p>
-                    <div className="bg-blue-50 p-3 rounded">
-                      <p className="font-medium text-blue-700">
-                        {selectedVoucher.relatedPurchase.invoiceNumber}
+                    <p className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <FaUniversity className="text-blue-500" />
+                      Bank Account
+                    </p>
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                      <p className="font-bold text-gray-900 text-lg">
+                        {selectedVoucher.bankAccount?.accountName || 'N/A'}
+                      </p>
+                      <p className="text-sm text-gray-700 mt-1">
+                        Account: {selectedVoucher.bankAccount?.accountNumber || 'N/A'}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {selectedVoucher.bankAccount?.bankName || ''}
                       </p>
                     </div>
                   </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <FaUser className="text-green-500" />
+                      Payee Information
+                    </p>
+                    <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                      <p className="font-bold text-gray-900 text-lg">
+                        {selectedVoucher.payee?.name || selectedVoucher.payeeName || 'N/A'}
+                      </p>
+                      <p className="text-sm text-gray-700 mt-1 capitalize">
+                        Type: {selectedVoucher.payeeType || 'N/A'}
+                      </p>
+                      {selectedVoucher.payee?.email && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          {selectedVoucher.payee.email}
+                        </p>
+                      )}
+                      {selectedVoucher.payee?.phoneNumber && (
+                        <p className="text-sm text-gray-600">
+                          {selectedVoucher.payee.phoneNumber}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Amount - Enhanced */}
+                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-xl">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-indigo-100 text-sm font-medium mb-1">Total Amount</p>
+                      <p className="text-4xl font-bold">
+                        {formatCurrency(selectedVoucher.amount, selectedVoucher.currency)}
+                      </p>
+                    </div>
+                    <div className="bg-white/20 rounded-full p-4">
+                      <FaMoneyBillWave className="text-4xl" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/20">
+                    <div>
+                      <p className="text-indigo-100 text-xs mb-1">Currency</p>
+                      <p className="font-semibold">
+                        {selectedVoucher.currency?.code || 'N/A'}
+                      </p>
+                      <p className="text-xs text-indigo-100">
+                        {selectedVoucher.currency?.name || ''}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-indigo-100 text-xs mb-1">Exchange Rate</p>
+                      <p className="font-semibold text-lg">
+                        {selectedVoucher.currencyExchangeRate || '1'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-indigo-100 text-xs mb-1">Symbol</p>
+                      <p className="font-semibold text-lg">
+                        {selectedVoucher.currency?.symbol || 'Rs'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Details - Enhanced */}
+                <div>
+                  <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <FaFileInvoice className="text-orange-500" />
+                    Payment Details
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                      <p className="text-xs text-gray-600 mb-1">Payment Method</p>
+                      <p className="font-bold text-lg text-gray-900 capitalize">
+                        {selectedVoucher.paymentMethod?.replace('_', ' ') || 'N/A'}
+                      </p>
+                    </div>
+                    {selectedVoucher.checkNumber && (
+                      <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                        <p className="text-xs text-gray-600 mb-1">Check Number</p>
+                        <p className="font-bold text-lg text-gray-900">
+                          {selectedVoucher.checkNumber}
+                        </p>
+                      </div>
+                    )}
+                    {selectedVoucher.referenceNumber && (
+                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <p className="text-xs text-gray-600 mb-1">Reference Number</p>
+                        <p className="font-bold text-lg text-gray-900">
+                          {selectedVoucher.referenceNumber}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Related Transactions */}
+                {(selectedVoucher.relatedPurchase || selectedVoucher.relatedSale) && (
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <FaFileInvoice className="text-indigo-500" />
+                      Related Transactions
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {selectedVoucher.relatedPurchase && (
+                        <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                          <p className="text-xs text-gray-600 mb-1">Related Purchase</p>
+                          <p className="font-bold text-lg text-indigo-700">
+                            {selectedVoucher.relatedPurchase.invoiceNumber || 'N/A'}
+                          </p>
+                          {selectedVoucher.relatedPurchase._id && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              ID: {selectedVoucher.relatedPurchase._id}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      {selectedVoucher.relatedSale && (
+                        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                          <p className="text-xs text-gray-600 mb-1">Related Sale</p>
+                          <p className="font-bold text-lg text-green-700">
+                            {selectedVoucher.relatedSale.invoiceNumber || selectedVoucher.relatedSale._id || 'N/A'}
+                          </p>
+                          {selectedVoucher.relatedSale._id && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              ID: {selectedVoucher.relatedSale._id}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
 
-                {/* Description & Notes */}
+                {/* Description & Notes - Enhanced */}
                 {(selectedVoucher.description || selectedVoucher.notes) && (
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {selectedVoucher.description && (
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Description</p>
-                        <p className="text-sm">{selectedVoucher.description}</p>
+                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <p className="text-sm font-semibold text-gray-700 mb-2">Description</p>
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          {selectedVoucher.description}
+                        </p>
                       </div>
                     )}
                     {selectedVoucher.notes && (
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Notes</p>
-                        <p className="text-sm">{selectedVoucher.notes}</p>
+                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <p className="text-sm font-semibold text-gray-700 mb-2">Notes</p>
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          {selectedVoucher.notes}
+                        </p>
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* Attachments */}
+                {/* Attachments - Enhanced */}
                 {selectedVoucher.attachments &&
                   selectedVoucher.attachments.length > 0 && (
                     <div>
-                      <p className="text-sm text-gray-600 mb-2">Attachments</p>
-                      <div className="space-y-2">
+                      <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        <FaFileUpload className="text-blue-500" />
+                        Attachments ({selectedVoucher.attachments.length})
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {selectedVoucher.attachments.map((attachment, index) => (
                           <div
                             key={index}
-                            className="bg-gray-50 p-3 rounded flex items-center gap-3"
+                            className="bg-white border-2 border-gray-200 p-4 rounded-lg hover:border-blue-400 transition-colors"
                           >
-                            {attachment.type?.startsWith('image/') ? (
-                              <img
-                                src={attachment.url}
-                                alt={attachment.name}
-                                className="w-16 h-16 object-cover rounded"
-                              />
-                            ) : (
-                              <div className="w-16 h-16 bg-blue-100 rounded flex items-center justify-center">
-                                <FaFileUpload className="text-2xl text-blue-600" />
+                            <div className="flex items-start gap-4">
+                              {attachment.type?.startsWith('image/') ? (
+                                <img
+                                  src={attachment.url}
+                                  alt={attachment.name}
+                                  className="w-20 h-20 object-cover rounded-lg border border-gray-200"
+                                />
+                              ) : (
+                                <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center border border-gray-200">
+                                  <FaFileUpload className="text-3xl text-blue-600" />
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-sm text-gray-900 mb-1 truncate">
+                                  {attachment.name}
+                                </p>
+                                <p className="text-xs text-gray-500 mb-2">
+                                  {attachment.type || 'Unknown type'}
+                                </p>
+                                <a
+                                  href={attachment.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-1"
+                                >
+                                  View Full Size →
+                                </a>
                               </div>
-                            )}
-                            <div className="flex-1">
-                              <p className="font-medium text-sm">{attachment.name}</p>
-                              <a
-                                href={attachment.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-blue-600 hover:underline"
-                              >
-                                View Attachment
-                              </a>
                             </div>
                           </div>
                         ))}
@@ -1234,17 +1350,41 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                     </div>
                   )}
 
-                {/* Created By */}
-                <div>
-                  <p className="text-sm text-gray-600">Created By</p>
-                  <p className="font-medium">
-                    {selectedVoucher.user?.name || 'N/A'} (
-                    {selectedVoucher.user?.email || ''})
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {formatDate(selectedVoucher.createdAt)}
-                  </p>
+                {/* Created By & Metadata - Enhanced */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <p className="text-xs text-gray-600 mb-2">Created By</p>
+                    <p className="font-semibold text-gray-900">
+                      {selectedVoucher.user?.name || 'N/A'}
+                    </p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      {selectedVoucher.user?.email || ''}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Created: {formatDate(selectedVoucher.createdAt)}
+                    </p>
+                  </div>
+                  {selectedVoucher.updatedAt && selectedVoucher.updatedAt !== selectedVoucher.createdAt && (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <p className="text-xs text-gray-600 mb-2">Last Updated</p>
+                      <p className="font-semibold text-gray-900">
+                        {formatDate(selectedVoucher.updatedAt)}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-2">
+                        {Math.round(
+                          (new Date(selectedVoucher.updatedAt) -
+                            new Date(selectedVoucher.createdAt)) /
+                            (1000 * 60 * 60 * 24)
+                        )}{' '}
+                        days after creation
+                      </p>
+                    </div>
+                  )}
                 </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No voucher selected</p>
               </div>
             )}
           </ModalBody>
