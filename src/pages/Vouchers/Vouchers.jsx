@@ -14,11 +14,19 @@ import {
   FaExchangeAlt,
   FaCoins,
   FaArrowLeft,
+  FaPlus,
 } from 'react-icons/fa';
+import BankPaymentVoucher from './BankPaymentVoucher';
+import BankPaymentVouchersList from './BankPaymentVouchersList';
+import UpdateBankPaymentVoucher from './UpdateBankPaymentVoucher';
 
 const Vouchers = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState('bank-payment');
+  const [showForm, setShowForm] = useState(false);
+  const [showList, setShowList] = useState(true);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editVoucherId, setEditVoucherId] = useState(null);
 
   const voucherCategories = [
     {
@@ -187,7 +195,12 @@ const Vouchers = () => {
                     return (
                       <button
                         key={category.id}
-                        onClick={() => setSelectedCategory(category.id)}
+                        onClick={() => {
+                          setSelectedCategory(category.id);
+                          setShowForm(false);
+                          setShowList(true);
+                          setShowEdit(false);
+                        }}
                         className={`w-full flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all duration-200 ${
                           isActive
                             ? `${colors.active} ${colors.border} shadow-md transform scale-[1.02]`
@@ -221,42 +234,90 @@ const Vouchers = () => {
 
           {/* Main Content */}
           <main className="flex-1">
-            <Card className="shadow-lg border-0 min-h-[600px]">
-              <CardBody className="p-6">
-                {selectedCategoryData && (
-                  <div className="flex flex-col items-center justify-center h-full">
-                    <div
-                      className={`flex items-center justify-center w-20 h-20 rounded-full mb-6 ${getColorClasses(selectedCategoryData.color).bg}`}
-                    >
+            {showEdit && selectedCategory === 'bank-payment' ? (
+              <UpdateBankPaymentVoucher
+                voucherId={editVoucherId}
+                onBack={() => {
+                  setShowEdit(false);
+                  setShowList(true);
+                  setEditVoucherId(null);
+                }}
+              />
+            ) : showForm && selectedCategory === 'bank-payment' ? (
+              <BankPaymentVoucher
+                onBack={() => {
+                  setShowForm(false);
+                  setShowList(true);
+                }}
+              />
+            ) : showList && selectedCategory === 'bank-payment' ? (
+              <BankPaymentVouchersList
+                onAddNew={() => {
+                  setShowList(false);
+                  setShowForm(true);
+                }}
+                onView={(voucher) => {
+                  // View is handled in the list component modal
+                }}
+                onEdit={(voucherId) => {
+                  setEditVoucherId(voucherId);
+                  setShowList(false);
+                  setShowEdit(true);
+                }}
+              />
+            ) : (
+              <Card className="shadow-lg border-0 min-h-[600px]">
+                <CardBody className="p-6">
+                  {selectedCategoryData && (
+                    <div className="flex flex-col items-center justify-center h-full">
                       <div
-                        className={`text-4xl ${getColorClasses(selectedCategoryData.color).icon}`}
+                        className={`flex items-center justify-center w-20 h-20 rounded-full mb-6 ${getColorClasses(selectedCategoryData.color).bg}`}
                       >
-                        {selectedCategoryData.icon}
+                        <div
+                          className={`text-4xl ${getColorClasses(selectedCategoryData.color).icon}`}
+                        >
+                          {selectedCategoryData.icon}
+                        </div>
+                      </div>
+                      <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                        {selectedCategoryData.title}
+                      </h2>
+                      <p className="text-gray-600 text-center mb-8 max-w-md">
+                        {selectedCategoryData.description}
+                      </p>
+                      <div className="bg-gray-50 rounded-lg p-8 w-full max-w-2xl">
+                        <p className="text-center text-gray-500 mb-6">
+                          Voucher management interface for{' '}
+                          <span className="font-semibold text-gray-700">
+                            {selectedCategoryData.title}
+                          </span>
+                          .
+                        </p>
+                        {selectedCategory === 'bank-payment' && (
+                          <div className="flex justify-center">
+                            <Button
+                              color="primary"
+                              size="lg"
+                              startContent={<FaPlus />}
+                              onPress={() => setShowForm(true)}
+                              className="bg-gradient-to-r from-blue-500 to-blue-600"
+                            >
+                              Create Bank Payment Voucher
+                            </Button>
+                          </div>
+                        )}
+                        {selectedCategory !== 'bank-payment' && (
+                          <p className="text-center text-sm text-gray-400 mt-4">
+                            This section can be expanded to include voucher lists,
+                            forms, and management features.
+                          </p>
+                        )}
                       </div>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                      {selectedCategoryData.title}
-                    </h2>
-                    <p className="text-gray-600 text-center mb-8 max-w-md">
-                      {selectedCategoryData.description}
-                    </p>
-                    <div className="bg-gray-50 rounded-lg p-8 w-full max-w-2xl">
-                      <p className="text-center text-gray-500">
-                        Voucher management interface for{' '}
-                        <span className="font-semibold text-gray-700">
-                          {selectedCategoryData.title}
-                        </span>{' '}
-                        will be displayed here.
-                      </p>
-                      <p className="text-center text-sm text-gray-400 mt-4">
-                        This section can be expanded to include voucher lists,
-                        forms, and management features.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </CardBody>
-            </Card>
+                  )}
+                </CardBody>
+              </Card>
+            )}
           </main>
         </div>
       </div>
