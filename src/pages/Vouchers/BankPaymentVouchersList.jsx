@@ -41,6 +41,7 @@ import {
   FaTimesCircle,
   FaUser,
   FaUniversity,
+  FaFileInvoice,
 } from 'react-icons/fa';
 import { useQuery, useQueryClient } from 'react-query';
 import userRequest from '../../utils/userRequest';
