@@ -68,7 +68,8 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
       try {
         setIsLoading(true);
         const response = await userRequest.get(`/bank-payment-vouchers/${actualId}`);
-        const voucher = response.data.data;
+        // API returns { status: "success", data: { voucher: {...} } }
+        const voucher = response.data?.data?.voucher || response.data?.data || response.data;
 
         // Store full voucher info for display
         setVoucherInfo(voucher);

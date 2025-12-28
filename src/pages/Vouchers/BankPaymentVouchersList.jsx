@@ -211,7 +211,8 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
     try {
       setIsLoadingDetails(true);
       const response = await userRequest.get(`/bank-payment-vouchers/${voucherId}`);
-      return response.data.data;
+      // API returns { status: "success", data: { voucher: {...} } }
+      return response.data?.data?.voucher || response.data?.data || response.data;
     } catch (error) {
       console.error('Error fetching voucher details:', error);
       toast.error('Failed to load voucher details');
