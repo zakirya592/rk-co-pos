@@ -68,18 +68,36 @@ const BankPaymentVoucher = ({ onBack }) => {
   };
 
   const fetchSuppliers = async () => {
-    const res = await userRequest.get('/suppliers');
-    return res.data || [];
+    try {
+      const res = await userRequest.get('/suppliers');
+      const data = res.data?.data || res.data || [];
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      console.error('Error fetching suppliers:', error);
+      return [];
+    }
   };
 
   const fetchCustomers = async () => {
-    const res = await userRequest.get('/customers');
-    return res.data || [];
+    try {
+      const res = await userRequest.get('/customers');
+      const data = res.data?.data || res.data || [];
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      return [];
+    }
   };
 
   const fetchUsers = async () => {
-    const res = await userRequest.get('/users');
-    return res.data?.data || res.data || [];
+    try {
+      const res = await userRequest.get('/users');
+      const data = res.data?.data || res.data || [];
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      return [];
+    }
   };
 
   const fetchPurchases = async () => {
@@ -112,11 +130,11 @@ const BankPaymentVoucher = ({ onBack }) => {
   const getPayeeOptions = () => {
     switch (formData.payeeType) {
       case 'supplier':
-        return suppliers;
+        return Array.isArray(suppliers) ? suppliers : [];
       case 'customer':
-        return customers;
+        return Array.isArray(customers) ? customers : [];
       case 'user':
-        return users;
+        return Array.isArray(users) ? users : [];
       default:
         return [];
     }
@@ -418,15 +436,22 @@ const BankPaymentVoucher = ({ onBack }) => {
                     name="bankAccount"
                     selectedKeys={formData.bankAccount ? [formData.bankAccount] : []}
                     onSelectionChange={(keys) => {
-                      const [selected] = Array.from(keys);
-                      handleChange({ target: { name: 'bankAccount', value: selected || '' } });
+                      const selected = Array.from(keys)[0] || '';
+                      setFormData((prev) => ({
+                        ...prev,
+                        bankAccount: selected,
+                      }));
                     }}
                     labelPlacement="outside"
                     placeholder="Select bank account"
                     isLoading={isLoadingBanks}
                   >
                     {bankAccounts.map((account) => (
-                      <SelectItem key={account._id} value={account._id}>
+                      <SelectItem 
+                        key={account._id} 
+                        value={account._id}
+                        textValue={`${account.accountName} - ${account.accountNumber}`}
+                      >
                         {account.accountName} - {account.accountNumber}
                       </SelectItem>
                     ))}
@@ -438,8 +463,13 @@ const BankPaymentVoucher = ({ onBack }) => {
                     name="payeeType"
                     selectedKeys={formData.payeeType ? [formData.payeeType] : []}
                     onSelectionChange={(keys) => {
-                      const [selected] = Array.from(keys);
-                      handleChange({ target: { name: 'payeeType', value: selected || '' } });
+                      const selected = Array.from(keys)[0] || '';
+                      setFormData((prev) => ({
+                        ...prev,
+                        payeeType: selected,
+                        payee: '', // Reset payee when type changes
+                        payeeName: '',
+                      }));
                     }}
                     labelPlacement="outside"
                   >
@@ -460,18 +490,37 @@ const BankPaymentVoucher = ({ onBack }) => {
                     name="payee"
                     selectedKeys={formData.payee ? [formData.payee] : []}
                     onSelectionChange={(keys) => {
-                      const [selected] = Array.from(keys);
-                      handleChange({ target: { name: 'payee', value: selected || '' } });
+                      const selected = Array.from(keys)[0] || '';
+                      const payees = getPayeeOptions();
+                      const selectedPayee = payees.find((p) => p._id === selected);
+                      setFormData((prev) => ({
+                        ...prev,
+                        payee: selected,
+                        payeeName: selectedPayee?.name || selectedPayee?.email || '',
+                      }));
                     }}
                     labelPlacement="outside"
                     placeholder={`Select ${formData.payeeType || 'payee'}`}
                     isDisabled={!formData.payeeType}
                   >
-                    {getPayeeOptions().map((payee) => (
-                      <SelectItem key={payee._id} value={payee._id}>
-                        {payee.name || payee.email || payee._id}
-                      </SelectItem>
-                    ))}
+                    {(() => {
+                      const payeeOptions = getPayeeOptions();
+                      return Array.isArray(payeeOptions) && payeeOptions.length > 0
+                        ? payeeOptions.map((payee) => (
+                            <SelectItem 
+                              key={payee._id} 
+                              value={payee._id}
+                              textValue={payee.name || payee.email || payee._id}
+                            >
+                              {payee.name || payee.email || payee._id}
+                            </SelectItem>
+                          ))
+                        : (
+                            <SelectItem key="no-options" value="" isDisabled>
+                              No {formData.payeeType || 'payee'} available
+                            </SelectItem>
+                          );
+                    })()}
                   </Select>
 
                   <Input
@@ -513,15 +562,22 @@ const BankPaymentVoucher = ({ onBack }) => {
                     name="currency"
                     selectedKeys={formData.currency ? [formData.currency] : []}
                     onSelectionChange={(keys) => {
-                      const [selected] = Array.from(keys);
-                      handleChange({ target: { name: 'currency', value: selected || '' } });
+                      const selected = Array.from(keys)[0] || '';
+                      setFormData((prev) => ({
+                        ...prev,
+                        currency: selected,
+                      }));
                     }}
                     labelPlacement="outside"
                     placeholder="Select currency"
                     isLoading={isLoadingCurrencies}
                   >
                     {currencies.map((currency) => (
-                      <SelectItem key={currency._id} value={currency._id}>
+                      <SelectItem 
+                        key={currency._id} 
+                        value={currency._id}
+                        textValue={`${currency.code} - ${currency.name} (${currency.symbol})`}
+                      >
                         {currency.code} - {currency.name} ({currency.symbol})
                       </SelectItem>
                     ))}
@@ -555,8 +611,11 @@ const BankPaymentVoucher = ({ onBack }) => {
                     name="paymentMethod"
                     selectedKeys={formData.paymentMethod ? [formData.paymentMethod] : []}
                     onSelectionChange={(keys) => {
-                      const [selected] = Array.from(keys);
-                      handleChange({ target: { name: 'paymentMethod', value: selected || '' } });
+                      const selected = Array.from(keys)[0] || '';
+                      setFormData((prev) => ({
+                        ...prev,
+                        paymentMethod: selected,
+                      }));
                     }}
                     labelPlacement="outside"
                   >
@@ -566,8 +625,17 @@ const BankPaymentVoucher = ({ onBack }) => {
                     <SelectItem key="check" value="check">
                       Check
                     </SelectItem>
-                    <SelectItem key="online" value="online">
-                      Online
+                    <SelectItem key="online_payment" value="online_payment">
+                      Online Payment
+                    </SelectItem>
+                    <SelectItem key="wire_transfer" value="wire_transfer">
+                      Wire Transfer
+                    </SelectItem>
+                    <SelectItem key="dd" value="dd">
+                      Demand Draft (DD)
+                    </SelectItem>
+                    <SelectItem key="other" value="other">
+                      Other
                     </SelectItem>
                   </Select>
 
@@ -604,14 +672,21 @@ const BankPaymentVoucher = ({ onBack }) => {
                     name="relatedPurchase"
                     selectedKeys={formData.relatedPurchase ? [formData.relatedPurchase] : []}
                     onSelectionChange={(keys) => {
-                      const [selected] = Array.from(keys);
-                      handleChange({ target: { name: 'relatedPurchase', value: selected || '' } });
+                      const selected = Array.from(keys)[0] || '';
+                      setFormData((prev) => ({
+                        ...prev,
+                        relatedPurchase: selected,
+                      }));
                     }}
                     labelPlacement="outside"
                     placeholder="Select purchase (optional)"
                   >
                     {purchases.map((purchase) => (
-                      <SelectItem key={purchase._id} value={purchase._id}>
+                      <SelectItem 
+                        key={purchase._id} 
+                        value={purchase._id}
+                        textValue={purchase.invoiceNumber || purchase._id}
+                      >
                         {purchase.invoiceNumber || purchase._id}
                       </SelectItem>
                     ))}
@@ -622,14 +697,21 @@ const BankPaymentVoucher = ({ onBack }) => {
                     name="relatedSale"
                     selectedKeys={formData.relatedSale ? [formData.relatedSale] : []}
                     onSelectionChange={(keys) => {
-                      const [selected] = Array.from(keys);
-                      handleChange({ target: { name: 'relatedSale', value: selected || '' } });
+                      const selected = Array.from(keys)[0] || '';
+                      setFormData((prev) => ({
+                        ...prev,
+                        relatedSale: selected,
+                      }));
                     }}
                     labelPlacement="outside"
                     placeholder="Select sale (optional)"
                   >
                     {sales.map((sale) => (
-                      <SelectItem key={sale._id} value={sale._id}>
+                      <SelectItem 
+                        key={sale._id} 
+                        value={sale._id}
+                        textValue={sale.invoiceNumber || sale._id}
+                      >
                         {sale.invoiceNumber || sale._id}
                       </SelectItem>
                     ))}

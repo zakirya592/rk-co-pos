@@ -150,6 +150,20 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
     }).format(amount || 0)}`;
   };
 
+  // Format payment method name
+  const formatPaymentMethod = (method) => {
+    if (!method) return 'N/A';
+    const methodMap = {
+      'bank_transfer': 'Bank Transfer',
+      'check': 'Check',
+      'online_payment': 'Online Payment',
+      'wire_transfer': 'Wire Transfer',
+      'dd': 'Demand Draft (DD)',
+      'other': 'Other',
+    };
+    return methodMap[method] || method.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
   // Get status color
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -710,8 +724,8 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm capitalize font-medium">
-                      {voucher.paymentMethod?.replace('_', ' ') || 'N/A'}
+                    <div className="text-sm font-medium">
+                      {formatPaymentMethod(voucher.paymentMethod)}
                     </div>
                     {voucher.checkNumber && (
                       <div className="text-xs text-gray-500 mt-1">
@@ -1219,8 +1233,8 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
                       <p className="text-xs text-gray-600 mb-1">Payment Method</p>
-                      <p className="font-bold text-lg text-gray-900 capitalize">
-                        {selectedVoucher.paymentMethod?.replace('_', ' ') || 'N/A'}
+                      <p className="font-bold text-lg text-gray-900">
+                        {formatPaymentMethod(selectedVoucher.paymentMethod)}
                       </p>
                     </div>
                     {selectedVoucher.checkNumber && (

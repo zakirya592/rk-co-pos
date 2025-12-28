@@ -612,8 +612,17 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
                     <SelectItem key="check" value="check">
                       Check
                     </SelectItem>
-                    <SelectItem key="online" value="online">
-                      Online
+                    <SelectItem key="online_payment" value="online_payment">
+                      Online Payment
+                    </SelectItem>
+                    <SelectItem key="wire_transfer" value="wire_transfer">
+                      Wire Transfer
+                    </SelectItem>
+                    <SelectItem key="dd" value="dd">
+                      Demand Draft (DD)
+                    </SelectItem>
+                    <SelectItem key="other" value="other">
+                      Other
                     </SelectItem>
                   </Select>
 
@@ -1018,8 +1027,18 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
                     {voucherInfo.paymentMethod && (
                       <div className="flex justify-between items-center p-3 bg-white rounded-lg">
                         <span className="text-sm text-gray-600">Method</span>
-                        <span className="font-medium text-gray-900 capitalize">
-                          {voucherInfo.paymentMethod.replace('_', ' ')}
+                        <span className="font-medium text-gray-900">
+                          {(() => {
+                            const methodMap = {
+                              'bank_transfer': 'Bank Transfer',
+                              'check': 'Check',
+                              'online_payment': 'Online Payment',
+                              'wire_transfer': 'Wire Transfer',
+                              'dd': 'Demand Draft (DD)',
+                              'other': 'Other',
+                            };
+                            return methodMap[voucherInfo.paymentMethod] || voucherInfo.paymentMethod.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                          })()}
                         </span>
                       </div>
                     )}
