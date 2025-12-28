@@ -321,6 +321,15 @@ const Vouchers = () => {
                   setShowEdit(true);
                 }}
               />
+            ) : showEdit && selectedCategory === 'journal' ? (
+              <UpdateJournalPaymentVoucher
+                voucherId={editVoucherId}
+                onBack={() => {
+                  setShowEdit(false);
+                  setShowList(true);
+                  setEditVoucherId(null);
+                }}
+              />
             ) : showForm && selectedCategory === 'journal' ? (
               <JournalPaymentVoucher
                 onBack={() => {

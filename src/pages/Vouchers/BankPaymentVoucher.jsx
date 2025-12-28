@@ -24,7 +24,7 @@ import {
   FaMoneyBillWave,
   FaFileInvoice,
 } from 'react-icons/fa';
-import userRequest from '../../utils/userRequest';
+import userRequest from '../../utils/userRequest'; 
 import toast from 'react-hot-toast';
 import { useQuery, useQueryClient } from 'react-query';
 

@@ -17,6 +17,7 @@ import {
   FaTimes,
   FaSave,
   FaPlus,
+  FaEdit,
   FaTrash,
   FaInfoCircle,
   FaCalendarAlt,
@@ -123,13 +124,25 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
   };
 
   const fetchCashPaymentVouchers = async () => {
-    const res = await userRequest.get('/cash-payment-vouchers?limit=100');
-    return res.data?.data?.vouchers || [];
+    try {
+      const res = await userRequest.get('/cash-payment-vouchers?limit=100');
+      const vouchers = res.data?.data?.vouchers || res.data?.data || res.data || [];
+      return Array.isArray(vouchers) ? vouchers : [];
+    } catch (error) {
+      console.error('Error fetching cash payment vouchers:', error);
+      return [];
+    }
   };
 
   const fetchBankPaymentVouchers = async () => {
-    const res = await userRequest.get('/bank-payment-vouchers?limit=100');
-    return res.data?.data?.vouchers || [];
+    try {
+      const res = await userRequest.get('/bank-payment-vouchers?limit=100');
+      const vouchers = res.data?.data?.vouchers || res.data?.data || res.data || [];
+      return Array.isArray(vouchers) ? vouchers : [];
+    } catch (error) {
+      console.error('Error fetching bank payment vouchers:', error);
+      return [];
+    }
   };
 
   const { data: bankAccounts = [], isLoading: isLoadingBanks } = useQuery(
@@ -400,86 +413,98 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
         formDataToSend.append('attachment', attachment);
       }
 
-      await userRequest.post('/journal-payment-vouchers', formDataToSend, {
+      await userRequest.put(`/journal-payment-vouchers/${actualId}`, formDataToSend, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      toast.success('Journal Payment Voucher created successfully');
+      toast.success('Journal Payment Voucher updated successfully');
 
       // Invalidate queries
       queryClient.invalidateQueries(['journal-payment-vouchers']);
       onBack();
-
-      // Reset form
-      setFormData({
-        voucherDate: new Date().toISOString().split('T')[0],
-        voucherType: 'journal_entry',
-        entries: [
-          {
-            account: '',
-            accountModel: 'BankAccount',
-            accountName: '',
-            debit: '',
-            credit: '',
-            description: '',
-          },
-          {
-            account: '',
-            accountModel: 'BankAccount',
-            accountName: '',
-            debit: '',
-            credit: '',
-            description: '',
-          },
-        ],
-        currency: '',
-        currencyExchangeRate: '1',
-        referenceNumber: '',
-        relatedPurchase: '',
-        relatedSale: '',
-        relatedPayment: '',
-        relatedCashPaymentVoucher: '',
-        relatedSupplierPayment: '',
-        relatedBankPaymentVoucher: '',
-        description: '',
-        notes: '',
-      });
-      setAttachment(null);
-      setAttachmentPreview(null);
-
-      // Go back to vouchers list
-      if (onBack) {
-        onBack();
-      } else {
-        navigate('/vouchers');
-      }
     } catch (error) {
-      console.error('Error creating voucher:', error);
+      console.error('Error updating voucher:', error);
       toast.error(
-        error.response?.data?.message || 'Failed to create journal payment voucher'
+        error.response?.data?.message || 'Failed to update journal payment voucher'
       );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Set default currency
+  // Fetch voucher data
   useEffect(() => {
-    if (currencies.length > 0 && !formData.currency) {
-      const pkrCurrency = currencies.find((c) => c.code === 'PKR');
-      if (pkrCurrency) {
-        setFormData((prev) => ({
-          ...prev,
-          currency: pkrCurrency._id,
-        }));
-      } else {
-        setFormData((prev) => ({
-          ...prev,
-          currency: currencies[0]._id,
-        }));
+    const fetchVoucher = async () => {
+      if (!actualId) {
+        setIsLoading(false);
+        return;
       }
-    }
-  }, [currencies]);
+      try {
+        setIsLoading(true);
+        const response = await userRequest.get(`/journal-payment-vouchers/${actualId}`);
+        const voucher = response.data?.data?.voucher || response.data?.data || response.data;
+        
+        setVoucherInfo(voucher);
+
+        setFormData({
+          voucherDate: voucher.voucherDate
+            ? new Date(voucher.voucherDate).toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0],
+          voucherType: voucher.voucherType || 'journal_entry',
+          entries: voucher.entries && voucher.entries.length > 0 
+            ? voucher.entries.map(entry => ({
+                account: entry.account?._id || entry.account || '',
+                accountModel: entry.accountModel || 'BankAccount',
+                accountName: entry.accountName || '',
+                debit: entry.debit?.toString() || '',
+                credit: entry.credit?.toString() || '',
+                description: entry.description || '',
+              }))
+            : [
+                {
+                  account: '',
+                  accountModel: 'BankAccount',
+                  accountName: '',
+                  debit: '',
+                  credit: '',
+                  description: '',
+                },
+                {
+                  account: '',
+                  accountModel: 'BankAccount',
+                  accountName: '',
+                  debit: '',
+                  credit: '',
+                  description: '',
+                },
+              ],
+          currency: voucher.currency?._id || '',
+          currencyExchangeRate: voucher.currencyExchangeRate?.toString() || '1',
+          referenceNumber: voucher.referenceNumber || '',
+          relatedPurchase: voucher.relatedPurchase?._id || '',
+          relatedSale: voucher.relatedSale?._id || '',
+          relatedPayment: voucher.relatedPayment || '',
+          relatedCashPaymentVoucher: voucher.relatedCashPaymentVoucher?._id || voucher.relatedCashPaymentVoucher || '',
+          relatedSupplierPayment: voucher.relatedSupplierPayment || '',
+          relatedBankPaymentVoucher: voucher.relatedBankPaymentVoucher?._id || voucher.relatedBankPaymentVoucher || '',
+          description: voucher.description || '',
+          notes: voucher.notes || '',
+        });
+
+        if (voucher.attachments && voucher.attachments.length > 0) {
+          setExistingAttachments(voucher.attachments);
+        }
+      } catch (error) {
+        console.error('Error fetching voucher:', error);
+        toast.error('Failed to load voucher data');
+        onBack();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchVoucher();
+  }, [actualId, onBack]);
 
   // Calculate totals
   const totalDebit = formData.entries.reduce(
@@ -491,6 +516,23 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
     0
   );
   const isBalanced = Math.abs(totalDebit - totalCredit) < 0.01;
+  
+  // Check if any entries have values
+  const hasEntriesWithValues = formData.entries.some(
+    (entry) => (parseFloat(entry.debit) || 0) > 0 || (parseFloat(entry.credit) || 0) > 0
+  );
+  
+  // Only disable if entries have values but are not balanced
+  const shouldDisableButton = hasEntriesWithValues && !isBalanced;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <Spinner size="lg" />
+        <p className="ml-4 text-gray-600">Loading voucher data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -510,23 +552,23 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
               </Button>
               <div className="flex items-center gap-4">
                 <div className="bg-white/20 p-3 rounded-xl">
-                  <FaPlus className="text-white text-3xl" />
+                  <FaEdit className="text-white text-3xl" />
                 </div>
                 <div>
                   <h1 className="text-3xl md:text-4xl font-bold text-white">
-                    Create Journal Payment Voucher
+                    Update Journal Payment Voucher
                   </h1>
                   <p className="text-purple-100 text-sm md:text-base mt-1">
-                    Add a new journal entry • Debits must equal Credits
+                    {voucherInfo?.voucherNumber || voucherInfo?.referCode || 'Edit journal entry'} • Debits must equal Credits
                   </p>
                 </div>
               </div>
             </div>
             <div className="hidden md:flex items-center gap-3">
               <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-                <p className="text-white text-xs font-medium">New Entry</p>
+                <p className="text-white text-xs font-medium">Update Entry</p>
                 <p className="text-purple-100 text-sm font-semibold">
-                  {isBalanced ? 'Balanced' : 'Unbalanced'}
+                  {hasEntriesWithValues ? (isBalanced ? 'Balanced' : 'Unbalanced') : 'Ready'}
                 </p>
               </div>
             </div>
@@ -545,14 +587,14 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
                   <div className="mb-6 pb-4 border-b-2 border-gray-200">
                     <div className="flex items-center gap-3">
                       <div className="bg-purple-100 p-2 rounded-lg">
-                        <FaPlus className="text-purple-600 text-xl" />
+                        <FaEdit className="text-purple-600 text-xl" />
                       </div>
                       <div>
                         <h2 className="text-xl font-bold text-gray-900">
-                          New Journal Entry
+                          Edit Journal Entry
                         </h2>
                         <p className="text-sm text-gray-600">
-                          Fill in all required information to create the voucher
+                          Update the voucher information below
                         </p>
                       </div>
                     </div>
@@ -913,7 +955,7 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
                         labelPlacement="outside"
                         placeholder="Select cash payment voucher (optional)"
                       >
-                        {cashPaymentVouchers.map((voucher) => (
+                        {Array.isArray(cashPaymentVouchers) && cashPaymentVouchers.map((voucher) => (
                           <SelectItem
                             key={voucher._id}
                             value={voucher._id}
@@ -937,7 +979,7 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
                         labelPlacement="outside"
                         placeholder="Select bank payment voucher (optional)"
                       >
-                        {bankPaymentVouchers.map((voucher) => (
+                        {Array.isArray(bankPaymentVouchers) && bankPaymentVouchers.map((voucher) => (
                           <SelectItem
                             key={voucher._id}
                             value={voucher._id}
@@ -1085,9 +1127,9 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
                       isLoading={isSubmitting}
                       startContent={!isSubmitting && <FaSave />}
                       className="bg-gradient-to-r from-purple-500 to-indigo-600"
-                      isDisabled={!isBalanced}
+                      isDisabled={shouldDisableButton}
                     >
-                      {isSubmitting ? 'Creating...' : 'Create Voucher'}
+                      {isSubmitting ? 'Updating...' : 'Update Voucher'}
                     </Button>
                   </div>
                 </form>
