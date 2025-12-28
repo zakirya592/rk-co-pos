@@ -501,6 +501,14 @@ const JournalPaymentVoucher = ({ onBack }) => {
     0
   );
   const isBalanced = Math.abs(totalDebit - totalCredit) < 0.01;
+  
+  // Check if any entries have values
+  const hasEntriesWithValues = formData.entries.some(
+    (entry) => (parseFloat(entry.debit) || 0) > 0 || (parseFloat(entry.credit) || 0) > 0
+  );
+  
+  // Only disable if entries have values but are not balanced
+  const shouldDisableButton = hasEntriesWithValues && !isBalanced;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -1095,7 +1103,7 @@ const JournalPaymentVoucher = ({ onBack }) => {
                       isLoading={isSubmitting}
                       startContent={!isSubmitting && <FaSave />}
                       className="bg-gradient-to-r from-purple-500 to-indigo-600"
-                      isDisabled={!isBalanced}
+                      isDisabled={shouldDisableButton}
                     >
                       {isSubmitting ? 'Creating...' : 'Create Voucher'}
                     </Button>
