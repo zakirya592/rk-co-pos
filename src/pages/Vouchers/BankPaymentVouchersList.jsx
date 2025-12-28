@@ -42,6 +42,7 @@ import {
   FaUser,
   FaUniversity,
   FaFileInvoice,
+  FaPrint,
 } from 'react-icons/fa';
 import { useQuery, useQueryClient } from 'react-query';
 import userRequest from '../../utils/userRequest';
@@ -236,6 +237,314 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
     if (fullDetails) {
       setSelectedVoucher(fullDetails);
     }
+  };
+
+  // Handle print voucher
+  const handlePrint = (voucher) => {
+    const printWindow = window.open('', '_blank');
+    const printContent = generatePrintContent(voucher);
+    
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    
+    // Wait for content to load, then print
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
+  };
+
+  // Generate print-friendly HTML content
+  const generatePrintContent = (voucher) => {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Bank Payment Voucher - ${voucher.voucherNumber || voucher.referCode}</title>
+          <style>
+            @media print {
+              @page {
+                size: A4;
+                margin: 1cm;
+              }
+              body {
+                margin: 0;
+                padding: 0;
+              }
+              .no-print {
+                display: none;
+              }
+            }
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            body {
+              font-family: Arial, sans-serif;
+              font-size: 12px;
+              line-height: 1.6;
+              color: #333;
+              padding: 20px;
+            }
+            .header {
+              text-align: center;
+              border-bottom: 3px solid #000;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .header h1 {
+              font-size: 24px;
+              font-weight: bold;
+              margin-bottom: 10px;
+            }
+            .header p {
+              font-size: 14px;
+              color: #666;
+            }
+            .voucher-info {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 30px;
+              margin-bottom: 30px;
+            }
+            .info-section {
+              background: #f9f9f9;
+              padding: 15px;
+              border: 1px solid #ddd;
+            }
+            .info-section h3 {
+              font-size: 14px;
+              font-weight: bold;
+              margin-bottom: 10px;
+              border-bottom: 2px solid #333;
+              padding-bottom: 5px;
+            }
+            .info-row {
+              display: flex;
+              justify-content: space-between;
+              padding: 5px 0;
+              border-bottom: 1px dotted #ccc;
+            }
+            .info-label {
+              font-weight: bold;
+              color: #555;
+            }
+            .info-value {
+              text-align: right;
+            }
+            .amount-section {
+              background: #e8f4f8;
+              padding: 20px;
+              border: 2px solid #0066cc;
+              margin: 30px 0;
+              text-align: center;
+            }
+            .amount-section h2 {
+              font-size: 16px;
+              margin-bottom: 10px;
+              color: #0066cc;
+            }
+            .amount-value {
+              font-size: 32px;
+              font-weight: bold;
+              color: #0066cc;
+            }
+            .footer {
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 2px solid #000;
+              text-align: center;
+              font-size: 10px;
+              color: #666;
+            }
+            .signature-section {
+              margin-top: 50px;
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 50px;
+            }
+            .signature-box {
+              border-top: 1px solid #000;
+              padding-top: 10px;
+              text-align: center;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>BANK PAYMENT VOUCHER</h1>
+            <p>${voucher.voucherNumber || voucher.referCode || 'N/A'}</p>
+          </div>
+
+          <div class="voucher-info">
+            <div class="info-section">
+              <h3>Voucher Information</h3>
+              <div class="info-row">
+                <span class="info-label">Voucher Number:</span>
+                <span class="info-value">${voucher.voucherNumber || 'N/A'}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Refer Code:</span>
+                <span class="info-value">${voucher.referCode || 'N/A'}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Voucher Date:</span>
+                <span class="info-value">${formatDate(voucher.voucherDate)}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Status:</span>
+                <span class="info-value">${(voucher.status || 'Draft').toUpperCase()}</span>
+              </div>
+              ${voucher.transactionId ? `
+              <div class="info-row">
+                <span class="info-label">Transaction ID:</span>
+                <span class="info-value">${voucher.transactionId}</span>
+              </div>
+              ` : ''}
+            </div>
+
+            <div class="info-section">
+              <h3>Bank Account</h3>
+              <div class="info-row">
+                <span class="info-label">Account Name:</span>
+                <span class="info-value">${voucher.bankAccount?.accountName || 'N/A'}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Account Number:</span>
+                <span class="info-value">${voucher.bankAccount?.accountNumber || 'N/A'}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Bank Name:</span>
+                <span class="info-value">${voucher.bankAccount?.bankName || 'N/A'}</span>
+              </div>
+              ${voucher.bankAccount?.branchName ? `
+              <div class="info-row">
+                <span class="info-label">Branch:</span>
+                <span class="info-value">${voucher.bankAccount.branchName}</span>
+              </div>
+              ` : ''}
+            </div>
+          </div>
+
+          <div class="voucher-info">
+            <div class="info-section">
+              <h3>Payee Information</h3>
+              <div class="info-row">
+                <span class="info-label">Name:</span>
+                <span class="info-value">${voucher.payee?.name || voucher.payeeName || 'N/A'}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Type:</span>
+                <span class="info-value">${(voucher.payeeType || 'N/A').toUpperCase()}</span>
+              </div>
+              ${voucher.payee?.email ? `
+              <div class="info-row">
+                <span class="info-label">Email:</span>
+                <span class="info-value">${voucher.payee.email}</span>
+              </div>
+              ` : ''}
+              ${voucher.payee?.phoneNumber ? `
+              <div class="info-row">
+                <span class="info-label">Phone:</span>
+                <span class="info-value">${voucher.payee.phoneNumber}</span>
+              </div>
+              ` : ''}
+            </div>
+
+            <div class="info-section">
+              <h3>Payment Details</h3>
+              <div class="info-row">
+                <span class="info-label">Payment Method:</span>
+                <span class="info-value">${formatPaymentMethod(voucher.paymentMethod)}</span>
+              </div>
+              ${voucher.checkNumber ? `
+              <div class="info-row">
+                <span class="info-label">Check Number:</span>
+                <span class="info-value">${voucher.checkNumber}</span>
+              </div>
+              ` : ''}
+              ${voucher.referenceNumber ? `
+              <div class="info-row">
+                <span class="info-label">Reference Number:</span>
+                <span class="info-value">${voucher.referenceNumber}</span>
+              </div>
+              ` : ''}
+            </div>
+          </div>
+
+          <div class="amount-section">
+            <h2>Total Amount</h2>
+            <div class="amount-value">${formatCurrency(voucher.amount, voucher.currency)}</div>
+            <p style="margin-top: 10px; font-size: 14px;">
+              Currency: ${voucher.currency?.code || 'N/A'} (${voucher.currency?.name || ''})
+              ${voucher.currencyExchangeRate && voucher.currencyExchangeRate !== 1 ? ` | Exchange Rate: ${voucher.currencyExchangeRate}` : ''}
+            </p>
+          </div>
+
+          ${voucher.description || voucher.notes ? `
+          <div class="info-section" style="margin: 20px 0;">
+            <h3>Additional Information</h3>
+            ${voucher.description ? `
+            <div style="margin-bottom: 10px;">
+              <strong>Description:</strong><br>
+              ${voucher.description}
+            </div>
+            ` : ''}
+            ${voucher.notes ? `
+            <div>
+              <strong>Notes:</strong><br>
+              ${voucher.notes}
+            </div>
+            ` : ''}
+          </div>
+          ` : ''}
+
+          ${voucher.relatedPurchase || voucher.relatedSale ? `
+          <div class="info-section" style="margin: 20px 0;">
+            <h3>Related Transactions</h3>
+            ${voucher.relatedPurchase ? `
+            <div class="info-row">
+              <span class="info-label">Related Purchase:</span>
+              <span class="info-value">${voucher.relatedPurchase.invoiceNumber || voucher.relatedPurchase._id || 'N/A'}</span>
+            </div>
+            ` : ''}
+            ${voucher.relatedSale ? `
+            <div class="info-row">
+              <span class="info-label">Related Sale:</span>
+              <span class="info-value">${voucher.relatedSale.invoiceNumber || voucher.relatedSale._id || 'N/A'}</span>
+            </div>
+            ` : ''}
+          </div>
+          ` : ''}
+
+          <div class="footer">
+            <div style="margin-bottom: 30px;">
+              <p><strong>Created By:</strong> ${voucher.user?.name || 'N/A'} (${voucher.user?.email || ''})</p>
+              <p><strong>Created Date:</strong> ${formatDate(voucher.createdAt)}</p>
+              ${voucher.updatedAt && voucher.updatedAt !== voucher.createdAt ? `
+              <p><strong>Last Updated:</strong> ${formatDate(voucher.updatedAt)}</p>
+              ` : ''}
+            </div>
+
+            <div class="signature-section">
+              <div class="signature-box">
+                <p style="margin-bottom: 40px;">Prepared By</p>
+                <p>_________________________</p>
+              </div>
+              <div class="signature-box">
+                <p style="margin-bottom: 40px;">Approved By</p>
+                <p>_________________________</p>
+              </div>
+            </div>
+
+            <p style="margin-top: 30px; font-size: 9px;">
+              This is a computer-generated document. No signature is required.
+            </p>
+          </div>
+        </body>
+      </html>
+    `;
   };
 
   if (isLoading) {
@@ -1410,6 +1719,18 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
           <ModalFooter>
             <Button variant="flat" onPress={onClose}>
               Close
+            </Button>
+            <Button
+              color="default"
+              variant="flat"
+              startContent={<FaPrint />}
+              onPress={() => {
+                if (selectedVoucher) {
+                  handlePrint(selectedVoucher);
+                }
+              }}
+            >
+              Print
             </Button>
             <Button
               color="primary"
