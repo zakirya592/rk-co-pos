@@ -19,6 +19,9 @@ import {
 import BankPaymentVoucher from './BankPaymentVoucher';
 import BankPaymentVouchersList from './BankPaymentVouchersList';
 import UpdateBankPaymentVoucher from './UpdateBankPaymentVoucher';
+import CashPaymentVoucher from './CashPaymentVoucher';
+import CashPaymentVouchersList from './CashPaymentVouchersList';
+import UpdateCashPaymentVoucher from './UpdateCashPaymentVoucher';
 
 const Vouchers = () => {
   const navigate = useNavigate();
@@ -271,6 +274,37 @@ const Vouchers = () => {
               />
             ) : showList && selectedCategory === 'bank-payment' ? (
               <BankPaymentVouchersList
+                onAddNew={() => {
+                  setShowList(false);
+                  setShowForm(true);
+                }}
+                onView={(voucher) => {
+                  // View is handled in the list component modal
+                }}
+                onEdit={(voucherId) => {
+                  setEditVoucherId(voucherId);
+                  setShowList(false);
+                  setShowEdit(true);
+                }}
+              />
+            ) : showEdit && selectedCategory === 'cash-payment' ? (
+              <UpdateCashPaymentVoucher
+                voucherId={editVoucherId}
+                onBack={() => {
+                  setShowEdit(false);
+                  setShowList(true);
+                  setEditVoucherId(null);
+                }}
+              />
+            ) : showForm && selectedCategory === 'cash-payment' ? (
+              <CashPaymentVoucher
+                onBack={() => {
+                  setShowForm(false);
+                  setShowList(true);
+                }}
+              />
+            ) : showList && selectedCategory === 'cash-payment' ? (
+              <CashPaymentVouchersList
                 onAddNew={() => {
                   setShowList(false);
                   setShowForm(true);
