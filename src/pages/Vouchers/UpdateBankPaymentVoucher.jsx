@@ -60,6 +60,7 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
     relatedSupplierPayment: '',
     description: '',
     notes: '',
+    status: 'draft',
   });
 
   // Fetch voucher data
@@ -95,6 +96,7 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
           relatedSupplierPayment: voucher.relatedSupplierPayment || '',
           description: voucher.description || '',
           notes: voucher.notes || '',
+          status: voucher.status || 'draft',
         });
 
         if (voucher.attachments && voucher.attachments.length > 0) {
@@ -125,18 +127,36 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
   };
 
   const fetchSuppliers = async () => {
-    const res = await userRequest.get('/suppliers');
-    return res.data || [];
+    try {
+      const res = await userRequest.get('/suppliers');
+      const data = res.data?.data || res.data || [];
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      console.error('Error fetching suppliers:', error);
+      return [];
+    }
   };
 
   const fetchCustomers = async () => {
-    const res = await userRequest.get('/customers');
-    return res.data || [];
+    try {
+      const res = await userRequest.get('/customers');
+      const data = res.data?.data || res.data || [];
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      return [];
+    }
   };
 
   const fetchUsers = async () => {
-    const res = await userRequest.get('/users');
-    return res.data?.data || res.data || [];
+    try {
+      const res = await userRequest.get('/users');
+      const data = res.data?.data || res.data || [];
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      return [];
+    }
   };
 
   const fetchPurchases = async () => {
@@ -169,11 +189,11 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
   const getPayeeOptions = () => {
     switch (formData.payeeType) {
       case 'supplier':
-        return suppliers;
+        return Array.isArray(suppliers) ? suppliers : [];
       case 'customer':
-        return customers;
+        return Array.isArray(customers) ? customers : [];
       case 'user':
-        return users;
+        return Array.isArray(users) ? users : [];
       default:
         return [];
     }
@@ -190,12 +210,14 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
     // Update payeeName when payee changes
     if (name === 'payee') {
       const payees = getPayeeOptions();
-      const selectedPayee = payees.find((p) => p._id === value);
-      if (selectedPayee) {
-        setFormData((prev) => ({
-          ...prev,
-          payeeName: selectedPayee.name || selectedPayee.email || '',
-        }));
+      if (Array.isArray(payees) && payees.length > 0) {
+        const selectedPayee = payees.find((p) => p._id === value);
+        if (selectedPayee) {
+          setFormData((prev) => ({
+            ...prev,
+            payeeName: selectedPayee.name || selectedPayee.email || '',
+          }));
+        }
       }
     }
 
@@ -270,6 +292,7 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
       formDataToSend.append('currency', formData.currency);
       formDataToSend.append('currencyExchangeRate', formData.currencyExchangeRate || '1');
       formDataToSend.append('paymentMethod', formData.paymentMethod);
+      formDataToSend.append('status', formData.status || 'draft');
 
       if (formData.checkNumber) {
         formDataToSend.append('checkNumber', formData.checkNumber);
@@ -338,10 +361,13 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
   const formatCurrency = (amount, currency) => {
     if (!amount) return 'N/A';
     const symbol = currency?.symbol || 'Rs';
+    const numAmount = parseFloat(amount || 0);
+    // Check if amount is a whole number
+    const isWholeNumber = numAmount % 1 === 0;
     return `${symbol} ${new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount || 0)}`;
+      minimumFractionDigits: isWholeNumber ? 0 : 2,
+      maximumFractionDigits: isWholeNumber ? 0 : 2,
+    }).format(numAmount)}`;
   };
 
   // Format date
@@ -447,6 +473,41 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
                     labelPlacement="outside"
                     description="Payment voucher type"
                   />
+
+                  <Select
+                    isRequired
+                    label="Status"
+                    name="status"
+                    selectedKeys={formData.status ? [formData.status] : []}
+                    onSelectionChange={(keys) => {
+                      const selected = Array.from(keys)[0] || '';
+                      setFormData((prev) => ({
+                        ...prev,
+                        status: selected,
+                      }));
+                    }}
+                    labelPlacement="outside"
+                    description="Current status of the voucher"
+                  >
+                    <SelectItem key="draft" value="draft">
+                      Draft
+                    </SelectItem>
+                    <SelectItem key="pending" value="pending">
+                      Pending
+                    </SelectItem>
+                    <SelectItem key="approved" value="approved">
+                      Approved
+                    </SelectItem>
+                    <SelectItem key="completed" value="completed">
+                      Completed
+                    </SelectItem>
+                    <SelectItem key="cancelled" value="cancelled">
+                      Cancelled
+                    </SelectItem>
+                    <SelectItem key="rejected" value="rejected">
+                      Rejected
+                    </SelectItem>
+                  </Select>
                 </div>
               </div>
 
@@ -465,15 +526,22 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
                     name="bankAccount"
                     selectedKeys={formData.bankAccount ? [formData.bankAccount] : []}
                     onSelectionChange={(keys) => {
-                      const [selected] = Array.from(keys);
-                      handleChange({ target: { name: 'bankAccount', value: selected || '' } });
+                      const selected = Array.from(keys)[0] || '';
+                      setFormData((prev) => ({
+                        ...prev,
+                        bankAccount: selected,
+                      }));
                     }}
                     labelPlacement="outside"
                     placeholder="Select bank account"
                     isLoading={isLoadingBanks}
                   >
                     {bankAccounts.map((account) => (
-                      <SelectItem key={account._id} value={account._id}>
+                      <SelectItem 
+                        key={account._id} 
+                        value={account._id}
+                        textValue={`${account.accountName} - ${account.accountNumber}`}
+                      >
                         {account.accountName} - {account.accountNumber}
                       </SelectItem>
                     ))}
@@ -485,8 +553,13 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
                     name="payeeType"
                     selectedKeys={formData.payeeType ? [formData.payeeType] : []}
                     onSelectionChange={(keys) => {
-                      const [selected] = Array.from(keys);
-                      handleChange({ target: { name: 'payeeType', value: selected || '' } });
+                      const selected = Array.from(keys)[0] || '';
+                      setFormData((prev) => ({
+                        ...prev,
+                        payeeType: selected,
+                        payee: '', // Reset payee when type changes
+                        payeeName: '',
+                      }));
                     }}
                     labelPlacement="outside"
                   >
@@ -507,18 +580,37 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
                     name="payee"
                     selectedKeys={formData.payee ? [formData.payee] : []}
                     onSelectionChange={(keys) => {
-                      const [selected] = Array.from(keys);
-                      handleChange({ target: { name: 'payee', value: selected || '' } });
+                      const selected = Array.from(keys)[0] || '';
+                      const payees = getPayeeOptions();
+                      const selectedPayee = payees.find((p) => p._id === selected);
+                      setFormData((prev) => ({
+                        ...prev,
+                        payee: selected,
+                        payeeName: selectedPayee?.name || selectedPayee?.email || '',
+                      }));
                     }}
                     labelPlacement="outside"
                     placeholder={`Select ${formData.payeeType || 'payee'}`}
                     isDisabled={!formData.payeeType}
                   >
-                    {getPayeeOptions().map((payee) => (
-                      <SelectItem key={payee._id} value={payee._id}>
-                        {payee.name || payee.email || payee._id}
-                      </SelectItem>
-                    ))}
+                    {(() => {
+                      const payeeOptions = getPayeeOptions();
+                      return Array.isArray(payeeOptions) && payeeOptions.length > 0
+                        ? payeeOptions.map((payee) => (
+                            <SelectItem 
+                              key={payee._id} 
+                              value={payee._id}
+                              textValue={payee.name || payee.email || payee._id}
+                            >
+                              {payee.name || payee.email || payee._id}
+                            </SelectItem>
+                          ))
+                        : (
+                            <SelectItem key="no-options" value="" isDisabled>
+                              No {formData.payeeType || 'payee'} available
+                            </SelectItem>
+                          );
+                    })()}
                   </Select>
 
                   <Input
@@ -560,15 +652,22 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
                     name="currency"
                     selectedKeys={formData.currency ? [formData.currency] : []}
                     onSelectionChange={(keys) => {
-                      const [selected] = Array.from(keys);
-                      handleChange({ target: { name: 'currency', value: selected || '' } });
+                      const selected = Array.from(keys)[0] || '';
+                      setFormData((prev) => ({
+                        ...prev,
+                        currency: selected,
+                      }));
                     }}
                     labelPlacement="outside"
                     placeholder="Select currency"
                     isLoading={isLoadingCurrencies}
                   >
                     {currencies.map((currency) => (
-                      <SelectItem key={currency._id} value={currency._id}>
+                      <SelectItem 
+                        key={currency._id} 
+                        value={currency._id}
+                        textValue={`${currency.code} - ${currency.name} (${currency.symbol})`}
+                      >
                         {currency.code} - {currency.name} ({currency.symbol})
                       </SelectItem>
                     ))}

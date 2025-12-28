@@ -144,10 +144,13 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
   // Format currency
   const formatCurrency = (amount, currency) => {
     const symbol = currency?.symbol || 'Rs';
+    const numAmount = parseFloat(amount || 0);
+    // Check if amount is a whole number
+    const isWholeNumber = numAmount % 1 === 0;
     return `${symbol} ${new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount || 0)}`;
+      minimumFractionDigits: isWholeNumber ? 0 : 2,
+      maximumFractionDigits: isWholeNumber ? 0 : 2,
+    }).format(numAmount)}`;
   };
 
   // Format payment method name
