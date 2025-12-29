@@ -28,6 +28,9 @@ import UpdateJournalPaymentVoucher from './UpdateJournalPaymentVoucher';
 import OpeningBalanceVoucher from './OpeningBalanceVoucher';
 import OpeningBalanceVouchersList from './OpeningBalanceVouchersList';
 import UpdateOpeningBalanceVoucher from './UpdateOpeningBalanceVoucher';
+import ReconcileBankAccountsVoucher from './ReconcileBankAccountsVoucher';
+import ReconcileBankAccountsVouchersList from './ReconcileBankAccountsVouchersList';
+import UpdateReconcileBankAccountsVoucher from './UpdateReconcileBankAccountsVoucher';
 
 const Vouchers = () => {
   const navigate = useNavigate();
@@ -373,6 +376,37 @@ const Vouchers = () => {
               />
             ) : showList && selectedCategory === 'opening-balance' ? (
               <OpeningBalanceVouchersList
+                onAddNew={() => {
+                  setShowList(false);
+                  setShowForm(true);
+                }}
+                onView={(voucher) => {
+                  // View is handled in the list component modal
+                }}
+                onEdit={(voucherId) => {
+                  setEditVoucherId(voucherId);
+                  setShowList(false);
+                  setShowEdit(true);
+                }}
+              />
+            ) : showEdit && selectedCategory === 'reconcile-bank' ? (
+              <UpdateReconcileBankAccountsVoucher
+                voucherId={editVoucherId}
+                onBack={() => {
+                  setShowEdit(false);
+                  setShowList(true);
+                  setEditVoucherId(null);
+                }}
+              />
+            ) : showForm && selectedCategory === 'reconcile-bank' ? (
+              <ReconcileBankAccountsVoucher
+                onBack={() => {
+                  setShowForm(false);
+                  setShowList(true);
+                }}
+              />
+            ) : showList && selectedCategory === 'reconcile-bank' ? (
+              <ReconcileBankAccountsVouchersList
                 onAddNew={() => {
                   setShowList(false);
                   setShowForm(true);
