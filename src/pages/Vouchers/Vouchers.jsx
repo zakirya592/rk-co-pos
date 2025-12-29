@@ -25,6 +25,9 @@ import UpdateCashPaymentVoucher from './UpdateCashPaymentVoucher';
 import JournalPaymentVoucher from './JournalPaymentVoucher';
 import JournalPaymentVouchersList from './JournalPaymentVouchersList';
 import UpdateJournalPaymentVoucher from './UpdateJournalPaymentVoucher';
+import OpeningBalanceVoucher from './OpeningBalanceVoucher';
+import OpeningBalanceVouchersList from './OpeningBalanceVouchersList';
+import UpdateOpeningBalanceVoucher from './UpdateOpeningBalanceVoucher';
 
 const Vouchers = () => {
   const navigate = useNavigate();
@@ -339,6 +342,37 @@ const Vouchers = () => {
               />
             ) : showList && selectedCategory === 'journal' ? (
               <JournalPaymentVouchersList
+                onAddNew={() => {
+                  setShowList(false);
+                  setShowForm(true);
+                }}
+                onView={(voucher) => {
+                  // View is handled in the list component modal
+                }}
+                onEdit={(voucherId) => {
+                  setEditVoucherId(voucherId);
+                  setShowList(false);
+                  setShowEdit(true);
+                }}
+              />
+            ) : showEdit && selectedCategory === 'opening-balance' ? (
+              <UpdateOpeningBalanceVoucher
+                voucherId={editVoucherId}
+                onBack={() => {
+                  setShowEdit(false);
+                  setShowList(true);
+                  setEditVoucherId(null);
+                }}
+              />
+            ) : showForm && selectedCategory === 'opening-balance' ? (
+              <OpeningBalanceVoucher
+                onBack={() => {
+                  setShowForm(false);
+                  setShowList(true);
+                }}
+              />
+            ) : showList && selectedCategory === 'opening-balance' ? (
+              <OpeningBalanceVouchersList
                 onAddNew={() => {
                   setShowList(false);
                   setShowForm(true);
