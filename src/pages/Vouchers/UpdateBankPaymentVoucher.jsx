@@ -465,14 +465,25 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
                     labelPlacement="outside"
                   />
 
-                  <Input
+                  <Select
+                    isRequired
                     label="Voucher Type"
                     name="voucherType"
-                    value={formData.voucherType}
-                    disabled
+                    selectedKeys={formData.voucherType ? [formData.voucherType] : []}
+                    onSelectionChange={(keys) => {
+                      const selected = Array.from(keys)[0] || '';
+                      setFormData((prev) => ({
+                        ...prev,
+                        voucherType: selected,
+                      }));
+                    }}
                     labelPlacement="outside"
-                    description="Payment voucher type"
-                  />
+                    description="Select voucher type"
+                  >
+                    <SelectItem key="payment" value="payment">Payment</SelectItem>
+                    <SelectItem key="receipt" value="receipt">Receipt</SelectItem>
+                    <SelectItem key="transfer" value="transfer">Transfer</SelectItem>
+                  </Select>
 
                   <Select
                     isRequired

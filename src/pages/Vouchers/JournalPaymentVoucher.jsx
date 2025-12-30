@@ -37,7 +37,7 @@ const JournalPaymentVoucher = ({ onBack }) => {
 
   const [formData, setFormData] = useState({
     voucherDate: new Date().toISOString().split('T')[0],
-    voucherType: 'journal_entry',
+    voucherType: 'payment',
     entries: [
       {
         account: '',
@@ -423,7 +423,7 @@ const JournalPaymentVoucher = ({ onBack }) => {
       // Reset form
       setFormData({
         voucherDate: new Date().toISOString().split('T')[0],
-        voucherType: 'journal_entry',
+        voucherType: 'payment',
         entries: [
           {
             account: '',
@@ -593,14 +593,25 @@ const JournalPaymentVoucher = ({ onBack }) => {
                         labelPlacement="outside"
                       />
 
-                      <Input
+                      <Select
+                        isRequired
                         label="Voucher Type"
                         name="voucherType"
-                        value={formData.voucherType}
-                        disabled
+                        selectedKeys={formData.voucherType ? [formData.voucherType] : []}
+                        onSelectionChange={(keys) => {
+                          const selected = Array.from(keys)[0] || '';
+                          setFormData((prev) => ({
+                            ...prev,
+                            voucherType: selected,
+                          }));
+                        }}
                         labelPlacement="outside"
-                        description="Journal entry type"
-                      />
+                        description="Select voucher type"
+                      >
+                        <SelectItem key="payment" value="payment">Payment</SelectItem>
+                        <SelectItem key="receipt" value="receipt">Receipt</SelectItem>
+                        <SelectItem key="transfer" value="transfer">Transfer</SelectItem>
+                      </Select>
                     </div>
                   </div>
 

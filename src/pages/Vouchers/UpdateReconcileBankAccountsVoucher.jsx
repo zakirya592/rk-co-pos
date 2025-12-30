@@ -40,6 +40,7 @@ const UpdateReconcileBankAccountsVoucher = ({ voucherId, onBack }) => {
 
   const [formData, setFormData] = useState({
     voucherDate: new Date().toISOString().split('T')[0],
+    voucherType: 'payment',
     bankAccount: '',
     statementDate: '',
     statementNumber: '',
@@ -89,6 +90,7 @@ const UpdateReconcileBankAccountsVoucher = ({ voucherId, onBack }) => {
           voucherDate: voucher.voucherDate
             ? new Date(voucher.voucherDate).toISOString().split('T')[0]
             : new Date().toISOString().split('T')[0],
+          voucherType: voucher.voucherType || 'payment',
           bankAccount: voucher.bankAccount?._id || voucher.bankAccount || '',
           statementDate: formatDateForInput(voucher.statementDate),
           statementNumber: voucher.statementNumber || '',
@@ -259,6 +261,7 @@ const UpdateReconcileBankAccountsVoucher = ({ voucherId, onBack }) => {
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('voucherDate', formData.voucherDate);
+      formDataToSend.append('voucherType', formData.voucherType);
       formDataToSend.append('bankAccount', formData.bankAccount);
       formDataToSend.append('statementDate', formData.statementDate);
       formDataToSend.append('statementNumber', formData.statementNumber || '');
@@ -420,6 +423,25 @@ const UpdateReconcileBankAccountsVoucher = ({ voucherId, onBack }) => {
                         onChange={handleChange}
                         labelPlacement="outside"
                       />
+                      <Select
+                        isRequired
+                        label="Voucher Type"
+                        name="voucherType"
+                        selectedKeys={formData.voucherType ? [formData.voucherType] : []}
+                        onSelectionChange={(keys) => {
+                          const selected = Array.from(keys)[0] || '';
+                          setFormData((prev) => ({
+                            ...prev,
+                            voucherType: selected,
+                          }));
+                        }}
+                        labelPlacement="outside"
+                        description="Select voucher type"
+                      >
+                        <SelectItem key="payment" value="payment">Payment</SelectItem>
+                        <SelectItem key="receipt" value="receipt">Receipt</SelectItem>
+                        <SelectItem key="transfer" value="transfer">Transfer</SelectItem>
+                      </Select>
                       <Select
                         isRequired
                         label="Bank Account"

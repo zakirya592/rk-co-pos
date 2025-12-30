@@ -39,6 +39,7 @@ const UpdateBankAccountTransferVoucher = ({ voucherId, onBack }) => {
 
   const [formData, setFormData] = useState({
     voucherDate: new Date().toISOString().split('T')[0],
+    voucherType: 'transfer',
     fromBankAccount: '',
     toBankAccount: '',
     amount: '',
@@ -230,6 +231,7 @@ const UpdateBankAccountTransferVoucher = ({ voucherId, onBack }) => {
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('voucherDate', formData.voucherDate);
+      formDataToSend.append('voucherType', formData.voucherType);
       formDataToSend.append('fromBankAccount', formData.fromBankAccount);
       formDataToSend.append('toBankAccount', formData.toBankAccount);
       formDataToSend.append('amount', formData.amount);
@@ -408,6 +410,25 @@ const UpdateBankAccountTransferVoucher = ({ voucherId, onBack }) => {
                         onChange={handleChange}
                         labelPlacement="outside"
                       />
+                      <Select
+                        isRequired
+                        label="Voucher Type"
+                        name="voucherType"
+                        selectedKeys={formData.voucherType ? [formData.voucherType] : []}
+                        onSelectionChange={(keys) => {
+                          const selected = Array.from(keys)[0] || '';
+                          setFormData((prev) => ({
+                            ...prev,
+                            voucherType: selected,
+                          }));
+                        }}
+                        labelPlacement="outside"
+                        description="Select voucher type"
+                      >
+                        <SelectItem key="payment" value="payment">Payment</SelectItem>
+                        <SelectItem key="receipt" value="receipt">Receipt</SelectItem>
+                        <SelectItem key="transfer" value="transfer">Transfer</SelectItem>
+                      </Select>
                     </div>
                   </div>
 
