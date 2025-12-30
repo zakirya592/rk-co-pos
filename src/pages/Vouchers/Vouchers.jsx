@@ -31,6 +31,12 @@ import UpdateOpeningBalanceVoucher from './UpdateOpeningBalanceVoucher';
 import ReconcileBankAccountsVoucher from './ReconcileBankAccountsVoucher';
 import ReconcileBankAccountsVouchersList from './ReconcileBankAccountsVouchersList';
 import UpdateReconcileBankAccountsVoucher from './UpdateReconcileBankAccountsVoucher';
+import BankAccountTransferVoucher from './BankAccountTransferVoucher';
+import BankAccountTransferVouchersList from './BankAccountTransferVouchersList';
+import UpdateBankAccountTransferVoucher from './UpdateBankAccountTransferVoucher';
+import SarafEntryVoucher from './SarafEntryVoucher';
+import SarafEntryVouchersList from './SarafEntryVouchersList';
+import UpdateSarafEntryVoucher from './UpdateSarafEntryVoucher';
 
 const Vouchers = () => {
   const navigate = useNavigate();
@@ -407,6 +413,68 @@ const Vouchers = () => {
               />
             ) : showList && selectedCategory === 'reconcile-bank' ? (
               <ReconcileBankAccountsVouchersList
+                onAddNew={() => {
+                  setShowList(false);
+                  setShowForm(true);
+                }}
+                onView={(voucher) => {
+                  // View is handled in the list component modal
+                }}
+                onEdit={(voucherId) => {
+                  setEditVoucherId(voucherId);
+                  setShowList(false);
+                  setShowEdit(true);
+                }}
+              />
+            ) : showEdit && selectedCategory === 'bank-transfer' ? (
+              <UpdateBankAccountTransferVoucher
+                voucherId={editVoucherId}
+                onBack={() => {
+                  setShowEdit(false);
+                  setShowList(true);
+                  setEditVoucherId(null);
+                }}
+              />
+            ) : showForm && selectedCategory === 'bank-transfer' ? (
+              <BankAccountTransferVoucher
+                onBack={() => {
+                  setShowForm(false);
+                  setShowList(true);
+                }}
+              />
+            ) : showList && selectedCategory === 'bank-transfer' ? (
+              <BankAccountTransferVouchersList
+                onAddNew={() => {
+                  setShowList(false);
+                  setShowForm(true);
+                }}
+                onView={(voucher) => {
+                  // View is handled in the list component modal
+                }}
+                onEdit={(voucherId) => {
+                  setEditVoucherId(voucherId);
+                  setShowList(false);
+                  setShowEdit(true);
+                }}
+              />
+            ) : showEdit && selectedCategory === 'saraf-entry' ? (
+              <UpdateSarafEntryVoucher
+                voucherId={editVoucherId}
+                onBack={() => {
+                  setShowEdit(false);
+                  setShowList(true);
+                  setEditVoucherId(null);
+                }}
+              />
+            ) : showForm && selectedCategory === 'saraf-entry' ? (
+              <SarafEntryVoucher
+                onBack={() => {
+                  setShowForm(false);
+                  setShowList(true);
+                }}
+              />
+            ) : showList && selectedCategory === 'saraf-entry' ? (
+              <SarafEntryVouchersList
                 onAddNew={() => {
                   setShowList(false);
                   setShowForm(true);
