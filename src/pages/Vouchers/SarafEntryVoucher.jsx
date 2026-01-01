@@ -114,7 +114,8 @@ const SarafEntryVoucher = ({ onBack }) => {
   const fetchBankPaymentVouchers = async () => {
     try {
       const res = await userRequest.get('/bank-payment-vouchers?limit=100');
-      return res.data?.data?.vouchers || res.data?.data || [];
+      const data = res.data?.data?.vouchers || res.data?.data || res.data || [];
+      return Array.isArray(data) ? data : [];
     } catch (error) {
       console.error('Error fetching bank payment vouchers:', error);
       return [];
@@ -124,7 +125,8 @@ const SarafEntryVoucher = ({ onBack }) => {
   const fetchCashPaymentVouchers = async () => {
     try {
       const res = await userRequest.get('/cash-payment-vouchers?limit=100');
-      return res.data?.data?.vouchers || res.data?.data || [];
+      const data = res.data?.data?.vouchers || res.data?.data || res.data || [];
+      return Array.isArray(data) ? data : [];
     } catch (error) {
       console.error('Error fetching cash payment vouchers:', error);
       return [];
@@ -145,14 +147,18 @@ const SarafEntryVoucher = ({ onBack }) => {
   );
   const { data: purchases = [] } = useQuery(['purchases'], fetchPurchases);
   const { data: sales = [] } = useQuery(['sales'], fetchSales);
-  const { data: bankPaymentVouchers = [] } = useQuery(
+  const { data: bankPaymentVouchersData = [] } = useQuery(
     ['bank-payment-vouchers'],
     fetchBankPaymentVouchers
   );
-  const { data: cashPaymentVouchers = [] } = useQuery(
+  const { data: cashPaymentVouchersData = [] } = useQuery(
     ['cash-payment-vouchers'],
     fetchCashPaymentVouchers
   );
+
+  // Ensure arrays
+  const bankPaymentVouchers = Array.isArray(bankPaymentVouchersData) ? bankPaymentVouchersData : [];
+  const cashPaymentVouchers = Array.isArray(cashPaymentVouchersData) ? cashPaymentVouchersData : [];
 
   // Handle form field changes
   const handleChange = (e) => {
