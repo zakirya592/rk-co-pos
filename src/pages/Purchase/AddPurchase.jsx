@@ -312,8 +312,11 @@ const AddPurchase = () => {
           await userRequest.post('/supplier-payments', paymentData)
         }
 
+        const purchaseId = purchaseResponse.data.data._id;
         toast.success('Purchase and payment processed successfully!')
-        navigate('/purchases')
+        // Set flag for auto-print and redirect to invoice page
+        sessionStorage.setItem('autoPrintPurchase', purchaseId);
+        navigate(`/purchases/Details/${purchaseId}?print=true`)
       } else {
         throw new Error(purchaseResponse.data.message || 'Failed to create purchase')
       }

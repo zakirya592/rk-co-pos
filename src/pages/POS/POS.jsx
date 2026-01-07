@@ -322,8 +322,10 @@ const POS = () => {
         description: "",
       }));
       setShowPaymentModal(false);
-      navigate("/Navigation");
       toast.success("Sale and payment completed successfully!");
+      // Set flag for auto-print and redirect to invoice page
+      sessionStorage.setItem('autoPrintSale', saleId);
+      navigate(`/sales/${saleId}?print=true`);
     } catch (error) {
       toast.error(
         error?.response?.data?.message ||

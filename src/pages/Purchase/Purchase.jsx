@@ -25,6 +25,7 @@ import SuppliersPaymentmodel from "./SuppliersPaymentmodel";
 import { useQuery } from "react-query";
 import userRequest from "../../utils/userRequest";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const fetchProducts = async (
   key,
@@ -56,6 +57,7 @@ const fetchCustomers = async (search = "", page = 1) => {
 };
 
 const Purchase = () => {
+  const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
   const [customerPage, setCustomerPage] = useState(1);
@@ -205,41 +207,83 @@ const Purchase = () => {
 
   const completeSale = async () => {
     setpaymentMethodslosding(true);
-    //handleSalepaymets
     try {
-      await userRequest.post("/supplier-payments", {
+      // First create the purchase
+      const purchaseData = {
         supplier: selectedCustomer?._id,
-        products: cart.map((item) => ({
+        warehouse: selectedTransferTo || undefined,
+        currency: saleDataadd.currency || "",
+        purchaseDate: new Date().toISOString().split('T')[0],
+        notes: saleDataadd.description || "",
+        items: cart.map((item) => ({
           product: item._id,
           quantity: item.quantity,
-          // price: item.price,
-          // discount: 0,
-          amount: item.price * item.quantity - 0,
+          purchaseRate: item.price,
+          retailRate: item.retailRate || item.price,
+          wholesaleRate: item.wholesaleRate || item.price,
         })),
-        amount: totalPaid,
-        paymentMethod: paymentMethods[0]?.method || "cash",
-        status:
-          totalPaid === total
-            ? "completed"
-            : totalPaid > 0
-              ? "partial"
-              : "pending",
-        currency: saleDataadd.currency || "",
-        notes: saleDataadd.description,
+        payments: paymentMethods.filter(p => p.amount && parseFloat(p.amount) > 0).map(payment => ({
+          method: payment.method,
+          amount: parseFloat(payment.amount),
+          ...(payment.bankAccount ? { bankAccount: payment.bankAccount } : {})
+        })),
+      };
+
+      const formDataToSend = new FormData();
+      formDataToSend.append('supplier', purchaseData.supplier);
+      if (purchaseData.warehouse) {
+        formDataToSend.append('warehouse', purchaseData.warehouse);
+      }
+      if (purchaseData.currency) {
+        formDataToSend.append('currency', purchaseData.currency);
+      }
+      formDataToSend.append('purchaseDate', purchaseData.purchaseDate);
+      if (purchaseData.notes) {
+        formDataToSend.append('notes', purchaseData.notes);
+      }
+      formDataToSend.append('items', JSON.stringify(purchaseData.items));
+      formDataToSend.append('payments', JSON.stringify(purchaseData.payments));
+
+      const purchaseResponse = await userRequest.post('/purchases', formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
+
+      const purchaseId = purchaseResponse?.data?.data?._id || purchaseResponse?.data?._id;
+      if (!purchaseId) {
+        throw new Error("Purchase created but no purchase id returned.");
+      }
+
+      // Create supplier payment if needed
+      if (totalPaid > 0) {
+        const paymentData = {
+          supplier: selectedCustomer?._id,
+          amount: totalPaid,
+          paymentMethod: paymentMethods[0]?.method || "cash",
+          status: totalPaid === total ? "completed" : totalPaid > 0 ? "partial" : "pending",
+          currency: saleDataadd.currency || "",
+          notes: saleDataadd.description || `Payment for purchase #${purchaseId}`,
+        };
+        await userRequest.post("/supplier-payments", paymentData);
+      }
+
       setCart([]);
       setDiscount(0);
       setPaymentMethods([]);
       setTotalPaid(0);
       setShowSuppliersPaymentmodel(false);
       setpaymentMethodslosding(false);
-      toast.success("Sale completed successfully!");
+      toast.success("Purchase completed successfully!");
+      // Set flag for auto-print and redirect to invoice page
+      sessionStorage.setItem('autoPrintPurchase', purchaseId);
+      navigate(`/purchases/Details/${purchaseId}?print=true`);
     } catch (error) {
       setpaymentMethodslosding(false);
       toast.error(
         error?.response?.data?.message ||
         error.message ||
-        "Failed to add customer."
+        "Failed to complete purchase."
       );
     }
   };

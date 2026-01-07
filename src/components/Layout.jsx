@@ -122,6 +122,14 @@ const Layout = () => {
             }
           />
           <Route
+            path="/purchase-pos"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "user"]}>
+                <Purchase />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/sales"
             element={
               <ProtectedRoute allowedRoles={["admin", "user"]}>

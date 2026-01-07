@@ -95,7 +95,7 @@ const cardData = [
   {
     to: "/purchases",
     icon: <FaShoppingCart />,
-    title: "Purchase",
+    title: "Purchases",
     desc: "Manage purchases",
     color: "teal",
   },
