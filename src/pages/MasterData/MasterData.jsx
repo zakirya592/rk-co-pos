@@ -8,6 +8,8 @@ import PackingUnitsTable from './components/PackingUnitsTable';
 import userRequest from '../../utils/userRequest';
 import PochuesTable from './components/PochuesTable';
 import AssetsTable from './components/AssetsTable';
+import IncomesTable from './components/IncomesTable';
+import LiabilitiesTable from './components/LiabilitiesTable';
 import { 
   FaBoxes, 
   FaLayerGroup, 
@@ -94,6 +96,54 @@ const MasterData = () => {
     }
   );
 
+  const { data: incomesData, refetch: refetchIncomes } = useQuery(
+    'incomes',
+    async () => {
+      const { data } = await userRequest.get("/incomes");
+      // Handle nested structure: data.data.incomes
+      if (data?.data?.incomes && Array.isArray(data.data.incomes)) {
+        return data.data.incomes;
+      }
+      // Fallback for other response structures
+      if (Array.isArray(data.data)) {
+        return data.data;
+      }
+      if (Array.isArray(data)) {
+        return data;
+      }
+      return [];
+    },
+    {
+      onError: (error) => {
+        toast.error(error.response?.data?.message || 'Failed to fetch incomes');
+      },
+    }
+  );
+
+  const { data: liabilitiesData, refetch: refetchLiabilities } = useQuery(
+    'liabilities',
+    async () => {
+      const { data } = await userRequest.get("/liabilities");
+      // Handle nested structure: data.data.liabilities
+      if (data?.data?.liabilities && Array.isArray(data.data.liabilities)) {
+        return data.data.liabilities;
+      }
+      // Fallback for other response structures
+      if (Array.isArray(data.data)) {
+        return data.data;
+      }
+      if (Array.isArray(data)) {
+        return data;
+      }
+      return [];
+    },
+    {
+      onError: (error) => {
+        toast.error(error.response?.data?.message || 'Failed to fetch liabilities');
+      },
+    }
+  );
+
   const handleTabChange = (key) => {
     setSelectedTab(key);
   };
@@ -103,6 +153,8 @@ const MasterData = () => {
     refetchPackingUnits();
     refetchProducts();
     refetchAssets();
+    refetchIncomes();
+    refetchLiabilities();
   };
 
   const sidebarItems = [
@@ -140,6 +192,46 @@ const MasterData = () => {
             <CardBody>
               <AssetsTable
                 data={Array.isArray(assetsData) ? assetsData : []}
+                onRefresh={refetchAll}
+              />
+            </CardBody>
+          </Card>
+        </div>
+      );
+    }
+
+    // Render Incomes table when income is selected
+    if (selectedSidebarItem === 'income') {
+      return (
+        <div className="p-6">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+            {item?.icon}
+            {item?.label}
+          </h2>
+          <Card>
+            <CardBody>
+              <IncomesTable
+                data={Array.isArray(incomesData) ? incomesData : []}
+                onRefresh={refetchAll}
+              />
+            </CardBody>
+          </Card>
+        </div>
+      );
+    }
+
+    // Render Liabilities table when liability is selected
+    if (selectedSidebarItem === 'liability') {
+      return (
+        <div className="p-6">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+            {item?.icon}
+            {item?.label}
+          </h2>
+          <Card>
+            <CardBody>
+              <LiabilitiesTable
+                data={Array.isArray(liabilitiesData) ? liabilitiesData : []}
                 onRefresh={refetchAll}
               />
             </CardBody>
