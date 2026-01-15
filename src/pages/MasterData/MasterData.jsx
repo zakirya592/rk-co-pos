@@ -328,9 +328,24 @@ const MasterData = () => {
   const renderSidebarContent = () => {
     if (!selectedSidebarItem) {
       return (
-        <div className="flex items-center justify-center h-full text-gray-500">
-          <p>Select an option from the sidebar to view details</p>
-        </div>
+        <Card className="shadow-lg border-0">
+          <CardBody className="p-12">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-teal-100 to-teal-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <FaBook className="text-teal-600 text-3xl" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Welcome to Master Data</h3>
+              <p className="text-gray-500 mb-6">Select an option from the sidebar to view and manage your data</p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                <span className="px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-xs font-medium">Assets</span>
+                <span className="px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-xs font-medium">Income</span>
+                <span className="px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-xs font-medium">Liabilities</span>
+                <span className="px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-xs font-medium">Employees</span>
+                <span className="px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-xs font-medium">And more...</span>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
       );
     }
 
@@ -339,259 +354,318 @@ const MasterData = () => {
     // Render Assets table when assets is selected
     if (selectedSidebarItem === 'assets') {
       return (
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            {item?.icon}
-            {item?.label}
-          </h2>
-          <Card>
-            <CardBody>
-              <AssetsTable
-                data={Array.isArray(assetsData) ? assetsData : []}
-                onRefresh={refetchAll}
-              />
-            </CardBody>
-          </Card>
-        </div>
+        <Card className="shadow-lg border-0">
+          <CardBody className="p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-teal-500/30">
+                {item?.icon}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{item?.label}</h2>
+                <p className="text-sm text-gray-500">Manage your assets and resources</p>
+              </div>
+            </div>
+            <AssetsTable
+              data={Array.isArray(assetsData) ? assetsData : []}
+              onRefresh={refetchAll}
+            />
+          </CardBody>
+        </Card>
       );
     }
 
     // Render Incomes table when income is selected
     if (selectedSidebarItem === 'income') {
       return (
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            {item?.icon}
-            {item?.label}
-          </h2>
-          <Card>
-            <CardBody>
-              <IncomesTable
-                data={Array.isArray(incomesData) ? incomesData : []}
-                onRefresh={refetchAll}
-              />
-            </CardBody>
-          </Card>
-        </div>
+        <Card className="shadow-lg border-0">
+          <CardBody className="p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-teal-500/30">
+                {item?.icon}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{item?.label}</h2>
+                <p className="text-sm text-gray-500">Track and manage income sources</p>
+              </div>
+            </div>
+            <IncomesTable
+              data={Array.isArray(incomesData) ? incomesData : []}
+              onRefresh={refetchAll}
+            />
+          </CardBody>
+        </Card>
       );
     }
 
     // Render Liabilities table when liability is selected
     if (selectedSidebarItem === 'liability') {
       return (
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            {item?.icon}
-            {item?.label}
-          </h2>
-          <Card>
-            <CardBody>
-              <LiabilitiesTable
-                data={Array.isArray(liabilitiesData) ? liabilitiesData : []}
-                onRefresh={refetchAll}
-              />
-            </CardBody>
-          </Card>
-        </div>
+        <Card className="shadow-lg border-0">
+          <CardBody className="p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-teal-500/30">
+                {item?.icon}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{item?.label}</h2>
+                <p className="text-sm text-gray-500">Manage your liabilities and debts</p>
+              </div>
+            </div>
+            <LiabilitiesTable
+              data={Array.isArray(liabilitiesData) ? liabilitiesData : []}
+              onRefresh={refetchAll}
+            />
+          </CardBody>
+        </Card>
       );
     }
 
     // Render Partnership Accounts table when partnership is selected
     if (selectedSidebarItem === 'partnership') {
       return (
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            {item?.icon}
-            {item?.label}
-          </h2>
-          <Card>
-            <CardBody>
-              <PartnershipAccountsTable
-                data={Array.isArray(partnershipAccountsData) ? partnershipAccountsData : []}
-                onRefresh={refetchAll}
-              />
-            </CardBody>
-          </Card>
-        </div>
+        <Card className="shadow-lg border-0">
+          <CardBody className="p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-teal-500/30">
+                {item?.icon}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{item?.label}</h2>
+                <p className="text-sm text-gray-500">Manage partnership accounts and shares</p>
+              </div>
+            </div>
+            <PartnershipAccountsTable
+              data={Array.isArray(partnershipAccountsData) ? partnershipAccountsData : []}
+              onRefresh={refetchAll}
+            />
+          </CardBody>
+        </Card>
       );
     }
 
     // Render Cash Books table when cashbook is selected
     if (selectedSidebarItem === 'cashbook') {
       return (
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            {item?.icon}
-            {item?.label}
-          </h2>
-          <Card>
-            <CardBody>
-              <CashBooksTable
-                data={Array.isArray(cashBooksData) ? cashBooksData : []}
-                onRefresh={refetchAll}
-              />
-            </CardBody>
-          </Card>
-        </div>
+        <Card className="shadow-lg border-0">
+          <CardBody className="p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-teal-500/30">
+                {item?.icon}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{item?.label}</h2>
+                <p className="text-sm text-gray-500">Track cash flow and transactions</p>
+              </div>
+            </div>
+            <CashBooksTable
+              data={Array.isArray(cashBooksData) ? cashBooksData : []}
+              onRefresh={refetchAll}
+            />
+          </CardBody>
+        </Card>
       );
     }
 
     // Render Capitals table when capital is selected
     if (selectedSidebarItem === 'capital') {
       return (
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            {item?.icon}
-            {item?.label}
-          </h2>
-          <Card>
-            <CardBody>
-              <CapitalsTable
-                data={Array.isArray(capitalsData) ? capitalsData : []}
-                onRefresh={refetchAll}
-              />
-            </CardBody>
-          </Card>
-        </div>
+        <Card className="shadow-lg border-0">
+          <CardBody className="p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-teal-500/30">
+                {item?.icon}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{item?.label}</h2>
+                <p className="text-sm text-gray-500">Manage capital investments and withdrawals</p>
+              </div>
+            </div>
+            <CapitalsTable
+              data={Array.isArray(capitalsData) ? capitalsData : []}
+              onRefresh={refetchAll}
+            />
+          </CardBody>
+        </Card>
       );
     }
 
     // Render Owners table when owner is selected
     if (selectedSidebarItem === 'owner') {
       return (
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            {item?.icon}
-            {item?.label}
-          </h2>
-          <Card>
-            <CardBody>
-              <OwnersTable
-                data={Array.isArray(ownersData) ? ownersData : []}
-                onRefresh={refetchAll}
-              />
-            </CardBody>
-          </Card>
-        </div>
+        <Card className="shadow-lg border-0">
+          <CardBody className="p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-teal-500/30">
+                {item?.icon}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{item?.label}</h2>
+                <p className="text-sm text-gray-500">Manage business owners and stakeholders</p>
+              </div>
+            </div>
+            <OwnersTable
+              data={Array.isArray(ownersData) ? ownersData : []}
+              onRefresh={refetchAll}
+            />
+          </CardBody>
+        </Card>
       );
     }
 
     // Render Employees table when employee is selected
     if (selectedSidebarItem === 'employee') {
       return (
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            {item?.icon}
-            {item?.label}
-          </h2>
-          <Card>
-            <CardBody>
-              <EmployeesTable
-                data={Array.isArray(employeesData) ? employeesData : []}
-                onRefresh={refetchAll}
-              />
-            </CardBody>
-          </Card>
-        </div>
+        <Card className="shadow-lg border-0">
+          <CardBody className="p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-teal-500/30">
+                {item?.icon}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{item?.label}</h2>
+                <p className="text-sm text-gray-500">Manage employee information and records</p>
+              </div>
+            </div>
+            <EmployeesTable
+              data={Array.isArray(employeesData) ? employeesData : []}
+              onRefresh={refetchAll}
+            />
+          </CardBody>
+        </Card>
       );
     }
 
     // Render Property Accounts table when property-accounts is selected
     if (selectedSidebarItem === 'property-accounts') {
       return (
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            {item?.icon}
-            {item?.label}
-          </h2>
-          <Card>
-            <CardBody>
-              <PropertyAccountsTable
-                data={Array.isArray(propertyAccountsData) ? propertyAccountsData : []}
-                onRefresh={refetchAll}
-              />
-            </CardBody>
-          </Card>
-        </div>
+        <Card className="shadow-lg border-0">
+          <CardBody className="p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-teal-500/30">
+                {item?.icon}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{item?.label}</h2>
+                <p className="text-sm text-gray-500">Manage property assets and accounts</p>
+              </div>
+            </div>
+            <PropertyAccountsTable
+              data={Array.isArray(propertyAccountsData) ? propertyAccountsData : []}
+              onRefresh={refetchAll}
+            />
+          </CardBody>
+        </Card>
       );
     }
     
     // For other items, show placeholder
     return (
-      <div className="p-6">
-        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          {item?.icon}
-          {item?.label}
-        </h2>
-        <Card>
-          <CardBody>
-            <p className="text-gray-600">
-              {item?.label} management section. This feature is coming soon.
+      <Card className="shadow-lg border-0">
+        <CardBody className="p-6">
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+            <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-teal-500/30">
+              {item?.icon}
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">{item?.label}</h2>
+              <p className="text-sm text-gray-500">This feature is coming soon</p>
+            </div>
+          </div>
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">
+              {item?.label} management section is under development.
             </p>
-          </CardBody>
-        </Card>
-      </div>
+          </div>
+        </CardBody>
+      </Card>
     );
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg font-bold text-gray-800">Master Data</h2>
+    <div className="flex h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      {/* Enhanced Sidebar */}
+      <div className="w-72 bg-white shadow-xl border-r border-gray-200 flex flex-col">
+        {/* Sidebar Header */}
+        <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-teal-600 to-teal-700">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+              <FaBook className="text-white text-xl" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white">Master Data</h2>
+              <p className="text-xs text-teal-100">Management Center</p>
+            </div>
+          </div>
         </div>
+
+        {/* Sidebar Navigation */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-2">
-            <div className="mb-4">
-              <p className="text-xs font-semibold text-gray-500 uppercase px-3 py-2">Existing Options</p>
+          <div className="p-4 space-y-6">
+            {/* Existing Options Section */}
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-3 py-2 mb-2">
+                Product Management
+              </p>
               <div className="space-y-1">
                 <button
                   onClick={() => {
                     setSelectedTab("quantity-units");
                     setSelectedSidebarItem(null);
                   }}
-                  className={`w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                  className={`w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-all duration-200 ${
                     selectedTab === "quantity-units" && !selectedSidebarItem
-                      ? "bg-teal-100 text-teal-700 font-semibold"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-lg shadow-teal-500/30 font-semibold transform scale-[1.02]"
+                      : "text-gray-700 hover:bg-gray-50 hover:shadow-sm"
                   }`}
                 >
-                  <FaBoxes />
-                  Quantity Units
+                  <div className={`${selectedTab === "quantity-units" && !selectedSidebarItem ? "text-white" : "text-teal-600"}`}>
+                    <FaBoxes className="text-lg" />
+                  </div>
+                  <span className="font-medium">Quantity Units</span>
                 </button>
                 <button
                   onClick={() => {
                     setSelectedTab("packing-units");
                     setSelectedSidebarItem(null);
                   }}
-                  className={`w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                  className={`w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-all duration-200 ${
                     selectedTab === "packing-units" && !selectedSidebarItem
-                      ? "bg-teal-100 text-teal-700 font-semibold"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-lg shadow-teal-500/30 font-semibold transform scale-[1.02]"
+                      : "text-gray-700 hover:bg-gray-50 hover:shadow-sm"
                   }`}
                 >
-                  <FaLayerGroup />
-                  Packing Units
+                  <div className={`${selectedTab === "packing-units" && !selectedSidebarItem ? "text-white" : "text-teal-600"}`}>
+                    <FaLayerGroup className="text-lg" />
+                  </div>
+                  <span className="font-medium">Packing Units</span>
                 </button>
                 <button
                   onClick={() => {
                     setSelectedTab("pochues");
                     setSelectedSidebarItem(null);
                   }}
-                  className={`w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                  className={`w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-all duration-200 ${
                     selectedTab === "pochues" && !selectedSidebarItem
-                      ? "bg-teal-100 text-teal-700 font-semibold"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-lg shadow-teal-500/30 font-semibold transform scale-[1.02]"
+                      : "text-gray-700 hover:bg-gray-50 hover:shadow-sm"
                   }`}
                 >
-                  <FaTags />
-                  Pochues
+                  <div className={`${selectedTab === "pochues" && !selectedSidebarItem ? "text-white" : "text-teal-600"}`}>
+                    <FaTags className="text-lg" />
+                  </div>
+                  <span className="font-medium">Products</span>
                 </button>
               </div>
             </div>
+
+            {/* Divider */}
+            <div className="border-t border-gray-200 my-2"></div>
+
+            {/* Financial Management Section */}
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase px-3 py-2">New Options</p>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-3 py-2 mb-2">
+                Financial Management
+              </p>
               <div className="space-y-1">
                 {sidebarItems.map((item) => (
                   <button
@@ -600,49 +674,89 @@ const MasterData = () => {
                       setSelectedSidebarItem(item.key);
                       setSelectedTab(null);
                     }}
-                    className={`w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                    className={`w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-all duration-200 ${
                       selectedSidebarItem === item.key
-                        ? "bg-teal-100 text-teal-700 font-semibold"
-                        : "text-gray-700 hover:bg-gray-100"
+                        ? "bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-lg shadow-teal-500/30 font-semibold transform scale-[1.02]"
+                        : "text-gray-700 hover:bg-gray-50 hover:shadow-sm"
                     }`}
                   >
-                    {item.icon}
-                    {item.label}
+                    <div className={`${selectedSidebarItem === item.key ? "text-white" : "text-teal-600"}`}>
+                      {item.icon}
+                    </div>
+                    <span className="font-medium">{item.label}</span>
                   </button>
                 ))}
               </div>
             </div>
           </div>
         </div>
+
+        {/* Sidebar Footer */}
+        <div className="p-4 border-t border-gray-200 bg-gray-50">
+          <Button
+            variant="flat"
+            className="w-full bg-white hover:bg-gray-100 border border-gray-200"
+            onPress={() => navigate('/Navigation')}
+          >
+            <span className="font-medium">← Back to Dashboard</span>
+          </Button>
+        </div>
       </div>
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Master Data Management</h1>
-            <Button
-              variant="flat"
-              onPress={() => navigate('/Navigation')}
-            >
-              Dashboard
-            </Button>
+        {/* Enhanced Header */}
+        <div className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
+          <div className="px-8 py-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-1">Master Data Management</h1>
+                <p className="text-sm text-gray-500">
+                  {selectedSidebarItem 
+                    ? `Manage ${sidebarItems.find(i => i.key === selectedSidebarItem)?.label || 'data'}`
+                    : selectedTab 
+                      ? `Manage ${selectedTab === 'quantity-units' ? 'Quantity Units' : selectedTab === 'packing-units' ? 'Packing Units' : 'Products'}`
+                      : 'Select a category to get started'
+                  }
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="flat"
+                  className="bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200"
+                  onPress={refetchAll}
+                >
+                  <span className="font-medium">Refresh All</span>
+                </Button>
+              </div>
+            </div>
           </div>
+        </div>
 
+        {/* Content */}
+        <div className="p-8">
           {selectedSidebarItem ? (
-            renderSidebarContent()
+            <div className="animate-fadeIn">
+              {renderSidebarContent()}
+            </div>
           ) : (
-            <Card className="w-full">
+            <Card className="w-full shadow-lg border-0">
               <CardBody className="p-0">
                 <Tabs
                   aria-label="Master data tabs"
                   selectedKey={selectedTab}
                   onSelectionChange={handleTabChange}
-                  className="px-4 pt-2"
+                  className="px-6 pt-4"
                   variant="underlined"
+                  classNames={{
+                    tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
+                    cursor: "w-full bg-teal-600",
+                    tab: "max-w-fit px-4 h-12",
+                    tabContent: "group-data-[selected=true]:text-teal-600 font-semibold"
+                  }}
                 >
                   <Tab key="quantity-units" title="Quantity Units">
-                    <div className="p-4">
+                    <div className="p-6">
                       <QuantityUnitsTable
                         data={quantityUnitsData || []}
                         onRefresh={refetchAll}
@@ -650,7 +764,7 @@ const MasterData = () => {
                     </div>
                   </Tab>
                   <Tab key="packing-units" title="Packing Units">
-                    <div className="p-4">
+                    <div className="p-6">
                       <PackingUnitsTable
                         data={packingUnitsData || []}
                         quantityUnits={quantityUnitsData || []}
@@ -658,8 +772,8 @@ const MasterData = () => {
                       />
                     </div>
                   </Tab>
-                  <Tab key="pochues" title="Pochues">
-                    <div className="p-4">
+                  <Tab key="pochues" title="Products">
+                    <div className="p-6">
                       <PochuesTable
                         data={productsData || []}
                         packingUnits={packingUnitsData || []}
@@ -673,6 +787,23 @@ const MasterData = () => {
           )}
         </div>
       </div>
+
+      {/* Add custom styles */}
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 };
