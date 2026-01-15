@@ -7,6 +7,7 @@ import QuantityUnitsTable from './components/QuantityUnitsTable';
 import PackingUnitsTable from './components/PackingUnitsTable';
 import userRequest from '../../utils/userRequest';
 import PochuesTable from './components/PochuesTable';
+import AssetsTable from './components/AssetsTable';
 import { 
   FaBoxes, 
   FaLayerGroup, 
@@ -69,6 +70,30 @@ const MasterData = () => {
     }
   );
 
+  const { data: assetsData, refetch: refetchAssets } = useQuery(
+    'assets',
+    async () => {
+      const { data } = await userRequest.get("/assets");
+      // Handle nested structure: data.data.assets
+      if (data?.data?.assets && Array.isArray(data.data.assets)) {
+        return data.data.assets;
+      }
+      // Fallback for other response structures
+      if (Array.isArray(data.data)) {
+        return data.data;
+      }
+      if (Array.isArray(data)) {
+        return data;
+      }
+      return [];
+    },
+    {
+      onError: (error) => {
+        toast.error(error.response?.data?.message || 'Failed to fetch assets');
+      },
+    }
+  );
+
   const handleTabChange = (key) => {
     setSelectedTab(key);
   };
@@ -77,6 +102,7 @@ const MasterData = () => {
     refetchQuantityUnits();
     refetchPackingUnits();
     refetchProducts();
+    refetchAssets();
   };
 
   const sidebarItems = [
@@ -101,6 +127,28 @@ const MasterData = () => {
     }
 
     const item = sidebarItems.find(i => i.key === selectedSidebarItem);
+    
+    // Render Assets table when assets is selected
+    if (selectedSidebarItem === 'assets') {
+      return (
+        <div className="p-6">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+            {item?.icon}
+            {item?.label}
+          </h2>
+          <Card>
+            <CardBody>
+              <AssetsTable
+                data={Array.isArray(assetsData) ? assetsData : []}
+                onRefresh={refetchAll}
+              />
+            </CardBody>
+          </Card>
+        </div>
+      );
+    }
+    
+    // For other items, show placeholder
     return (
       <div className="p-6">
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
