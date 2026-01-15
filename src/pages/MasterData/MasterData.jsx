@@ -14,6 +14,8 @@ import PartnershipAccountsTable from './components/PartnershipAccountsTable';
 import CashBooksTable from './components/CashBooksTable';
 import CapitalsTable from './components/CapitalsTable';
 import OwnersTable from './components/OwnersTable';
+import EmployeesTable from './components/EmployeesTable';
+import PropertyAccountsTable from './components/PropertyAccountsTable';
 import { 
   FaBoxes, 
   FaLayerGroup, 
@@ -244,6 +246,54 @@ const MasterData = () => {
     }
   );
 
+  const { data: employeesData, refetch: refetchEmployees } = useQuery(
+    'employees',
+    async () => {
+      const { data } = await userRequest.get("/employees");
+      // Handle nested structure: data.data.employees
+      if (data?.data?.employees && Array.isArray(data.data.employees)) {
+        return data.data.employees;
+      }
+      // Fallback for other response structures
+      if (Array.isArray(data.data)) {
+        return data.data;
+      }
+      if (Array.isArray(data)) {
+        return data;
+      }
+      return [];
+    },
+    {
+      onError: (error) => {
+        toast.error(error.response?.data?.message || 'Failed to fetch employees');
+      },
+    }
+  );
+
+  const { data: propertyAccountsData, refetch: refetchPropertyAccounts } = useQuery(
+    'property-accounts',
+    async () => {
+      const { data } = await userRequest.get("/property-accounts");
+      // Handle nested structure: data.data.propertyAccounts
+      if (data?.data?.propertyAccounts && Array.isArray(data.data.propertyAccounts)) {
+        return data.data.propertyAccounts;
+      }
+      // Fallback for other response structures
+      if (Array.isArray(data.data)) {
+        return data.data;
+      }
+      if (Array.isArray(data)) {
+        return data;
+      }
+      return [];
+    },
+    {
+      onError: (error) => {
+        toast.error(error.response?.data?.message || 'Failed to fetch property accounts');
+      },
+    }
+  );
+
   const handleTabChange = (key) => {
     setSelectedTab(key);
   };
@@ -259,6 +309,8 @@ const MasterData = () => {
     refetchCashBooks();
     refetchCapitals();
     refetchOwners();
+    refetchEmployees();
+    refetchPropertyAccounts();
   };
 
   const sidebarItems = [
@@ -416,6 +468,46 @@ const MasterData = () => {
             <CardBody>
               <OwnersTable
                 data={Array.isArray(ownersData) ? ownersData : []}
+                onRefresh={refetchAll}
+              />
+            </CardBody>
+          </Card>
+        </div>
+      );
+    }
+
+    // Render Employees table when employee is selected
+    if (selectedSidebarItem === 'employee') {
+      return (
+        <div className="p-6">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+            {item?.icon}
+            {item?.label}
+          </h2>
+          <Card>
+            <CardBody>
+              <EmployeesTable
+                data={Array.isArray(employeesData) ? employeesData : []}
+                onRefresh={refetchAll}
+              />
+            </CardBody>
+          </Card>
+        </div>
+      );
+    }
+
+    // Render Property Accounts table when property-accounts is selected
+    if (selectedSidebarItem === 'property-accounts') {
+      return (
+        <div className="p-6">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+            {item?.icon}
+            {item?.label}
+          </h2>
+          <Card>
+            <CardBody>
+              <PropertyAccountsTable
+                data={Array.isArray(propertyAccountsData) ? propertyAccountsData : []}
                 onRefresh={refetchAll}
               />
             </CardBody>
