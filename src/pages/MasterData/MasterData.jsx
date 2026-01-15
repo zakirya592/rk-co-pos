@@ -10,6 +10,7 @@ import PochuesTable from './components/PochuesTable';
 import AssetsTable from './components/AssetsTable';
 import IncomesTable from './components/IncomesTable';
 import LiabilitiesTable from './components/LiabilitiesTable';
+import PartnershipAccountsTable from './components/PartnershipAccountsTable';
 import { 
   FaBoxes, 
   FaLayerGroup, 
@@ -144,6 +145,30 @@ const MasterData = () => {
     }
   );
 
+  const { data: partnershipAccountsData, refetch: refetchPartnershipAccounts } = useQuery(
+    'partnership-accounts',
+    async () => {
+      const { data } = await userRequest.get("/partnership-accounts");
+      // Handle nested structure: data.data.partnershipAccounts
+      if (data?.data?.partnershipAccounts && Array.isArray(data.data.partnershipAccounts)) {
+        return data.data.partnershipAccounts;
+      }
+      // Fallback for other response structures
+      if (Array.isArray(data.data)) {
+        return data.data;
+      }
+      if (Array.isArray(data)) {
+        return data;
+      }
+      return [];
+    },
+    {
+      onError: (error) => {
+        toast.error(error.response?.data?.message || 'Failed to fetch partnership accounts');
+      },
+    }
+  );
+
   const handleTabChange = (key) => {
     setSelectedTab(key);
   };
@@ -155,6 +180,7 @@ const MasterData = () => {
     refetchAssets();
     refetchIncomes();
     refetchLiabilities();
+    refetchPartnershipAccounts();
   };
 
   const sidebarItems = [
@@ -232,6 +258,26 @@ const MasterData = () => {
             <CardBody>
               <LiabilitiesTable
                 data={Array.isArray(liabilitiesData) ? liabilitiesData : []}
+                onRefresh={refetchAll}
+              />
+            </CardBody>
+          </Card>
+        </div>
+      );
+    }
+
+    // Render Partnership Accounts table when partnership is selected
+    if (selectedSidebarItem === 'partnership') {
+      return (
+        <div className="p-6">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+            {item?.icon}
+            {item?.label}
+          </h2>
+          <Card>
+            <CardBody>
+              <PartnershipAccountsTable
+                data={Array.isArray(partnershipAccountsData) ? partnershipAccountsData : []}
                 onRefresh={refetchAll}
               />
             </CardBody>
