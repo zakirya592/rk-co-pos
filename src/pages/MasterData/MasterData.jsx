@@ -13,6 +13,7 @@ import LiabilitiesTable from './components/LiabilitiesTable';
 import PartnershipAccountsTable from './components/PartnershipAccountsTable';
 import CashBooksTable from './components/CashBooksTable';
 import CapitalsTable from './components/CapitalsTable';
+import OwnersTable from './components/OwnersTable';
 import { 
   FaBoxes, 
   FaLayerGroup, 
@@ -219,6 +220,30 @@ const MasterData = () => {
     }
   );
 
+  const { data: ownersData, refetch: refetchOwners } = useQuery(
+    'owners',
+    async () => {
+      const { data } = await userRequest.get("/owners");
+      // Handle nested structure: data.data.owners
+      if (data?.data?.owners && Array.isArray(data.data.owners)) {
+        return data.data.owners;
+      }
+      // Fallback for other response structures
+      if (Array.isArray(data.data)) {
+        return data.data;
+      }
+      if (Array.isArray(data)) {
+        return data;
+      }
+      return [];
+    },
+    {
+      onError: (error) => {
+        toast.error(error.response?.data?.message || 'Failed to fetch owners');
+      },
+    }
+  );
+
   const handleTabChange = (key) => {
     setSelectedTab(key);
   };
@@ -233,6 +258,7 @@ const MasterData = () => {
     refetchPartnershipAccounts();
     refetchCashBooks();
     refetchCapitals();
+    refetchOwners();
   };
 
   const sidebarItems = [
@@ -370,6 +396,26 @@ const MasterData = () => {
             <CardBody>
               <CapitalsTable
                 data={Array.isArray(capitalsData) ? capitalsData : []}
+                onRefresh={refetchAll}
+              />
+            </CardBody>
+          </Card>
+        </div>
+      );
+    }
+
+    // Render Owners table when owner is selected
+    if (selectedSidebarItem === 'owner') {
+      return (
+        <div className="p-6">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+            {item?.icon}
+            {item?.label}
+          </h2>
+          <Card>
+            <CardBody>
+              <OwnersTable
+                data={Array.isArray(ownersData) ? ownersData : []}
                 onRefresh={refetchAll}
               />
             </CardBody>
