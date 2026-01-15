@@ -12,6 +12,7 @@ import IncomesTable from './components/IncomesTable';
 import LiabilitiesTable from './components/LiabilitiesTable';
 import PartnershipAccountsTable from './components/PartnershipAccountsTable';
 import CashBooksTable from './components/CashBooksTable';
+import CapitalsTable from './components/CapitalsTable';
 import { 
   FaBoxes, 
   FaLayerGroup, 
@@ -194,6 +195,30 @@ const MasterData = () => {
     }
   );
 
+  const { data: capitalsData, refetch: refetchCapitals } = useQuery(
+    'capitals',
+    async () => {
+      const { data } = await userRequest.get("/capitals");
+      // Handle nested structure: data.data.capitals
+      if (data?.data?.capitals && Array.isArray(data.data.capitals)) {
+        return data.data.capitals;
+      }
+      // Fallback for other response structures
+      if (Array.isArray(data.data)) {
+        return data.data;
+      }
+      if (Array.isArray(data)) {
+        return data;
+      }
+      return [];
+    },
+    {
+      onError: (error) => {
+        toast.error(error.response?.data?.message || 'Failed to fetch capitals');
+      },
+    }
+  );
+
   const handleTabChange = (key) => {
     setSelectedTab(key);
   };
@@ -207,6 +232,7 @@ const MasterData = () => {
     refetchLiabilities();
     refetchPartnershipAccounts();
     refetchCashBooks();
+    refetchCapitals();
   };
 
   const sidebarItems = [
@@ -324,6 +350,26 @@ const MasterData = () => {
             <CardBody>
               <CashBooksTable
                 data={Array.isArray(cashBooksData) ? cashBooksData : []}
+                onRefresh={refetchAll}
+              />
+            </CardBody>
+          </Card>
+        </div>
+      );
+    }
+
+    // Render Capitals table when capital is selected
+    if (selectedSidebarItem === 'capital') {
+      return (
+        <div className="p-6">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+            {item?.icon}
+            {item?.label}
+          </h2>
+          <Card>
+            <CardBody>
+              <CapitalsTable
+                data={Array.isArray(capitalsData) ? capitalsData : []}
                 onRefresh={refetchAll}
               />
             </CardBody>
