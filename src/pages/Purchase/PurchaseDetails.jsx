@@ -184,6 +184,11 @@ const PurchaseDetails = () => {
               <div>
                 <h1 className="text-5xl font-bold text-teal-700 mb-2">INVOICE</h1>
                 <p className="text-lg text-teal-700 font-medium">RK & Co</p>
+                {purchase.warehouse && (
+                  <p className="text-sm text-teal-600 mt-1">
+                    Warehouse: {purchase.warehouse.name || purchase.warehouse}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -280,7 +285,12 @@ const PurchaseDetails = () => {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-sm text-teal-700">RK & Co</p>
+              <p className="text-sm text-teal-700 font-semibold">RK & Co</p>
+              {purchase.warehouse && (
+                <p className="text-sm text-teal-700">
+                  Warehouse: {purchase.warehouse.name || purchase.warehouse}
+                </p>
+              )}
               <p className="text-sm text-teal-700">www.rkco.com</p>
               <p className="text-sm text-teal-700">contact@rkco.com</p>
             </div>

@@ -185,6 +185,12 @@ const SaleDetails = () => {
               <div>
                 <h1 className="text-5xl font-bold text-teal-700 mb-2">INVOICE</h1>
                 <p className="text-lg text-teal-700 font-medium">RK & Co</p>
+                {(sale.warehouse || sale.shop) && (
+                  <p className="text-sm text-teal-600 mt-1">
+                    {sale.warehouse ? `Warehouse: ${sale.warehouse.name || sale.warehouse}` : ''}
+                    {sale.shop ? `Shop: ${sale.shop.name || sale.shop}` : ''}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -287,7 +293,13 @@ const SaleDetails = () => {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-sm text-teal-700">RK & Co</p>
+              <p className="text-sm text-teal-700 font-semibold">RK & Co</p>
+              {(sale.warehouse || sale.shop) && (
+                <p className="text-sm text-teal-700">
+                  {sale.warehouse ? `Warehouse: ${sale.warehouse.name || sale.warehouse}` : ''}
+                  {sale.shop ? `Shop: ${sale.shop.name || sale.shop}` : ''}
+                </p>
+              )}
               <p className="text-sm text-teal-700">www.rkco.com</p>
               <p className="text-sm text-teal-700">contact@rkco.com</p>
             </div>
