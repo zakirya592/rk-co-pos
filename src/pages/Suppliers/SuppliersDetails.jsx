@@ -69,6 +69,12 @@ const SuppliersDetails = () => {
    products: [],
    summary: {},
  });
+ const [purchaseHistoryData, setPurchaseHistoryData] = useState({
+   data: [],
+   totalPurchases: 0,
+   currentPage: 1,
+   totalPages: 1,
+ });
 
 
   const viewReceipt = (transaction) => {
@@ -125,10 +131,33 @@ const SuppliersDetails = () => {
     }
   };
 
+  const fetchPurchaseHistory = async () => {
+    try {
+      const response = await userRequest.get(`/purchases/supplier/${id}`);
+      const datas = response?.data || {};
+      console.log(datas, "purchase history data");
+      setPurchaseHistoryData({
+        data: datas?.data || [],
+        totalPurchases: datas?.totalPurchases || 0,
+        currentPage: datas?.currentPage || 1,
+        totalPages: datas?.totalPages || 1,
+      });
+    } catch (error) {
+      console.error("Error fetching purchase history:", error);
+      setPurchaseHistoryData({
+        data: [],
+        totalPurchases: 0,
+        currentPage: 1,
+        totalPages: 1,
+      });
+    }
+  };
+
   const fetchbothgetapi = () => {
     fetchCustomerHistory();
     fetchCustomerPaymentHistory();
     fetchCustomerTransactionsss();
+    fetchPurchaseHistory();
   };
 
   const handleAdvancePayment = async () => {
@@ -227,21 +256,26 @@ const SuppliersDetails = () => {
 
   const exportToExcel = () => {
     const ws = XLSX.utils.json_to_sheet(
-      PurchaseHistory.products.map((t) => ({
-        Name: t?.name || "",
-        Category: t?.category || "",
-        AvailableQuantity: t?.availableQuantity || "",
-        soldQuantity: t?.soldQuantity || "N/A",
-        Total: t?.totalValue || "",
-        purchaseRate: t?.purchaseRate || "",
-        soldValue: t?.soldValue || "",
-        packingUnit: t?.packingUnit || "",
+      purchaseHistoryData.data.map((purchase) => ({
+        "Invoice Number": purchase?.invoiceNumber || "",
+        "Refer Code": purchase?.referCode || "",
+        "Purchase Date": purchase?.purchaseDate
+          ? new Date(purchase.purchaseDate).toLocaleDateString()
+          : "",
+        "Items Count": purchase?.items?.length || 0,
+        "Items": purchase?.items
+          ?.map((item) => `${item.product?.name || "N/A"} (Qty: ${item.quantity || 0})`)
+          .join("; ") || "",
+        "Total Quantity": purchase?.totalQuantity || 0,
+        "Total Amount": purchase?.totalAmount || 0,
+        "Status": purchase?.status || "",
+        "Location Type": purchase?.locationType || "",
       }))
     );
 
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Transactions");
-    XLSX.writeFile(wb, "Transactions.xlsx");
+    XLSX.utils.book_append_sheet(wb, ws, "Purchase History");
+    XLSX.writeFile(wb, "Purchase_History.xlsx");
   };
 
   const printReceipt = () => {
@@ -287,10 +321,18 @@ const SuppliersDetails = () => {
 
   const printCustomerReport = () => {
     const today = new Date();
+    const totalAmount = purchaseHistoryData.data.reduce(
+      (sum, purchase) => sum + (purchase?.totalAmount || 0),
+      0
+    );
+    const totalQuantity = purchaseHistoryData.data.reduce(
+      (sum, purchase) => sum + (purchase?.totalQuantity || 0),
+      0
+    );
     const content = `
     <html>
       <head>
-        <title>suppliers Report</title>
+        <title>Purchase History Report</title>
         <style>
           body { font-family: Arial, sans-serif; padding: 20px; }
           h1, h2, h3 { text-align: center; }
@@ -302,63 +344,71 @@ const SuppliersDetails = () => {
         </style>
       </head>
       <body>
-        <h1>suppliers Transaction Report</h1>
+        <h1>Purchase History Report</h1>
         <h3>${supplierInfo?.name || "N/A"}</h3>
         <p>Date: ${today.toLocaleDateString()} ${today.toLocaleTimeString()}</p>
 
         <div class="summary">
           <h3>Summary</h3>
            <div class="topprint">
-          <div><strong>Total Item Sales:</strong>  ${
-            PurchaseHistory?.summary?.productCount || "0"
+          <div><strong>Total Purchases:</strong>  ${
+            purchaseHistoryData?.totalPurchases || "0"
           }</div>
-           <div><strong>Total :</strong> ${
-             PurchaseHistory?.summary?.totalAmount?.toLocaleString() || "0"
+           <div><strong>Total Amount:</strong> ${
+             totalAmount.toLocaleString() || "0"
            }</div>
           </div>
             <div class="topprint">
           <div><strong>Total Quantity:</strong>  ${
-            PurchaseHistory?.summary?.totalQuantity || "0"
+            totalQuantity || "0"
           }</div>
-           <div><strong>Sold Quantity :</strong> ${
-             PurchaseHistory?.summary?.soldQuantity?.toLocaleString() || "0"
-           }</div>
+           <div><strong>Current Page:</strong> ${
+             purchaseHistoryData?.currentPage || "1"
+           } / ${purchaseHistoryData?.totalPages || "1"}</div>
           </div>
          
          
         </div>
 
-        <h3>Transaction History</h3>
+        <h3>Purchase History</h3>
         <table>
           <thead>
             <tr>
               <th>#</th>
-              <th>Name</th>
-              <th>Category</th>
-              <th>Available Quantity</th>
-              <th>Total</th>
-              <th>Sold Quantity</th>
-              <th>Purchase Rate</th>
-              <th>Sold Value</th>
-              <th>Packing Unit</th>
+              <th>Invoice Number</th>
+              <th>Refer Code</th>
+              <th>Purchase Date</th>
+              <th>Items</th>
+              <th>Total Quantity</th>
+              <th>Total Amount</th>
+              <th>Status</th>
+              <th>Location</th>
             </tr>
           </thead>
           <tbody>
-            ${PurchaseHistory.products
+            ${purchaseHistoryData.data
               .map(
-                (t, i) => `
+                (purchase, i) => {
+                  const purchaseDate = purchase?.purchaseDate
+                    ? new Date(purchase.purchaseDate).toLocaleDateString()
+                    : "-";
+                  const itemsList = purchase?.items
+                    ?.map((item) => `${item.product?.name || "N/A"} (${item.quantity || 0})`)
+                    .join(", ") || "No items";
+                  return `
               <tr>
                 <td>${i + 1}</td>
-                <td>${t.name}</td>
-                <td>${t.category}</td>
-                <td>${t.availableQuantity}</td>
-                <td>${t.totalValue}</td>
-                <td>${t.soldQuantity}</td>
-                <td>${t.purchaseRate}</td>
-                <td>${t.soldValue}</td>
-                <td>${t.packingUnit}</td>
+                <td>${purchase.invoiceNumber || "-"}</td>
+                <td>${purchase.referCode || "-"}</td>
+                <td>${purchaseDate}</td>
+                <td>${itemsList}</td>
+                <td>${purchase.totalQuantity || 0}</td>
+                <td>${purchase.totalAmount?.toLocaleString() || 0}</td>
+                <td>${purchase.status || "-"}</td>
+                <td>${purchase.locationType === "warehouse" ? "Warehouse" : purchase.locationType === "shop" ? "Shop" : "-"}</td>
               </tr>
-            `
+            `;
+                }
               )
               .join("")}
           </tbody>
@@ -583,51 +633,74 @@ const SuppliersDetails = () => {
           </div>
         </CardHeader>
         <CardBody>
-          <Table aria-label="suppliers Transaction History">
+          <Table aria-label="Purchase History">
             <TableHeader>
-              <TableColumn>ID</TableColumn>
-              <TableColumn>Name </TableColumn>
-              <TableColumn>Category</TableColumn>
-              <TableColumn>Available Quantity</TableColumn>
-              <TableColumn>Total</TableColumn>
-              <TableColumn>Sold Quantity</TableColumn>
-              <TableColumn>Purchase Rate</TableColumn>
-              <TableColumn>Sold Value</TableColumn>
-              <TableColumn>Packing Unit</TableColumn>
-              {/* <TableColumn>Actions</TableColumn> */}
+              <TableColumn>Invoice Number</TableColumn>
+              <TableColumn>Refer Code</TableColumn>
+              <TableColumn>Purchase Date</TableColumn>
+              <TableColumn>Items</TableColumn>
+              <TableColumn>Total Quantity</TableColumn>
+              <TableColumn>Total Amount</TableColumn>
+              <TableColumn>Status</TableColumn>
+              <TableColumn>Location</TableColumn>
             </TableHeader>
             <TableBody>
-              {PurchaseHistory?.products?.map((transaction, index) => {
-                return (
-                  <TableRow key={index + 1}>
-                    {/* Index */}
-                    <TableCell>{index + 1}</TableCell>
-
-                    {/* Invoice or Transaction ID */}
-                    <TableCell>{transaction?.name || "-"}</TableCell>
-
-                    {/* Category */}
-                    <TableCell>{transaction?.category || ""}</TableCell>
-
-                    <TableCell>
-                      {transaction?.availableQuantity || "0"}
-                    </TableCell>
-
-                    {/* Amount */}
-                    <TableCell>{transaction?.totalValue || "0"}</TableCell>
-                    {/* user */}
-                    <TableCell>{transaction?.soldQuantity || "0"}</TableCell>
-
-                    {/* Status */}
-                    <TableCell>
-                      <Chip size="sm">{transaction.purchaseRate}</Chip>
-                    </TableCell>
-                    <TableCell>{transaction?.soldValue || "0"}</TableCell>
-                    <TableCell>{transaction?.packingUnit || ""}</TableCell>
-                   
-                  </TableRow>
-                );
-              })}
+              {purchaseHistoryData?.data?.length > 0 ? (
+                purchaseHistoryData.data.map((purchase, index) => {
+                  const purchaseDate = purchase?.purchaseDate
+                    ? new Date(purchase.purchaseDate).toLocaleDateString()
+                    : "-";
+                  const itemsList = purchase?.items
+                    ?.map((item) => `${item.product?.name || "N/A"} (${item.quantity || 0})`)
+                    .join(", ") || "No items";
+                  
+                  return (
+                    <TableRow key={purchase._id || index}>
+                      <TableCell>{purchase?.invoiceNumber || "-"}</TableCell>
+                      <TableCell>{purchase?.referCode || "-"}</TableCell>
+                      <TableCell>{purchaseDate}</TableCell>
+                      <TableCell>
+                        <Tooltip content={itemsList}>
+                          <span className="cursor-help">
+                            {purchase?.items?.length || 0} item(s)
+                          </span>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>{purchase?.totalQuantity || "0"}</TableCell>
+                      <TableCell>
+                        {purchase?.totalAmount?.toLocaleString() || "0"}
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          size="sm"
+                          color={
+                            purchase?.status === "completed"
+                              ? "success"
+                              : purchase?.status === "pending"
+                              ? "warning"
+                              : "default"
+                          }
+                        >
+                          {purchase?.status || "-"}
+                        </Chip>
+                      </TableCell>
+                      <TableCell>
+                        {purchase?.locationType === "warehouse"
+                          ? "Warehouse"
+                          : purchase?.locationType === "shop"
+                          ? "Shop"
+                          : "-"}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center">
+                    No purchase history found
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardBody>
