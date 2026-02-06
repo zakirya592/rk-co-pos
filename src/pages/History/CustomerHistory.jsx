@@ -45,7 +45,7 @@ const CustomerHistory = () => {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
-  const [totalSales, setTotalSales] = useState(0);
+  const [totalSales, setTotalSales] = useState({});
   const [grandTotal, setGrandTotal] = useState(0);
   const [totalRevenuetop, settotalRevenuetop] = useState({});
 
@@ -80,7 +80,8 @@ const CustomerHistory = () => {
   const fetchCustomerPaymentHistory = async () => {
     try {
       const response = await userRequest.get(`/payments/customer/${id}/journey`);
-      const datas = response?.data?.data || "";
+      // API returns { status, data: { customer, summary, timeline } }
+      const datas = response?.data?.data || response?.data || {};
       setTotalSales(datas);
     } catch (error) {
       console.error('Error fetching customer history:', error);
@@ -429,8 +430,7 @@ const CustomerHistory = () => {
               <div className="flex flex-col items-center">
                 <FaMoneyBill className="text-4xl text-green-500 mb-2" />
                 <p className="text-xl font-bold">
-                  {/* {totalSales?.summary?.totalPaid || "0"} */}
-                  {totalRevenuetop?.totalPaid || "0"}
+                  {totalSales?.summary?.totalPaid ?? "0"}
                 </p>
                 <p color="$text" size="$sm">
                   Total Paid
@@ -445,8 +445,7 @@ const CustomerHistory = () => {
               <div className="flex flex-col items-center">
                 <FaClock className="text-4xl text-red-500 mb-2" />
                 <p className="text-xl font-bold">
-                  {Math.max(totalRevenuetop?.totalRemaining || 0, 0)}
-                  {/* {Math.max(totalSales?.summary?.currentOutstandingBalance || 0, 0)} */}
+                  {Math.max(totalSales?.summary?.currentOutstandingBalance ?? 0, 0)}
                 </p>
                 <p color="$text" size="$sm">
                   Due Amount
@@ -461,8 +460,7 @@ const CustomerHistory = () => {
               <div className="flex flex-col items-center">
                 <FaMoneyBill className="text-4xl text-orange-500 mb-2" />
                 <p className="text-xl font-bold">
-                  {/* {totalSales?.summary?.totalAdvanceAmount || "0"} */}
-                  {totalRevenuetop?.currentAdvanceBalance || "0"}
+                  {totalSales?.summary?.totalAdvanceAmount ?? "0"}
                 </p>
                 <p color="$text" size="$sm">
                   Total Advance Amount
@@ -500,20 +498,20 @@ const CustomerHistory = () => {
               <Button
                 color="primary"
                 variant="flat"
-                disabled={totalRevenuetop?.currentAdvanceBalance === 0}
+                disabled={totalSales?.summary?.totalAdvanceAmount === 0}
                 // onPress={handleAdvancePayment}
                 onPress={
-                  totalRevenuetop?.currentAdvanceBalance !== 0
+                  totalSales?.summary?.totalAdvanceAmount !== 0
                     ? handleAdvancePayment
                     : undefined
                 }
                 title={
-                  totalRevenuetop?.currentAdvanceBalance === 0
+                  totalSales?.summary?.totalAdvanceAmount === 0
                     ? "Current advance balance is 0"
                     : ""
                 }
                 className={
-                  totalRevenuetop?.currentAdvanceBalance === 0
+                  totalSales?.summary?.totalAdvanceAmount === 0
                     ? "opacity-50 cursor-not-allowed"
                     : ""
                 }
