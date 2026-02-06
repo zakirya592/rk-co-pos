@@ -29,7 +29,13 @@ function Transactionshistory() {
     );
 
     // Support both new structure (paymentEntries like supplier-journey/payments) and legacy (transactions)
-    const paymentEntries = paymentData?.paymentEntries || paymentData?.transactions || [];
+    const rawEntries = paymentData?.paymentEntries || paymentData?.transactions || [];
+    // Sort descending by remaining balance (larger first - at top)
+    const paymentEntries = [...rawEntries].sort((a, b) => {
+        const balanceA = Number(a?.remainingBalance ?? 0);
+        const balanceB = Number(b?.remainingBalance ?? 0);
+        return balanceB - balanceA;
+    });
 
     return (
         <div>

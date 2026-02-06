@@ -165,7 +165,11 @@ const CustomerHistory = () => {
     );
   }
 
-  const { customerInfo, summary, data: transactions } = customerData;
+  const { customerInfo, summary, data: transactionsData } = customerData;
+  // Sort transactions descending by date (newest first)
+  const transactions = [...(transactionsData || [])].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
 
   // Delete customer
   const handleDeletecustomer = (transaction) => {
