@@ -1,70 +1,139 @@
-import { Card, CardBody, Chip, Spinner, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from '@nextui-org/react';
-import React from 'react'
-import { useParams } from 'react-router-dom';
-import { useQuery } from 'react-query';
-import userRequest from '../../utils/userRequest';
+import {
+    Card,
+    CardBody,
+    Chip,
+    Spinner,
+    Table,
+    TableBody,
+    TableCell,
+    TableColumn,
+    TableHeader,
+    TableRow,
+} from "@nextui-org/react";
+import React from "react";
+import { useParams } from "react-router-dom";
+import { useQuery } from "react-query";
+import userRequest from "../../utils/userRequest";
 
 function Transactionshistory() {
     const { id } = useParams();
 
-    // Add this fetch function
-    const fetchCategories = async () => {
-      const res = await userRequest.get(`/payments/customer/${id}/transactions`);
-      return res.data.data.transactions || [];
+    const fetchCustomerPayments = async () => {
+        const response = await userRequest.get(`/payments/customer/${id}/transactions`);
+        return response.data?.data || response.data || {};
     };
 
-      const { data: transactionss = [], isLoading: isCategoriesLoading } = useQuery(["customer-transactions", id], fetchCategories);
+    const { data: paymentData = {}, isLoading: isPaymentLoading } = useQuery(
+        ["customer-payments", id],
+        fetchCustomerPayments
+    );
 
+    // Support both new structure (paymentEntries like supplier-journey/payments) and legacy (transactions)
+    const paymentEntries = paymentData?.paymentEntries || paymentData?.transactions || [];
 
     return (
         <div>
-            <Card>
-                <h3 className="text-lg font-bold mx-3 my-4">Transaction History</h3>
+            {/* Payment Transactions Table - Same structure as SuppliersTransactionshistory */}
+            <Card className="mt-6">
+                <h3 className="text-lg font-bold mx-3 my-4">Payment Transactions</h3>
                 <CardBody>
-                    <Table aria-label="Customer Transaction History">
+                    <Table aria-label="Payment Transactions">
                         <TableHeader>
-                            <TableColumn>Type</TableColumn>
-                            <TableColumn>Reference</TableColumn>
-                            <TableColumn>Date</TableColumn>
-                            <TableColumn>Payment Method</TableColumn>
-                            <TableColumn>Amount</TableColumn>
-                            {/* <TableColumn>Status</TableColumn>
-                            <TableColumn>Balance After</TableColumn> */}
-                            <TableColumn>Remaining Balance</TableColumn>
-                            <TableColumn>Notes</TableColumn>
+                            <TableColumn>#</TableColumn>
+                            <TableColumn>TRANSACTION ID</TableColumn>
+                            <TableColumn>DATE</TableColumn>
+                            <TableColumn>PAYMENT METHOD</TableColumn>
+                            <TableColumn>AMOUNT</TableColumn>
+                            <TableColumn>ADVANCE PAYMENT</TableColumn>
+                            <TableColumn>REMAINING BALANCE</TableColumn>
+                            <TableColumn>STATUS</TableColumn>
+                            <TableColumn>USER</TableColumn>
+                            <TableColumn>NOTES</TableColumn>
                         </TableHeader>
-                        <TableBody  isLoading={isCategoriesLoading}
-                                  loadingContent={
-                                    <div className="flex justify-center items-center py-8">
-                                      <Spinner color="success" size="lg" />
-                                    </div>
-                                  }
-                                  emptyContent={
-                                    <div className="text-center text-gray-500 py-8">
-                                      No Transaction found
-                                    </div>
-                                  }>
-                            {transactionss.map((transaction, index) => (
-                                <TableRow key={index}>
-                                    <TableCell>{transaction.type}</TableCell>
-                                    <TableCell>{transaction.reference}</TableCell>
-                                    <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
-                                    <TableCell>{transaction.paymentMethod}</TableCell>
-                                    <TableCell>{transaction.amount}</TableCell>
-                                    {/* <TableCell>
-                                        <Chip
-                                            size="sm"
-                                            color={transaction.status === 'overdue' ? 'danger' : transaction.status === 'paid' ? 'success' : 'warning'}
-                                            variant="flat"
-                                        >
-                                            {transaction.status}
-                                        </Chip>
-                                    </TableCell>
-                                    <TableCell>{transaction.balanceAfter}</TableCell> */}
-                                    <TableCell>{transaction.remainingBalance}</TableCell>
-                                    <TableCell>{transaction.notes}</TableCell>
-                                </TableRow>
-                            ))}
+                        <TableBody
+                            isLoading={isPaymentLoading}
+                            loadingContent={
+                                <div className="flex justify-center items-center py-8">
+                                    <Spinner color="success" size="lg" />
+                                </div>
+                            }
+                            emptyContent={
+                                <div className="text-center text-gray-500 py-8">
+                                    No payment transactions found
+                                </div>
+                            }
+                        >
+                            {paymentEntries.map((payment, index) => {
+                                // Support new structure (payment.*) and legacy (flat)
+                                const paymentObj = payment?.payment || payment;
+                                return (
+                                    <TableRow key={payment._id || index}>
+                                        <TableCell>{index + 1}</TableCell>
+                                        <TableCell>
+                                            <span className="font-mono text-sm">
+                                                {paymentObj?.transactionId || payment?.reference || "—"}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell>
+                                            {paymentObj?.date || payment?.date
+                                                ? new Date(paymentObj?.date || payment?.date).toLocaleDateString()
+                                                : "—"}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Chip size="sm" color="secondary" variant="flat" className="capitalize">
+                                                {paymentObj?.method || payment?.paymentMethod || "—"}
+                                            </Chip>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className="font-semibold text-green-600">
+                                                {(paymentObj?.amount ?? payment?.amount)?.toLocaleString() || "0"}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className="font-semibold text-blue-600">
+                                                {payment?.advancePayment?.toLocaleString() || "0"}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span
+                                                className={`font-semibold ${
+                                                    (payment?.remainingBalance ?? 0) < 0
+                                                        ? "text-red-600"
+                                                        : (payment?.remainingBalance ?? 0) > 0
+                                                        ? "text-orange-600"
+                                                        : "text-green-600"
+                                                }`}
+                                            >
+                                                {payment?.remainingBalance?.toLocaleString() || "0"}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Chip
+                                                size="sm"
+                                                color={
+                                                    (paymentObj?.status || payment?.status) === "partial"
+                                                        ? "warning"
+                                                        : (paymentObj?.status || payment?.status) === "completed"
+                                                        ? "success"
+                                                        : "default"
+                                                }
+                                                variant="flat"
+                                                className="capitalize"
+                                            >
+                                                {paymentObj?.status || payment?.status || "—"}
+                                            </Chip>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className="font-medium">{payment?.user?.name || "—"}</span>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="max-w-[200px] truncate" title={payment?.notes || ""}>
+                                                {payment?.notes || "—"}
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
                         </TableBody>
                     </Table>
                 </CardBody>

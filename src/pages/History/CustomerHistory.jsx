@@ -47,7 +47,7 @@ const CustomerHistory = () => {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [totalSales, setTotalSales] = useState(0);
   const [grandTotal, setGrandTotal] = useState(0);
-  const [totalRevenuetop, settotalRevenuetop] = useState(0);
+  const [totalRevenuetop, settotalRevenuetop] = useState({});
 
   const viewReceipt = (transaction) => {
     setSelectedTransaction(transaction);
@@ -90,9 +90,10 @@ const CustomerHistory = () => {
   const fetchCustomerTransactionsss = async () => {
     try {
       const response = await userRequest.get(`/payments/customer/${id}/transactions`);
-      const datas = response?.data?.data || "";
-      console.log(datas.financialSummary, "datas");
-      settotalRevenuetop(datas.financialSummary)
+      const datas = response?.data?.data || response?.data || {};
+      // Support new structure (same as supplier-journey/payments): top-level or financialSummary
+      const summary = datas.financialSummary || datas;
+      settotalRevenuetop(summary);
     } catch (error) {
       console.error('Error fetching customer history:', error);
     }
@@ -499,20 +500,20 @@ const CustomerHistory = () => {
               <Button
                 color="primary"
                 variant="flat"
-                disabled={totalRevenuetop.currentAdvanceBalance === 0}
+                disabled={totalRevenuetop?.currentAdvanceBalance === 0}
                 // onPress={handleAdvancePayment}
                 onPress={
-                  totalRevenuetop.currentAdvanceBalance !== 0
+                  totalRevenuetop?.currentAdvanceBalance !== 0
                     ? handleAdvancePayment
                     : undefined
                 }
                 title={
-                  totalRevenuetop.currentAdvanceBalance === 0
+                  totalRevenuetop?.currentAdvanceBalance === 0
                     ? "Current advance balance is 0"
                     : ""
                 }
                 className={
-                  totalRevenuetop.currentAdvanceBalance === 0
+                  totalRevenuetop?.currentAdvanceBalance === 0
                     ? "opacity-50 cursor-not-allowed"
                     : ""
                 }
