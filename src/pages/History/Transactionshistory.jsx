@@ -10,7 +10,7 @@ import {
     TableHeader,
     TableRow,
 } from "@nextui-org/react";
-import React from "react";
+import React, { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "react-query";
 import userRequest from "../../utils/userRequest";
@@ -28,14 +28,24 @@ function Transactionshistory() {
         fetchCustomerPayments
     );
 
-    // Support both new structure (paymentEntries like supplier-journey/payments) and legacy (transactions)
-    const rawEntries = paymentData?.paymentEntries || paymentData?.transactions || [];
-    // Sort descending by remaining balance (larger first - at top)
-    const paymentEntries = [...rawEntries].sort((a, b) => {
-        const balanceA = Number(a?.remainingBalance ?? 0);
-        const balanceB = Number(b?.remainingBalance ?? 0);
-        return balanceB - balanceA;
-    });
+    // Sort by createdAt in descending order (newest first)
+    const paymentEntries = useMemo(() => {
+        // Support both new structure (paymentEntries like supplier-journey/payments) and legacy (transactions)
+        const rawEntries = paymentData?.paymentEntries || paymentData?.transactions || [];
+        
+        return [...rawEntries].sort((a, b) => {
+            // Extract createdAt - handle various data structures
+            const dateA = a?.createdAt ?? a?.payment?.createdAt ?? a?.created_at ?? a?.date ?? new Date(0);
+            const dateB = b?.createdAt ?? b?.payment?.createdAt ?? b?.created_at ?? b?.date ?? new Date(0);
+            
+            // Convert to Date objects and get timestamps
+            const timestampA = new Date(dateA).getTime();
+            const timestampB = new Date(dateB).getTime();
+            
+            // Descending order (newest first - largest timestamp first)
+            return timestampB - timestampA;
+        });
+    }, [paymentData]);
 
     return (
         <div>
