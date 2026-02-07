@@ -295,7 +295,7 @@ const POS = () => {
 
   const completeSale = async () => {
     try {
-      // Validate payment methods before creating sale
+      // Check if there are valid payments (optional - only call payment API if payments exist)
       const validPayments = paymentMethods.filter((p) => {
         if (!p.method) return false;
         const amount = p.amount?.toString().trim() || "";
@@ -304,11 +304,7 @@ const POS = () => {
         return !isNaN(numAmount) && numAmount > 0;
       });
 
-      if (!validPayments.length) {
-        toast.error("Please add at least one payment method with amount greater than 0");
-        return;
-      }
-
+      // Create sale first (always create sale, regardless of payment)
       const saleData = {
         customer: selectedCustomer?._id,
         items: cart.map((item) => ({
@@ -344,7 +340,14 @@ const POS = () => {
         throw new Error("Sale created but no sale id returned.");
       }
 
-      await handleSalepaymets(saleId);
+      // Only call payment API if there are valid payments
+      if (validPayments.length > 0) {
+        await handleSalepaymets(saleId);
+        toast.success("Sale and payment completed successfully!");
+      } else {
+        toast.success("Sale created successfully!");
+      }
+
       refetch();
       setCart([]);
       setDiscount(0);
@@ -355,7 +358,6 @@ const POS = () => {
         description: "",
       }));
       setShowPaymentModal(false);
-      toast.success("Sale and payment completed successfully!");
       // Set flag for auto-print and redirect to invoice page
       sessionStorage.setItem('autoPrintSale', saleId);
       navigate(`/sales/${saleId}?print=true`);
