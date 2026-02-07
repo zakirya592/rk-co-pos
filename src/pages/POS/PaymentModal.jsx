@@ -141,10 +141,13 @@ const PaymentModal = ({
                     <div className="flex gap-2">
                       <Select
                         placeholder="Payment Method"
-                        value={payment.method}
-                        onChange={(e) =>
-                          updatePaymentMethod(index, "method", e.target.value)
-                        }
+                        selectedKeys={payment.method ? new Set([payment.method]) : new Set()}
+                        onSelectionChange={(keys) => {
+                          const selectedMethod = Array.from(keys)[0];
+                          if (selectedMethod) {
+                            updatePaymentMethod(index, "method", selectedMethod);
+                          }
+                        }}
                         className="flex-1"
                       >
                         <SelectItem key="cash" value="cash">
@@ -168,26 +171,33 @@ const PaymentModal = ({
                       </Select>
                       <Input
                         type="number"
-                        placeholder="Amount"
-                        value={payment.amount}
-                        onChange={(e) =>
-                          updatePaymentMethod(index, "amount", e.target.value)
-                        }
+                        placeholder="Enter amount"
+                        value={payment.amount || ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          updatePaymentMethod(index, "amount", value);
+                        }}
+                        min="0"
+                        step="0.01"
                         className="flex-1"
+                        isRequired
                       />
                     </div>
                     {payment.method === "bank_transfer" && (
                       <div className="flex flex-col gap-2">
                         <Select
                           placeholder="Select Bank Account"
-                          value={payment.bankAccount}
-                          onChange={(e) =>
-                            updatePaymentMethod(
-                              index,
-                              "bankAccount",
-                              e.target.value
-                            )
-                          }
+                          selectedKeys={payment.bankAccount ? new Set([payment.bankAccount]) : new Set()}
+                          onSelectionChange={(keys) => {
+                            const selectedAccount = Array.from(keys)[0];
+                            if (selectedAccount) {
+                              updatePaymentMethod(
+                                index,
+                                "bankAccount",
+                                selectedAccount
+                              );
+                            }
+                          }}
                           className="w-full"
                         >
                           {bankAccounts.map((account) => (
@@ -231,10 +241,13 @@ const PaymentModal = ({
                     label="Currency"
                     labelPlacement="outside"
                     placeholder="Select currency"
-                    value={saleData.currency}
-                    onChange={(e) =>
-                      updateSaleData({ ...saleData, currency: e.target.value })
-                    }
+                    selectedKeys={saleData.currency ? new Set([saleData.currency]) : new Set()}
+                    onSelectionChange={(keys) => {
+                      const selectedCurrency = Array.from(keys)[0];
+                      if (selectedCurrency) {
+                        updateSaleData({ ...saleData, currency: selectedCurrency });
+                      }
+                    }}
                     variant="bordered"
                     className="font-semibold "
                     showSearch

@@ -183,13 +183,19 @@ const POS = () => {
 
 // {{ ... }}
   const handlePayment = () => {
+    // Initialize with at least one payment method if empty
+    if (paymentMethods.length === 0) {
+      setPaymentMethods([
+        { method: "cash", amount: "", bankAccount: "", proofFile: null },
+      ]);
+    }
     setShowPaymentModal(true);
   };
 
   const addPaymentMethod = () => {
     setPaymentMethods([
       ...paymentMethods,
-      { method: "cash", amount: 0, bankAccount: "", proofFile: null },
+      { method: "cash", amount: "", bankAccount: "", proofFile: null },
     ]);
   };
 
@@ -198,18 +204,27 @@ const POS = () => {
       i === index ? { ...payment, [field]: value } : payment
     );
     setPaymentMethods(updated);
+    // Calculate total paid from valid amounts only
     setTotalPaid(
-      updated.reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0)
+      updated.reduce((sum, payment) => {
+        const amount = payment.amount?.toString().trim() || "";
+        const numAmount = parseFloat(amount);
+        return sum + (isNaN(numAmount) ? 0 : numAmount);
+      }, 0)
     );
   };
 
   const handleSalepaymets = async (saleId) => {
-    const validPayments = paymentMethods.filter(
-      (p) => p.amount && parseFloat(p.amount) > 0
-    );
+    const validPayments = paymentMethods.filter((p) => {
+      if (!p.method) return false;
+      const amount = p.amount?.toString().trim() || "";
+      if (!amount) return false;
+      const numAmount = parseFloat(amount);
+      return !isNaN(numAmount) && numAmount > 0;
+    });
 
     if (!validPayments.length) {
-      throw new Error("Please add at least one payment method with amount");
+      throw new Error("Please add at least one payment method with amount greater than 0");
     }
 
     for (const payment of validPayments) {
@@ -280,9 +295,22 @@ const POS = () => {
 
   const completeSale = async () => {
     try {
+      // Validate payment methods before creating sale
+      const validPayments = paymentMethods.filter((p) => {
+        if (!p.method) return false;
+        const amount = p.amount?.toString().trim() || "";
+        if (!amount) return false;
+        const numAmount = parseFloat(amount);
+        return !isNaN(numAmount) && numAmount > 0;
+      });
+
+      if (!validPayments.length) {
+        toast.error("Please add at least one payment method with amount greater than 0");
+        return;
+      }
+
       const saleData = {
         customer: selectedCustomer?._id,
-        [transferTo]: selectedTransferTo,
         items: cart.map((item) => ({
           product: item._id,
           quantity: item.quantity,
@@ -303,6 +331,11 @@ const POS = () => {
         // notes: saleDataadd.description,
         // subtotal: subtotal,
       };
+
+      // Only include warehouse or shop if selectedTransferTo has a valid value
+      if (transferTo && selectedTransferTo) {
+        saleData[transferTo] = selectedTransferTo;
+      }
 
       const response = await userRequest.post("/sales", saleData);
 
