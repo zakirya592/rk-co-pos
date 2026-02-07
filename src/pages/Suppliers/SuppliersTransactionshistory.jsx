@@ -10,7 +10,7 @@ import {
     TableHeader,
     TableRow,
 } from "@nextui-org/react";
-import React from "react";
+import React, { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "react-query";
 import userRequest from "../../utils/userRequest";
@@ -31,6 +31,29 @@ function SuppliersTransactionshistory() {
 
     console.log(paymentData, "payment data");
 
+    // Sort by createdAt in descending order (newest first)
+    const sortedPaymentEntries = useMemo(() => {
+        if (!paymentData?.paymentEntries || !Array.isArray(paymentData.paymentEntries)) {
+            return [];
+        }
+        
+        const rawEntries = paymentData.paymentEntries;
+        
+        const sorted = [...rawEntries].sort((a, b) => {
+            // Extract createdAt - handle various data structures
+            const dateA = a?.createdAt ?? a?.payment?.createdAt ?? a?.created_at ?? new Date(0);
+            const dateB = b?.createdAt ?? b?.payment?.createdAt ?? b?.created_at ?? new Date(0);
+            
+            // Convert to Date objects and get timestamps
+            const timestampA = new Date(dateA).getTime();
+            const timestampB = new Date(dateB).getTime();
+            
+            // Descending order (newest first - largest timestamp first)
+            return timestampB - timestampA;
+        });
+        
+        return sorted;
+    }, [paymentData]);
 
     return (
       <div>
@@ -64,7 +87,7 @@ function SuppliersTransactionshistory() {
                   </div>
                 }
               >
-                {(paymentData?.paymentEntries || []).map((payment, index) => (
+                {sortedPaymentEntries.map((payment, index) => (
                   <TableRow key={payment._id}>
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>
