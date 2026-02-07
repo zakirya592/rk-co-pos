@@ -45,7 +45,7 @@ const BankPaymentVoucher = ({ onBack }) => {
     amount: '',
     currency: '',
     currencyExchangeRate: '1',
-    paymentMethod: 'bank_transfer',
+    paymentMethod: 'bank_payment',
     checkNumber: '',
     referenceNumber: '',
     relatedPurchase: '',
@@ -282,7 +282,7 @@ const BankPaymentVoucher = ({ onBack }) => {
         amount: '',
         currency: '',
         currencyExchangeRate: '1',
-        paymentMethod: 'bank_transfer',
+        paymentMethod: 'bank_payment',
         checkNumber: '',
         referenceNumber: '',
         relatedPurchase: '',
@@ -617,38 +617,14 @@ const BankPaymentVoucher = ({ onBack }) => {
                   Payment Method & References
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Select
+                  <Input
                     label="Payment Method"
                     name="paymentMethod"
-                    selectedKeys={formData.paymentMethod ? [formData.paymentMethod] : []}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] || '';
-                      setFormData((prev) => ({
-                        ...prev,
-                        paymentMethod: selected,
-                      }));
-                    }}
+                    value="Bank Payment"
+                    disabled
                     labelPlacement="outside"
-                  >
-                    <SelectItem key="bank_transfer" value="bank_transfer">
-                      Bank Transfer
-                    </SelectItem>
-                    <SelectItem key="check" value="check">
-                      Check
-                    </SelectItem>
-                    <SelectItem key="online_payment" value="online_payment">
-                      Online Payment
-                    </SelectItem>
-                    <SelectItem key="wire_transfer" value="wire_transfer">
-                      Wire Transfer
-                    </SelectItem>
-                    <SelectItem key="dd" value="dd">
-                      Demand Draft (DD)
-                    </SelectItem>
-                    <SelectItem key="other" value="other">
-                      Other
-                    </SelectItem>
-                  </Select>
+                    description="Fixed payment method for bank payment vouchers"
+                  />
 
                   <Input
                     label="Check Number"
@@ -946,27 +922,15 @@ const BankPaymentVoucher = ({ onBack }) => {
               <CardBody className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <FaMoneyBillWave className="text-orange-500" />
-                  Payment Methods
+                  Payment Method
                 </h3>
                 <div className="space-y-2">
-                  <div className="p-3 bg-gray-50 rounded-lg">
+                  <div className="p-3 bg-blue-50 rounded-lg border-2 border-blue-200">
                     <p className="text-sm font-semibold text-gray-900">
-                      Bank Transfer
+                      Bank Payment
                     </p>
                     <p className="text-xs text-gray-600">
-                      Direct bank-to-bank transfer
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm font-semibold text-gray-900">Check</p>
-                    <p className="text-xs text-gray-600">
-                      Physical or digital check payment
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm font-semibold text-gray-900">Online</p>
-                    <p className="text-xs text-gray-600">
-                      Online payment gateway
+                      This voucher uses bank payment method only. All transactions are processed through bank accounts.
                     </p>
                   </div>
                 </div>
