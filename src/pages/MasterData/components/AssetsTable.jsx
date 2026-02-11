@@ -12,9 +12,7 @@ import {
   DropdownMenu,
   DropdownItem,
   Input,
-  Select,
-  SelectItem,
-  Chip,
+  Textarea,
   useDisclosure,
   Modal,
   ModalContent,
@@ -29,15 +27,17 @@ import userRequest from "../../../utils/userRequest";
 const AssetsTable = ({ data, onRefresh }) => {
   const [editingId, setEditingId] = useState(null);
   const [viewingAsset, setViewingAsset] = useState(null);
-  const [editedData, setEditedData] = useState({ 
-    name: "", 
-    assetType: "current", 
-    value: "" 
+  const [editedData, setEditedData] = useState({
+    name: "",
+    mobileNo: "",
+    code: "",
+    description: "",
   });
-  const [newAsset, setNewAsset] = useState({ 
-    name: "", 
-    assetType: "current", 
-    value: "" 
+  const [newAsset, setNewAsset] = useState({
+    name: "",
+    mobileNo: "",
+    code: "",
+    description: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -65,34 +65,13 @@ const AssetsTable = ({ data, onRefresh }) => {
     onOpenChange: onCreateModalChange,
   } = useDisclosure();
 
-  const assetTypes = [
-    { key: "fixed", label: "Fixed" },
-    { key: "current", label: "Current" },
-    { key: "intangible", label: "Intangible" },
-    { key: "other", label: "Other" },
-  ];
-
-  const getAssetTypeColor = (type) => {
-    switch (type) {
-      case "fixed":
-        return "primary";
-      case "current":
-        return "success";
-      case "intangible":
-        return "warning";
-      case "other":
-        return "default";
-      default:
-        return "default";
-    }
-  };
-
   const handleEdit = (asset) => {
     setEditingId(asset._id);
     setEditedData({
       name: asset.name || "",
-      assetType: asset.assetType || "current",
-      value: asset.value?.toString() || "",
+      mobileNo: asset.mobileNo || asset.phoneNumber || "",
+      code: asset.code || "",
+      description: asset.description || "",
     });
     onEditModalOpen();
   };
@@ -113,22 +92,18 @@ const AssetsTable = ({ data, onRefresh }) => {
 
   const closeEditModal = () => {
     setEditingId(null);
-    setEditedData({ name: "", assetType: "current", value: "" });
+    setEditedData({ name: "", mobileNo: "", code: "", description: "" });
     onEditModalChange(false);
   };
 
   const closeCreateModal = () => {
-    setNewAsset({ name: "", assetType: "current", value: "" });
+    setNewAsset({ name: "", mobileNo: "", code: "", description: "" });
     onCreateModalChange(false);
   };
 
   const handleSave = async (id) => {
     if (!editedData.name.trim()) {
-      toast.error("Please enter asset name");
-      return;
-    }
-    if (!editedData.value || parseFloat(editedData.value) <= 0) {
-      toast.error("Please enter a valid value");
+      toast.error("Please enter name");
       return;
     }
 
@@ -136,8 +111,9 @@ const AssetsTable = ({ data, onRefresh }) => {
       setIsSubmitting(true);
       await userRequest.put(`/assets/${id}`, {
         name: editedData.name,
-        assetType: editedData.assetType,
-        value: editedData.value,
+        mobileNo: editedData.mobileNo,
+        code: editedData.code,
+        description: editedData.description,
       });
       toast.success("Asset updated successfully");
       onRefresh();
@@ -153,11 +129,7 @@ const AssetsTable = ({ data, onRefresh }) => {
 
   const handleCreate = async () => {
     if (!newAsset.name.trim()) {
-      toast.error("Please enter asset name");
-      return;
-    }
-    if (!newAsset.value || parseFloat(newAsset.value) <= 0) {
-      toast.error("Please enter a valid value");
+      toast.error("Please enter name");
       return;
     }
 
@@ -165,8 +137,9 @@ const AssetsTable = ({ data, onRefresh }) => {
       setIsCreating(true);
       await userRequest.post("/assets", {
         name: newAsset.name,
-        assetType: newAsset.assetType,
-        value: newAsset.value,
+        mobileNo: newAsset.mobileNo,
+        code: newAsset.code,
+        description: newAsset.description,
       });
       toast.success("Asset created successfully");
       closeCreateModal();
@@ -217,21 +190,16 @@ const AssetsTable = ({ data, onRefresh }) => {
     switch (columnKey) {
       case "name":
         return <span className="font-medium">{asset.name || "—"}</span>;
-      case "assetType":
+      case "mobileNo":
+        return <span>{asset.mobileNo || asset.phoneNumber || "—"}</span>;
+      case "code":
+        return <span>{asset.code || "—"}</span>;
+      case "description":
         return (
-          <Chip
-            size="sm"
-            color={getAssetTypeColor(asset.assetType)}
-            variant="flat"
-          >
-            {asset.assetType
-              ? asset.assetType.charAt(0).toUpperCase() +
-                asset.assetType.slice(1)
-              : "—"}
-          </Chip>
+          <span className="max-w-xs truncate block">
+            {asset.description || "—"}
+          </span>
         );
-      case "value":
-        return <span>{formatCurrency(asset.value)}</span>;
       case "createdAt":
         return formatDate(asset.createdAt);
       case "updatedAt":
@@ -309,8 +277,9 @@ const AssetsTable = ({ data, onRefresh }) => {
       <Table aria-label="Assets table">
         <TableHeader>
           <TableColumn key="name">NAME</TableColumn>
-          <TableColumn key="assetType">TYPE</TableColumn>
-          <TableColumn key="value">VALUE</TableColumn>
+          <TableColumn key="mobileNo">MOBILE NO</TableColumn>
+          <TableColumn key="code">CODE</TableColumn>
+          <TableColumn key="description">DESCRIPTION</TableColumn>
           <TableColumn key="createdAt">CREATED AT</TableColumn>
           <TableColumn key="updatedAt">UPDATED AT</TableColumn>
           <TableColumn key="actions" className="w-24">
@@ -340,8 +309,8 @@ const AssetsTable = ({ data, onRefresh }) => {
               <ModalBody>
                 <div className="space-y-4">
                   <Input
-                    label="Asset Name"
-                    placeholder="Enter asset name"
+                    label="Name"
+                    placeholder="Enter name"
                     value={newAsset.name}
                     onChange={(e) =>
                       setNewAsset({ ...newAsset, name: e.target.value })
@@ -349,33 +318,32 @@ const AssetsTable = ({ data, onRefresh }) => {
                     isRequired
                     fullWidth
                   />
-                  <Select
-                    label="Asset Type"
-                    placeholder="Select asset type"
-                    selectedKeys={[newAsset.assetType]}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0];
-                      setNewAsset({ ...newAsset, assetType: selected });
-                    }}
-                    isRequired
-                  >
-                    {assetTypes.map((type) => (
-                      <SelectItem key={type.key} value={type.key}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </Select>
                   <Input
-                    label="Value"
-                    type="number"
-                    placeholder="Enter asset value"
-                    value={newAsset.value}
+                    label="Mobile No"
+                    placeholder="Enter mobile number"
+                    value={newAsset.mobileNo}
                     onChange={(e) =>
-                      setNewAsset({ ...newAsset, value: e.target.value })
+                      setNewAsset({ ...newAsset, mobileNo: e.target.value })
                     }
-                    isRequired
-                    min="0"
-                    step="0.01"
+                    fullWidth
+                  />
+                  <Input
+                    label="Code"
+                    placeholder="Enter code"
+                    value={newAsset.code}
+                    onChange={(e) =>
+                      setNewAsset({ ...newAsset, code: e.target.value })
+                    }
+                    fullWidth
+                  />
+                  <Textarea
+                    label="Description"
+                    placeholder="Enter description"
+                    value={newAsset.description}
+                    onChange={(e) =>
+                      setNewAsset({ ...newAsset, description: e.target.value })
+                    }
+                    minRows={3}
                     fullWidth
                   />
                 </div>
@@ -410,7 +378,7 @@ const AssetsTable = ({ data, onRefresh }) => {
               <ModalBody>
                 <div className="space-y-4">
                   <Input
-                    label="Asset Name"
+                    label="Name"
                     value={editedData.name}
                     onChange={(e) =>
                       setEditedData({ ...editedData, name: e.target.value })
@@ -418,31 +386,32 @@ const AssetsTable = ({ data, onRefresh }) => {
                     isRequired
                     fullWidth
                   />
-                  <Select
-                    label="Asset Type"
-                    selectedKeys={[editedData.assetType]}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0];
-                      setEditedData({ ...editedData, assetType: selected });
-                    }}
-                    isRequired
-                  >
-                    {assetTypes.map((type) => (
-                      <SelectItem key={type.key} value={type.key}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </Select>
                   <Input
-                    label="Value"
-                    type="number"
-                    value={editedData.value}
+                    label="Mobile No"
+                    value={editedData.mobileNo}
                     onChange={(e) =>
-                      setEditedData({ ...editedData, value: e.target.value })
+                      setEditedData({ ...editedData, mobileNo: e.target.value })
                     }
-                    isRequired
-                    min="0"
-                    step="0.01"
+                    fullWidth
+                  />
+                  <Input
+                    label="Code"
+                    value={editedData.code}
+                    onChange={(e) =>
+                      setEditedData({ ...editedData, code: e.target.value })
+                    }
+                    fullWidth
+                  />
+                  <Textarea
+                    label="Description"
+                    value={editedData.description}
+                    onChange={(e) =>
+                      setEditedData({
+                        ...editedData,
+                        description: e.target.value,
+                      })
+                    }
+                    minRows={3}
                     fullWidth
                   />
                 </div>
@@ -479,37 +448,44 @@ const AssetsTable = ({ data, onRefresh }) => {
                   <div className="space-y-4">
                     <div>
                       <p className="text-sm text-gray-500">Name</p>
-                      <p className="text-lg font-semibold">{viewingAsset.name || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Asset Type</p>
-                      <Chip
-                        size="sm"
-                        color={getAssetTypeColor(viewingAsset.assetType)}
-                        variant="flat"
-                      >
-                        {viewingAsset.assetType
-                          ? viewingAsset.assetType.charAt(0).toUpperCase() +
-                            viewingAsset.assetType.slice(1)
-                          : "—"}
-                      </Chip>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Value</p>
                       <p className="text-lg font-semibold">
-                        {formatCurrency(viewingAsset.value)}
+                        {viewingAsset.name || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Mobile No</p>
+                      <p className="text-lg">
+                        {viewingAsset.mobileNo ||
+                          viewingAsset.phoneNumber ||
+                          "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Code</p>
+                      <p className="text-lg">
+                        {viewingAsset.code || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Description</p>
+                      <p className="text-lg">
+                        {viewingAsset.description || "—"}
                       </p>
                     </div>
                     {viewingAsset.createdAt && (
                       <div>
                         <p className="text-sm text-gray-500">Created At</p>
-                        <p className="text-sm">{formatDate(viewingAsset.createdAt)}</p>
+                        <p className="text-sm">
+                          {formatDate(viewingAsset.createdAt)}
+                        </p>
                       </div>
                     )}
                     {viewingAsset.updatedAt && (
                       <div>
                         <p className="text-sm text-gray-500">Updated At</p>
-                        <p className="text-sm">{formatDate(viewingAsset.updatedAt)}</p>
+                        <p className="text-sm">
+                          {formatDate(viewingAsset.updatedAt)}
+                        </p>
                       </div>
                     )}
                   </div>

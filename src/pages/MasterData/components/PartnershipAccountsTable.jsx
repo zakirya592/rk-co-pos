@@ -12,7 +12,7 @@ import {
   DropdownMenu,
   DropdownItem,
   Input,
-  Chip,
+  Textarea,
   useDisclosure,
   Modal,
   ModalContent,
@@ -27,17 +27,17 @@ import userRequest from "../../../utils/userRequest";
 const PartnershipAccountsTable = ({ data, onRefresh }) => {
   const [editingId, setEditingId] = useState(null);
   const [viewingPartnership, setViewingPartnership] = useState(null);
-  const [editedData, setEditedData] = useState({ 
-    partnerName: "", 
-    phoneNumber: "", 
-    sharePercentage: "",
-    openingBalance: ""
+  const [editedData, setEditedData] = useState({
+    name: "",
+    mobileNo: "",
+    code: "",
+    description: "",
   });
-  const [newPartnership, setNewPartnership] = useState({ 
-    partnerName: "", 
-    phoneNumber: "", 
-    sharePercentage: "",
-    openingBalance: ""
+  const [newPartnership, setNewPartnership] = useState({
+    name: "",
+    mobileNo: "",
+    code: "",
+    description: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -68,10 +68,10 @@ const PartnershipAccountsTable = ({ data, onRefresh }) => {
   const handleEdit = (partnership) => {
     setEditingId(partnership._id);
     setEditedData({
-      partnerName: partnership.partnerName || "",
-      phoneNumber: partnership.phoneNumber || "",
-      sharePercentage: partnership.sharePercentage?.toString() || "",
-      openingBalance: partnership.openingBalance?.toString() || "",
+      name: partnership.name || partnership.partnerName || "",
+      mobileNo: partnership.mobileNo || partnership.phoneNumber || "",
+      code: partnership.code || "",
+      description: partnership.description || "",
     });
     onEditModalOpen();
   };
@@ -95,36 +95,28 @@ const PartnershipAccountsTable = ({ data, onRefresh }) => {
 
   const closeEditModal = () => {
     setEditingId(null);
-    setEditedData({ partnerName: "", phoneNumber: "", sharePercentage: "", openingBalance: "" });
+    setEditedData({ name: "", mobileNo: "", code: "", description: "" });
     onEditModalChange(false);
   };
 
   const closeCreateModal = () => {
-    setNewPartnership({ partnerName: "", phoneNumber: "", sharePercentage: "", openingBalance: "" });
+    setNewPartnership({ name: "", mobileNo: "", code: "", description: "" });
     onCreateModalChange(false);
   };
 
   const handleSave = async (id) => {
-    if (!editedData.partnerName.trim()) {
-      toast.error("Please enter partner name");
-      return;
-    }
-    if (!editedData.sharePercentage || parseFloat(editedData.sharePercentage) < 0 || parseFloat(editedData.sharePercentage) > 100) {
-      toast.error("Please enter a valid share percentage (0-100)");
-      return;
-    }
-    if (!editedData.openingBalance || parseFloat(editedData.openingBalance) < 0) {
-      toast.error("Please enter a valid opening balance");
+    if (!editedData.name.trim()) {
+      toast.error("Please enter name");
       return;
     }
 
     try {
       setIsSubmitting(true);
       await userRequest.put(`/partnership-accounts/${id}`, {
-        partnerName: editedData.partnerName,
-        phoneNumber: editedData.phoneNumber,
-        sharePercentage: editedData.sharePercentage,
-        openingBalance: editedData.openingBalance,
+        name: editedData.name,
+        mobileNo: editedData.mobileNo,
+        code: editedData.code,
+        description: editedData.description,
       });
       toast.success("Partnership account updated successfully");
       onRefresh();
@@ -139,26 +131,18 @@ const PartnershipAccountsTable = ({ data, onRefresh }) => {
   };
 
   const handleCreate = async () => {
-    if (!newPartnership.partnerName.trim()) {
-      toast.error("Please enter partner name");
-      return;
-    }
-    if (!newPartnership.sharePercentage || parseFloat(newPartnership.sharePercentage) < 0 || parseFloat(newPartnership.sharePercentage) > 100) {
-      toast.error("Please enter a valid share percentage (0-100)");
-      return;
-    }
-    if (!newPartnership.openingBalance || parseFloat(newPartnership.openingBalance) < 0) {
-      toast.error("Please enter a valid opening balance");
+    if (!newPartnership.name.trim()) {
+      toast.error("Please enter name");
       return;
     }
 
     try {
       setIsCreating(true);
       await userRequest.post("/partnership-accounts", {
-        partnerName: newPartnership.partnerName,
-        phoneNumber: newPartnership.phoneNumber,
-        sharePercentage: newPartnership.sharePercentage,
-        openingBalance: newPartnership.openingBalance,
+        name: newPartnership.name,
+        mobileNo: newPartnership.mobileNo,
+        code: newPartnership.code,
+        description: newPartnership.description,
       });
       toast.success("Partnership account created successfully");
       closeCreateModal();
@@ -197,33 +181,28 @@ const PartnershipAccountsTable = ({ data, onRefresh }) => {
     return date.toLocaleString();
   };
 
-  const formatCurrency = (value) => {
-    if (!value && value !== 0) return "0.00";
-    return parseFloat(value).toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
-
-  const formatPercentage = (value) => {
-    if (!value && value !== 0) return "0.00";
-    return `${parseFloat(value).toFixed(2)}%`;
-  };
-
   const renderCell = (partnership, columnKey) => {
     switch (columnKey) {
-      case "partnerName":
-        return <span className="font-medium">{partnership.partnerName || "—"}</span>;
-      case "phoneNumber":
-        return <span>{partnership.phoneNumber || "—"}</span>;
-      case "sharePercentage":
+      case "name":
         return (
-          <Chip size="sm" color="primary" variant="flat">
-            {formatPercentage(partnership.sharePercentage)}
-          </Chip>
+          <span className="font-medium">
+            {partnership.name || partnership.partnerName || "—"}
+          </span>
         );
-      case "openingBalance":
-        return <span className="font-semibold">{formatCurrency(partnership.openingBalance)}</span>;
+      case "mobileNo":
+        return (
+          <span>
+            {partnership.mobileNo || partnership.phoneNumber || "—"}
+          </span>
+        );
+      case "code":
+        return <span>{partnership.code || "—"}</span>;
+      case "description":
+        return (
+          <span className="max-w-xs truncate block">
+            {partnership.description || "—"}
+          </span>
+        );
       case "createdAt":
         return formatDate(partnership.createdAt);
       case "updatedAt":
@@ -300,10 +279,10 @@ const PartnershipAccountsTable = ({ data, onRefresh }) => {
 
       <Table aria-label="Partnership accounts table">
         <TableHeader>
-          <TableColumn key="partnerName">PARTNER NAME</TableColumn>
-          <TableColumn key="phoneNumber">PHONE NUMBER</TableColumn>
-          <TableColumn key="sharePercentage">SHARE PERCENTAGE</TableColumn>
-          <TableColumn key="openingBalance">OPENING BALANCE</TableColumn>
+          <TableColumn key="name">NAME</TableColumn>
+          <TableColumn key="mobileNo">MOBILE NO</TableColumn>
+          <TableColumn key="code">CODE</TableColumn>
+          <TableColumn key="description">DESCRIPTION</TableColumn>
           <TableColumn key="createdAt">CREATED AT</TableColumn>
           <TableColumn key="updatedAt">UPDATED AT</TableColumn>
           <TableColumn key="actions" className="w-24">
@@ -333,50 +312,47 @@ const PartnershipAccountsTable = ({ data, onRefresh }) => {
               <ModalBody>
                 <div className="space-y-4">
                   <Input
-                    label="Partner Name"
-                    placeholder="Enter partner name"
-                    value={newPartnership.partnerName}
+                    label="Name"
+                    placeholder="Enter name"
+                    value={newPartnership.name}
                     onChange={(e) =>
-                      setNewPartnership({ ...newPartnership, partnerName: e.target.value })
+                      setNewPartnership({ ...newPartnership, name: e.target.value })
                     }
                     isRequired
                     fullWidth
                   />
                   <Input
-                    label="Phone Number"
-                    placeholder="Enter phone number"
-                    value={newPartnership.phoneNumber}
+                    label="Mobile No"
+                    placeholder="Enter mobile number"
+                    value={newPartnership.mobileNo}
                     onChange={(e) =>
-                      setNewPartnership({ ...newPartnership, phoneNumber: e.target.value })
+                      setNewPartnership({
+                        ...newPartnership,
+                        mobileNo: e.target.value,
+                      })
                     }
                     fullWidth
                   />
                   <Input
-                    label="Share Percentage"
-                    type="number"
-                    placeholder="Enter share percentage (0-100)"
-                    value={newPartnership.sharePercentage}
+                    label="Code"
+                    placeholder="Enter code"
+                    value={newPartnership.code}
                     onChange={(e) =>
-                      setNewPartnership({ ...newPartnership, sharePercentage: e.target.value })
+                      setNewPartnership({ ...newPartnership, code: e.target.value })
                     }
-                    isRequired
-                    min="0"
-                    max="100"
-                    step="0.01"
                     fullWidth
-                    description="Enter percentage between 0 and 100"
                   />
-                  <Input
-                    label="Opening Balance"
-                    type="number"
-                    placeholder="Enter opening balance"
-                    value={newPartnership.openingBalance}
+                  <Textarea
+                    label="Description"
+                    placeholder="Enter description"
+                    value={newPartnership.description}
                     onChange={(e) =>
-                      setNewPartnership({ ...newPartnership, openingBalance: e.target.value })
+                      setNewPartnership({
+                        ...newPartnership,
+                        description: e.target.value,
+                      })
                     }
-                    isRequired
-                    min="0"
-                    step="0.01"
+                    minRows={3}
                     fullWidth
                   />
                 </div>
@@ -411,46 +387,43 @@ const PartnershipAccountsTable = ({ data, onRefresh }) => {
               <ModalBody>
                 <div className="space-y-4">
                   <Input
-                    label="Partner Name"
-                    value={editedData.partnerName}
+                    label="Name"
+                    value={editedData.name}
                     onChange={(e) =>
-                      setEditedData({ ...editedData, partnerName: e.target.value })
+                      setEditedData({ ...editedData, name: e.target.value })
                     }
                     isRequired
                     fullWidth
                   />
                   <Input
-                    label="Phone Number"
-                    value={editedData.phoneNumber}
+                    label="Mobile No"
+                    value={editedData.mobileNo}
                     onChange={(e) =>
-                      setEditedData({ ...editedData, phoneNumber: e.target.value })
+                      setEditedData({
+                        ...editedData,
+                        mobileNo: e.target.value,
+                      })
                     }
                     fullWidth
                   />
                   <Input
-                    label="Share Percentage"
-                    type="number"
-                    value={editedData.sharePercentage}
+                    label="Code"
+                    value={editedData.code}
                     onChange={(e) =>
-                      setEditedData({ ...editedData, sharePercentage: e.target.value })
+                      setEditedData({ ...editedData, code: e.target.value })
                     }
-                    isRequired
-                    min="0"
-                    max="100"
-                    step="0.01"
                     fullWidth
-                    description="Enter percentage between 0 and 100"
                   />
-                  <Input
-                    label="Opening Balance"
-                    type="number"
-                    value={editedData.openingBalance}
+                  <Textarea
+                    label="Description"
+                    value={editedData.description}
                     onChange={(e) =>
-                      setEditedData({ ...editedData, openingBalance: e.target.value })
+                      setEditedData({
+                        ...editedData,
+                        description: e.target.value,
+                      })
                     }
-                    isRequired
-                    min="0"
-                    step="0.01"
+                    minRows={3}
                     fullWidth
                   />
                 </div>
@@ -486,23 +459,31 @@ const PartnershipAccountsTable = ({ data, onRefresh }) => {
                 {viewingPartnership && (
                   <div className="space-y-4">
                     <div>
-                      <p className="text-sm text-gray-500">Partner Name</p>
-                      <p className="text-lg font-semibold">{viewingPartnership.partnerName || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Phone Number</p>
-                      <p className="text-lg">{viewingPartnership.phoneNumber || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Share Percentage</p>
-                      <Chip size="sm" color="primary" variant="flat">
-                        {formatPercentage(viewingPartnership.sharePercentage)}
-                      </Chip>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Opening Balance</p>
+                      <p className="text-sm text-gray-500">Name</p>
                       <p className="text-lg font-semibold">
-                        {formatCurrency(viewingPartnership.openingBalance)}
+                        {viewingPartnership.name ||
+                          viewingPartnership.partnerName ||
+                          "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Mobile No</p>
+                      <p className="text-lg">
+                        {viewingPartnership.mobileNo ||
+                          viewingPartnership.phoneNumber ||
+                          "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Code</p>
+                      <p className="text-lg">
+                        {viewingPartnership.code || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Description</p>
+                      <p className="text-lg">
+                        {viewingPartnership.description || "—"}
                       </p>
                     </div>
                     {viewingPartnership.createdAt && (

@@ -12,9 +12,6 @@ import {
   DropdownMenu,
   DropdownItem,
   Input,
-  Select,
-  SelectItem,
-  Chip,
   Textarea,
   useDisclosure,
   Modal,
@@ -30,15 +27,17 @@ import userRequest from "../../../utils/userRequest";
 const IncomesTable = ({ data, onRefresh }) => {
   const [editingId, setEditingId] = useState(null);
   const [viewingIncome, setViewingIncome] = useState(null);
-  const [editedData, setEditedData] = useState({ 
-    description: "", 
-    amount: "", 
-    sourceType: "sale"
+  const [editedData, setEditedData] = useState({
+    name: "",
+    mobileNo: "",
+    code: "",
+    description: "",
   });
-  const [newIncome, setNewIncome] = useState({ 
-    description: "", 
-    amount: "", 
-    sourceType: "sale"
+  const [newIncome, setNewIncome] = useState({
+    name: "",
+    mobileNo: "",
+    code: "",
+    description: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -66,34 +65,13 @@ const IncomesTable = ({ data, onRefresh }) => {
     onOpenChange: onCreateModalChange,
   } = useDisclosure();
 
-  const sourceTypes = [
-    { key: "sale", label: "Sale" },
-    { key: "service", label: "Service" },
-    { key: "investment", label: "Investment" },
-    { key: "other", label: "Other" },
-  ];
-
-  const getSourceTypeColor = (type) => {
-    switch (type) {
-      case "sale":
-        return "success";
-      case "service":
-        return "primary";
-      case "investment":
-        return "warning";
-      case "other":
-        return "default";
-      default:
-        return "default";
-    }
-  };
-
   const handleEdit = (income) => {
     setEditingId(income._id);
     setEditedData({
+      name: income.name || "",
+      mobileNo: income.mobileNo || income.phoneNumber || "",
+      code: income.code || "",
       description: income.description || "",
-      sourceType: income.sourceType || "sale",
-      amount: income.amount?.toString() || "",
     });
     onEditModalOpen();
   };
@@ -114,31 +92,28 @@ const IncomesTable = ({ data, onRefresh }) => {
 
   const closeEditModal = () => {
     setEditingId(null);
-    setEditedData({ description: "", amount: "", sourceType: "sale" });
+    setEditedData({ name: "", mobileNo: "", code: "", description: "" });
     onEditModalChange(false);
   };
 
   const closeCreateModal = () => {
-    setNewIncome({ description: "", amount: "", sourceType: "sale" });
+    setNewIncome({ name: "", mobileNo: "", code: "", description: "" });
     onCreateModalChange(false);
   };
 
   const handleSave = async (id) => {
-    if (!editedData.description.trim()) {
-      toast.error("Please enter description");
-      return;
-    }
-    if (!editedData.amount || parseFloat(editedData.amount) <= 0) {
-      toast.error("Please enter a valid amount");
+    if (!editedData.name.trim()) {
+      toast.error("Please enter name");
       return;
     }
 
     try {
       setIsSubmitting(true);
       await userRequest.put(`/incomes/${id}`, {
+        name: editedData.name,
+        mobileNo: editedData.mobileNo,
+        code: editedData.code,
         description: editedData.description,
-        amount: editedData.amount,
-        sourceType: editedData.sourceType,
       });
       toast.success("Income updated successfully");
       onRefresh();
@@ -153,21 +128,18 @@ const IncomesTable = ({ data, onRefresh }) => {
   };
 
   const handleCreate = async () => {
-    if (!newIncome.description.trim()) {
-      toast.error("Please enter description");
-      return;
-    }
-    if (!newIncome.amount || parseFloat(newIncome.amount) <= 0) {
-      toast.error("Please enter a valid amount");
+    if (!newIncome.name.trim()) {
+      toast.error("Please enter name");
       return;
     }
 
     try {
       setIsCreating(true);
       await userRequest.post("/incomes", {
+        name: newIncome.name,
+        mobileNo: newIncome.mobileNo,
+        code: newIncome.code,
         description: newIncome.description,
-        amount: newIncome.amount,
-        sourceType: newIncome.sourceType,
       });
       toast.success("Income created successfully");
       closeCreateModal();
@@ -206,37 +178,20 @@ const IncomesTable = ({ data, onRefresh }) => {
     return date.toLocaleString();
   };
 
-  const formatCurrency = (value) => {
-    if (!value) return "0.00";
-    return parseFloat(value).toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
-
   const renderCell = (income, columnKey) => {
     switch (columnKey) {
+      case "name":
+        return <span className="font-medium">{income.name || "—"}</span>;
+      case "mobileNo":
+        return <span>{income.mobileNo || income.phoneNumber || "—"}</span>;
+      case "code":
+        return <span>{income.code || "—"}</span>;
       case "description":
         return (
           <span className="font-medium max-w-xs truncate block">
             {income.description || "—"}
           </span>
         );
-      case "sourceType":
-        return (
-          <Chip
-            size="sm"
-            color={getSourceTypeColor(income.sourceType)}
-            variant="flat"
-          >
-            {income.sourceType
-              ? income.sourceType.charAt(0).toUpperCase() +
-                income.sourceType.slice(1)
-              : "—"}
-          </Chip>
-        );
-      case "amount":
-        return <span className="font-semibold">{formatCurrency(income.amount)}</span>;
       case "createdAt":
         return formatDate(income.createdAt);
       case "updatedAt":
@@ -313,9 +268,10 @@ const IncomesTable = ({ data, onRefresh }) => {
 
       <Table aria-label="Incomes table">
         <TableHeader>
+          <TableColumn key="name">NAME</TableColumn>
+          <TableColumn key="mobileNo">MOBILE NO</TableColumn>
+          <TableColumn key="code">CODE</TableColumn>
           <TableColumn key="description">DESCRIPTION</TableColumn>
-          <TableColumn key="sourceType">SOURCE TYPE</TableColumn>
-          <TableColumn key="amount">AMOUNT</TableColumn>
           <TableColumn key="createdAt">CREATED AT</TableColumn>
           <TableColumn key="updatedAt">UPDATED AT</TableColumn>
           <TableColumn key="actions" className="w-24">
@@ -344,44 +300,45 @@ const IncomesTable = ({ data, onRefresh }) => {
               <ModalHeader>Add New Income</ModalHeader>
               <ModalBody>
                 <div className="space-y-4">
-                  <Textarea
-                    label="Description"
-                    placeholder="Enter income description"
-                    value={newIncome.description}
+                  <Input
+                    label="Name"
+                    placeholder="Enter name"
+                    value={newIncome.name}
                     onChange={(e) =>
-                      setNewIncome({ ...newIncome, description: e.target.value })
+                      setNewIncome({ ...newIncome, name: e.target.value })
                     }
                     isRequired
-                    minRows={3}
                     fullWidth
                   />
-                  <Select
-                    label="Source Type"
-                    placeholder="Select source type"
-                    selectedKeys={[newIncome.sourceType]}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0];
-                      setNewIncome({ ...newIncome, sourceType: selected });
-                    }}
-                    isRequired
-                  >
-                    {sourceTypes.map((type) => (
-                      <SelectItem key={type.key} value={type.key}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </Select>
                   <Input
-                    label="Amount"
-                    type="number"
-                    placeholder="Enter income amount"
-                    value={newIncome.amount}
+                    label="Mobile No"
+                    placeholder="Enter mobile number"
+                    value={newIncome.mobileNo}
                     onChange={(e) =>
-                      setNewIncome({ ...newIncome, amount: e.target.value })
+                      setNewIncome({ ...newIncome, mobileNo: e.target.value })
                     }
-                    isRequired
-                    min="0"
-                    step="0.01"
+                    fullWidth
+                  />
+                  <Input
+                    label="Code"
+                    placeholder="Enter code"
+                    value={newIncome.code}
+                    onChange={(e) =>
+                      setNewIncome({ ...newIncome, code: e.target.value })
+                    }
+                    fullWidth
+                  />
+                  <Textarea
+                    label="Description"
+                    placeholder="Enter description"
+                    value={newIncome.description}
+                    onChange={(e) =>
+                      setNewIncome({
+                        ...newIncome,
+                        description: e.target.value,
+                      })
+                    }
+                    minRows={3}
                     fullWidth
                   />
                 </div>
@@ -415,41 +372,44 @@ const IncomesTable = ({ data, onRefresh }) => {
               <ModalHeader>Edit Income</ModalHeader>
               <ModalBody>
                 <div className="space-y-4">
+                  <Input
+                    label="Name"
+                    value={editedData.name}
+                    onChange={(e) =>
+                      setEditedData({ ...editedData, name: e.target.value })
+                    }
+                    isRequired
+                    fullWidth
+                  />
+                  <Input
+                    label="Mobile No"
+                    value={editedData.mobileNo}
+                    onChange={(e) =>
+                      setEditedData({
+                        ...editedData,
+                        mobileNo: e.target.value,
+                      })
+                    }
+                    fullWidth
+                  />
+                  <Input
+                    label="Code"
+                    value={editedData.code}
+                    onChange={(e) =>
+                      setEditedData({ ...editedData, code: e.target.value })
+                    }
+                    fullWidth
+                  />
                   <Textarea
                     label="Description"
                     value={editedData.description}
                     onChange={(e) =>
-                      setEditedData({ ...editedData, description: e.target.value })
+                      setEditedData({
+                        ...editedData,
+                        description: e.target.value,
+                      })
                     }
-                    isRequired
                     minRows={3}
-                    fullWidth
-                  />
-                  <Select
-                    label="Source Type"
-                    selectedKeys={[editedData.sourceType]}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0];
-                      setEditedData({ ...editedData, sourceType: selected });
-                    }}
-                    isRequired
-                  >
-                    {sourceTypes.map((type) => (
-                      <SelectItem key={type.key} value={type.key}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                  <Input
-                    label="Amount"
-                    type="number"
-                    value={editedData.amount}
-                    onChange={(e) =>
-                      setEditedData({ ...editedData, amount: e.target.value })
-                    }
-                    isRequired
-                    min="0"
-                    step="0.01"
                     fullWidth
                   />
                 </div>
@@ -485,26 +445,27 @@ const IncomesTable = ({ data, onRefresh }) => {
                 {viewingIncome && (
                   <div className="space-y-4">
                     <div>
-                      <p className="text-sm text-gray-500">Description</p>
-                      <p className="text-lg font-semibold">{viewingIncome.description || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Source Type</p>
-                      <Chip
-                        size="sm"
-                        color={getSourceTypeColor(viewingIncome.sourceType)}
-                        variant="flat"
-                      >
-                        {viewingIncome.sourceType
-                          ? viewingIncome.sourceType.charAt(0).toUpperCase() +
-                            viewingIncome.sourceType.slice(1)
-                          : "—"}
-                      </Chip>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Amount</p>
+                      <p className="text-sm text-gray-500">Name</p>
                       <p className="text-lg font-semibold">
-                        {formatCurrency(viewingIncome.amount)}
+                        {viewingIncome.name || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Mobile No</p>
+                      <p className="text-lg">
+                        {viewingIncome.mobileNo ||
+                          viewingIncome.phoneNumber ||
+                          "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Code</p>
+                      <p className="text-lg">{viewingIncome.code || "—"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Description</p>
+                      <p className="text-lg">
+                        {viewingIncome.description || "—"}
                       </p>
                     </div>
                     {viewingIncome.createdAt && (

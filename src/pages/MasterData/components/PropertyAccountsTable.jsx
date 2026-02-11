@@ -12,8 +12,7 @@ import {
   DropdownMenu,
   DropdownItem,
   Input,
-  Checkbox,
-  Chip,
+  Textarea,
   useDisclosure,
   Modal,
   ModalContent,
@@ -28,17 +27,17 @@ import userRequest from "../../../utils/userRequest";
 const PropertyAccountsTable = ({ data, onRefresh }) => {
   const [editingId, setEditingId] = useState(null);
   const [viewingProperty, setViewingProperty] = useState(null);
-  const [editedData, setEditedData] = useState({ 
-    propertyName: "", 
-    location: "", 
-    value: "",
-    isRented: false
+  const [editedData, setEditedData] = useState({
+    name: "",
+    mobileNo: "",
+    code: "",
+    description: "",
   });
-  const [newProperty, setNewProperty] = useState({ 
-    propertyName: "", 
-    location: "", 
-    value: "",
-    isRented: false
+  const [newProperty, setNewProperty] = useState({
+    name: "",
+    mobileNo: "",
+    code: "",
+    description: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -69,10 +68,10 @@ const PropertyAccountsTable = ({ data, onRefresh }) => {
   const handleEdit = (property) => {
     setEditingId(property._id);
     setEditedData({
-      propertyName: property.propertyName || "",
-      location: property.location || "",
-      value: property.value?.toString() || "",
-      isRented: property.isRented === true || property.isRented === "true",
+      name: property.name || property.propertyName || "",
+      mobileNo: property.mobileNo || property.phoneNumber || "",
+      code: property.code || "",
+      description: property.description || property.location || "",
     });
     onEditModalOpen();
   };
@@ -96,32 +95,28 @@ const PropertyAccountsTable = ({ data, onRefresh }) => {
 
   const closeEditModal = () => {
     setEditingId(null);
-    setEditedData({ propertyName: "", location: "", value: "", isRented: false });
+    setEditedData({ name: "", mobileNo: "", code: "", description: "" });
     onEditModalChange(false);
   };
 
   const closeCreateModal = () => {
-    setNewProperty({ propertyName: "", location: "", value: "", isRented: false });
+    setNewProperty({ name: "", mobileNo: "", code: "", description: "" });
     onCreateModalChange(false);
   };
 
   const handleSave = async (id) => {
-    if (!editedData.propertyName.trim()) {
-      toast.error("Please enter property name");
-      return;
-    }
-    if (!editedData.value || parseFloat(editedData.value) < 0) {
-      toast.error("Please enter a valid value");
+    if (!editedData.name.trim()) {
+      toast.error("Please enter name");
       return;
     }
 
     try {
       setIsSubmitting(true);
       await userRequest.put(`/property-accounts/${id}`, {
-        propertyName: editedData.propertyName,
-        location: editedData.location,
-        value: editedData.value,
-        isRented: editedData.isRented,
+        name: editedData.name,
+        mobileNo: editedData.mobileNo,
+        code: editedData.code,
+        description: editedData.description,
       });
       toast.success("Property account updated successfully");
       onRefresh();
@@ -136,22 +131,18 @@ const PropertyAccountsTable = ({ data, onRefresh }) => {
   };
 
   const handleCreate = async () => {
-    if (!newProperty.propertyName.trim()) {
-      toast.error("Please enter property name");
-      return;
-    }
-    if (!newProperty.value || parseFloat(newProperty.value) < 0) {
-      toast.error("Please enter a valid value");
+    if (!newProperty.name.trim()) {
+      toast.error("Please enter name");
       return;
     }
 
     try {
       setIsCreating(true);
       await userRequest.post("/property-accounts", {
-        propertyName: newProperty.propertyName,
-        location: newProperty.location,
-        value: newProperty.value,
-        isRented: newProperty.isRented,
+        name: newProperty.name,
+        mobileNo: newProperty.mobileNo,
+        code: newProperty.code,
+        description: newProperty.description,
       });
       toast.success("Property account created successfully");
       closeCreateModal();
@@ -190,31 +181,27 @@ const PropertyAccountsTable = ({ data, onRefresh }) => {
     return date.toLocaleString();
   };
 
-  const formatCurrency = (value) => {
-    if (!value && value !== 0) return "0.00";
-    return parseFloat(value).toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
-
   const renderCell = (property, columnKey) => {
     switch (columnKey) {
-      case "propertyName":
-        return <span className="font-medium">{property.propertyName || "—"}</span>;
-      case "location":
-        return <span>{property.location || "—"}</span>;
-      case "value":
-        return <span className="font-semibold">{formatCurrency(property.value)}</span>;
-      case "isRented":
+      case "name":
         return (
-          <Chip
-            size="sm"
-            color={property.isRented === true || property.isRented === "true" ? "success" : "default"}
-            variant="flat"
-          >
-            {property.isRented === true || property.isRented === "true" ? "Rented" : "Not Rented"}
-          </Chip>
+          <span className="font-medium">
+            {property.name || property.propertyName || "—"}
+          </span>
+        );
+      case "mobileNo":
+        return (
+          <span>
+            {property.mobileNo || property.phoneNumber || "—"}
+          </span>
+        );
+      case "code":
+        return <span>{property.code || "—"}</span>;
+      case "description":
+        return (
+          <span className="max-w-xs truncate block">
+            {property.description || property.location || "—"}
+          </span>
         );
       case "createdAt":
         return formatDate(property.createdAt);
@@ -292,10 +279,10 @@ const PropertyAccountsTable = ({ data, onRefresh }) => {
 
       <Table aria-label="Property accounts table">
         <TableHeader>
-          <TableColumn key="propertyName">PROPERTY NAME</TableColumn>
-          <TableColumn key="location">LOCATION</TableColumn>
-          <TableColumn key="value">VALUE</TableColumn>
-          <TableColumn key="isRented">RENTAL STATUS</TableColumn>
+          <TableColumn key="name">NAME</TableColumn>
+          <TableColumn key="mobileNo">MOBILE NO</TableColumn>
+          <TableColumn key="code">CODE</TableColumn>
+          <TableColumn key="description">DESCRIPTION</TableColumn>
           <TableColumn key="createdAt">CREATED AT</TableColumn>
           <TableColumn key="updatedAt">UPDATED AT</TableColumn>
           <TableColumn key="actions" className="w-24">
@@ -325,45 +312,50 @@ const PropertyAccountsTable = ({ data, onRefresh }) => {
               <ModalBody>
                 <div className="space-y-4">
                   <Input
-                    label="Property Name"
-                    placeholder="Enter property name"
-                    value={newProperty.propertyName}
+                    label="Name"
+                    placeholder="Enter name"
+                    value={newProperty.name}
                     onChange={(e) =>
-                      setNewProperty({ ...newProperty, propertyName: e.target.value })
+                      setNewProperty({ ...newProperty, name: e.target.value })
                     }
                     isRequired
                     fullWidth
                   />
                   <Input
-                    label="Location"
-                    placeholder="Enter property location"
-                    value={newProperty.location}
+                    label="Mobile No"
+                    placeholder="Enter mobile number"
+                    value={newProperty.mobileNo}
                     onChange={(e) =>
-                      setNewProperty({ ...newProperty, location: e.target.value })
+                      setNewProperty({
+                        ...newProperty,
+                        mobileNo: e.target.value,
+                      })
                     }
                     fullWidth
                   />
                   <Input
-                    label="Value"
-                    type="number"
-                    placeholder="Enter property value"
-                    value={newProperty.value}
+                    label="Code"
+                    placeholder="Enter code"
+                    value={newProperty.code}
                     onChange={(e) =>
-                      setNewProperty({ ...newProperty, value: e.target.value })
+                      setNewProperty({ ...newProperty, code: e.target.value })
                     }
                     isRequired
-                    min="0"
-                    step="0.01"
                     fullWidth
                   />
-                  <Checkbox
-                    isSelected={newProperty.isRented}
-                    onValueChange={(isSelected) =>
-                      setNewProperty({ ...newProperty, isRented: isSelected })
+                  <Textarea
+                    label="Description"
+                    placeholder="Enter description"
+                    value={newProperty.description}
+                    onChange={(e) =>
+                      setNewProperty({
+                        ...newProperty,
+                        description: e.target.value,
+                      })
                     }
-                  >
-                    Is Rented
-                  </Checkbox>
+                    minRows={3}
+                    fullWidth
+                  />
                 </div>
               </ModalBody>
               <ModalFooter>
@@ -396,42 +388,46 @@ const PropertyAccountsTable = ({ data, onRefresh }) => {
               <ModalBody>
                 <div className="space-y-4">
                   <Input
-                    label="Property Name"
-                    value={editedData.propertyName}
+                    label="Name"
+                    value={editedData.name}
                     onChange={(e) =>
-                      setEditedData({ ...editedData, propertyName: e.target.value })
+                      setEditedData({ ...editedData, name: e.target.value })
                     }
                     isRequired
                     fullWidth
                   />
                   <Input
-                    label="Location"
-                    value={editedData.location}
+                    label="Mobile No"
+                    value={editedData.mobileNo}
                     onChange={(e) =>
-                      setEditedData({ ...editedData, location: e.target.value })
+                      setEditedData({
+                        ...editedData,
+                        mobileNo: e.target.value,
+                      })
                     }
                     fullWidth
                   />
                   <Input
-                    label="Value"
-                    type="number"
-                    value={editedData.value}
+                    label="Code"
+                    value={editedData.code}
                     onChange={(e) =>
-                      setEditedData({ ...editedData, value: e.target.value })
+                      setEditedData({ ...editedData, code: e.target.value })
                     }
                     isRequired
-                    min="0"
-                    step="0.01"
                     fullWidth
                   />
-                  <Checkbox
-                    isSelected={editedData.isRented}
-                    onValueChange={(isSelected) =>
-                      setEditedData({ ...editedData, isRented: isSelected })
+                  <Textarea
+                    label="Description"
+                    value={editedData.description}
+                    onChange={(e) =>
+                      setEditedData({
+                        ...editedData,
+                        description: e.target.value,
+                      })
                     }
-                  >
-                    Is Rented
-                  </Checkbox>
+                    minRows={3}
+                    fullWidth
+                  />
                 </div>
               </ModalBody>
               <ModalFooter>
@@ -465,28 +461,32 @@ const PropertyAccountsTable = ({ data, onRefresh }) => {
                 {viewingProperty && (
                   <div className="space-y-4">
                     <div>
-                      <p className="text-sm text-gray-500">Property Name</p>
-                      <p className="text-lg font-semibold">{viewingProperty.propertyName || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Location</p>
-                      <p className="text-lg">{viewingProperty.location || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Value</p>
+                      <p className="text-sm text-gray-500">Name</p>
                       <p className="text-lg font-semibold">
-                        {formatCurrency(viewingProperty.value)}
+                        {viewingProperty.name || viewingProperty.propertyName || "—"}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Rental Status</p>
-                      <Chip
-                        size="sm"
-                        color={viewingProperty.isRented === true || viewingProperty.isRented === "true" ? "success" : "default"}
-                        variant="flat"
-                      >
-                        {viewingProperty.isRented === true || viewingProperty.isRented === "true" ? "Rented" : "Not Rented"}
-                      </Chip>
+                      <p className="text-sm text-gray-500">Mobile No</p>
+                      <p className="text-lg">
+                        {viewingProperty.mobileNo ||
+                          viewingProperty.phoneNumber ||
+                          "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Code</p>
+                      <p className="text-lg">
+                        {viewingProperty.code || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Description</p>
+                      <p className="text-lg">
+                        {viewingProperty.description ||
+                          viewingProperty.location ||
+                          "—"}
+                      </p>
                     </div>
                     {viewingProperty.createdAt && (
                       <div>

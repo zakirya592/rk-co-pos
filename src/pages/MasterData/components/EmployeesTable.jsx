@@ -26,17 +26,17 @@ import userRequest from "../../../utils/userRequest";
 const EmployeesTable = ({ data, onRefresh }) => {
   const [editingId, setEditingId] = useState(null);
   const [viewingEmployee, setViewingEmployee] = useState(null);
-  const [editedData, setEditedData] = useState({ 
-    name: "", 
-    phoneNumber: "", 
-    position: "",
-    salary: ""
+  const [editedData, setEditedData] = useState({
+    name: "",
+    mobileNo: "",
+    code: "",
+    description: "",
   });
-  const [newEmployee, setNewEmployee] = useState({ 
-    name: "", 
-    phoneNumber: "", 
-    position: "",
-    salary: ""
+  const [newEmployee, setNewEmployee] = useState({
+    name: "",
+    mobileNo: "",
+    code: "",
+    description: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -68,9 +68,9 @@ const EmployeesTable = ({ data, onRefresh }) => {
     setEditingId(employee._id);
     setEditedData({
       name: employee.name || "",
-      phoneNumber: employee.phoneNumber || "",
-      position: employee.position || "",
-      salary: employee.salary?.toString() || "",
+      mobileNo: employee.mobileNo || employee.phoneNumber || "",
+      code: employee.code || "",
+      description: employee.description || employee.position || "",
     });
     onEditModalOpen();
   };
@@ -93,22 +93,18 @@ const EmployeesTable = ({ data, onRefresh }) => {
 
   const closeEditModal = () => {
     setEditingId(null);
-    setEditedData({ name: "", phoneNumber: "", position: "", salary: "" });
+    setEditedData({ name: "", mobileNo: "", code: "", description: "" });
     onEditModalChange(false);
   };
 
   const closeCreateModal = () => {
-    setNewEmployee({ name: "", phoneNumber: "", position: "", salary: "" });
+    setNewEmployee({ name: "", mobileNo: "", code: "", description: "" });
     onCreateModalChange(false);
   };
 
   const handleSave = async (id) => {
     if (!editedData.name.trim()) {
-      toast.error("Please enter employee name");
-      return;
-    }
-    if (!editedData.salary || parseFloat(editedData.salary) < 0) {
-      toast.error("Please enter a valid salary");
+      toast.error("Please enter name");
       return;
     }
 
@@ -116,9 +112,9 @@ const EmployeesTable = ({ data, onRefresh }) => {
       setIsSubmitting(true);
       await userRequest.put(`/employees/${id}`, {
         name: editedData.name,
-        phoneNumber: editedData.phoneNumber,
-        position: editedData.position,
-        salary: editedData.salary,
+        mobileNo: editedData.mobileNo,
+        code: editedData.code,
+        description: editedData.description,
       });
       toast.success("Employee updated successfully");
       onRefresh();
@@ -134,11 +130,7 @@ const EmployeesTable = ({ data, onRefresh }) => {
 
   const handleCreate = async () => {
     if (!newEmployee.name.trim()) {
-      toast.error("Please enter employee name");
-      return;
-    }
-    if (!newEmployee.salary || parseFloat(newEmployee.salary) < 0) {
-      toast.error("Please enter a valid salary");
+      toast.error("Please enter name");
       return;
     }
 
@@ -146,9 +138,9 @@ const EmployeesTable = ({ data, onRefresh }) => {
       setIsCreating(true);
       await userRequest.post("/employees", {
         name: newEmployee.name,
-        phoneNumber: newEmployee.phoneNumber,
-        position: newEmployee.position,
-        salary: newEmployee.salary,
+        mobileNo: newEmployee.mobileNo,
+        code: newEmployee.code,
+        description: newEmployee.description,
       });
       toast.success("Employee created successfully");
       closeCreateModal();
@@ -187,24 +179,22 @@ const EmployeesTable = ({ data, onRefresh }) => {
     return date.toLocaleString();
   };
 
-  const formatCurrency = (value) => {
-    if (!value && value !== 0) return "0.00";
-    return parseFloat(value).toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
-
   const renderCell = (employee, columnKey) => {
     switch (columnKey) {
       case "name":
         return <span className="font-medium">{employee.name || "—"}</span>;
-      case "phoneNumber":
-        return <span>{employee.phoneNumber || "—"}</span>;
-      case "position":
-        return <span>{employee.position || "—"}</span>;
-      case "salary":
-        return <span className="font-semibold">{formatCurrency(employee.salary)}</span>;
+      case "mobileNo":
+        return (
+          <span>{employee.mobileNo || employee.phoneNumber || "—"}</span>
+        );
+      case "code":
+        return <span>{employee.code || "—"}</span>;
+      case "description":
+        return (
+          <span className="max-w-xs truncate block">
+            {employee.description || employee.position || "—"}
+          </span>
+        );
       case "createdAt":
         return formatDate(employee.createdAt);
       case "updatedAt":
@@ -282,9 +272,9 @@ const EmployeesTable = ({ data, onRefresh }) => {
       <Table aria-label="Employees table">
         <TableHeader>
           <TableColumn key="name">NAME</TableColumn>
-          <TableColumn key="phoneNumber">PHONE NUMBER</TableColumn>
-          <TableColumn key="position">POSITION</TableColumn>
-          <TableColumn key="salary">SALARY</TableColumn>
+          <TableColumn key="mobileNo">MOBILE NO</TableColumn>
+          <TableColumn key="code">CODE</TableColumn>
+          <TableColumn key="description">DESCRIPTION</TableColumn>
           <TableColumn key="createdAt">CREATED AT</TableColumn>
           <TableColumn key="updatedAt">UPDATED AT</TableColumn>
           <TableColumn key="actions" className="w-24">
@@ -314,8 +304,8 @@ const EmployeesTable = ({ data, onRefresh }) => {
               <ModalBody>
                 <div className="space-y-4">
                   <Input
-                    label="Employee Name"
-                    placeholder="Enter employee name"
+                    label="Name"
+                    placeholder="Enter name"
                     value={newEmployee.name}
                     onChange={(e) =>
                       setNewEmployee({ ...newEmployee, name: e.target.value })
@@ -324,34 +314,37 @@ const EmployeesTable = ({ data, onRefresh }) => {
                     fullWidth
                   />
                   <Input
-                    label="Phone Number"
-                    placeholder="Enter phone number"
-                    value={newEmployee.phoneNumber}
+                    label="Mobile No"
+                    placeholder="Enter mobile number"
+                    value={newEmployee.mobileNo}
                     onChange={(e) =>
-                      setNewEmployee({ ...newEmployee, phoneNumber: e.target.value })
+                      setNewEmployee({
+                        ...newEmployee,
+                        mobileNo: e.target.value,
+                      })
                     }
                     fullWidth
                   />
                   <Input
-                    label="Position"
-                    placeholder="Enter employee position"
-                    value={newEmployee.position}
+                    label="Code"
+                    placeholder="Enter code"
+                    value={newEmployee.code}
                     onChange={(e) =>
-                      setNewEmployee({ ...newEmployee, position: e.target.value })
+                      setNewEmployee({ ...newEmployee, code: e.target.value })
                     }
                     fullWidth
                   />
-                  <Input
-                    label="Salary"
-                    type="number"
-                    placeholder="Enter salary"
-                    value={newEmployee.salary}
+                  <Textarea
+                    label="Description"
+                    placeholder="Enter description"
+                    value={newEmployee.description}
                     onChange={(e) =>
-                      setNewEmployee({ ...newEmployee, salary: e.target.value })
+                      setNewEmployee({
+                        ...newEmployee,
+                        description: e.target.value,
+                      })
                     }
-                    isRequired
-                    min="0"
-                    step="0.01"
+                    minRows={3}
                     fullWidth
                   />
                 </div>
@@ -386,7 +379,7 @@ const EmployeesTable = ({ data, onRefresh }) => {
               <ModalBody>
                 <div className="space-y-4">
                   <Input
-                    label="Employee Name"
+                    label="Name"
                     value={editedData.name}
                     onChange={(e) =>
                       setEditedData({ ...editedData, name: e.target.value })
@@ -395,31 +388,34 @@ const EmployeesTable = ({ data, onRefresh }) => {
                     fullWidth
                   />
                   <Input
-                    label="Phone Number"
-                    value={editedData.phoneNumber}
+                    label="Mobile No"
+                    value={editedData.mobileNo}
                     onChange={(e) =>
-                      setEditedData({ ...editedData, phoneNumber: e.target.value })
+                      setEditedData({
+                        ...editedData,
+                        mobileNo: e.target.value,
+                      })
                     }
                     fullWidth
                   />
                   <Input
-                    label="Position"
-                    value={editedData.position}
+                    label="Code"
+                    value={editedData.code}
                     onChange={(e) =>
-                      setEditedData({ ...editedData, position: e.target.value })
+                      setEditedData({ ...editedData, code: e.target.value })
                     }
                     fullWidth
                   />
-                  <Input
-                    label="Salary"
-                    type="number"
-                    value={editedData.salary}
+                  <Textarea
+                    label="Description"
+                    value={editedData.description}
                     onChange={(e) =>
-                      setEditedData({ ...editedData, salary: e.target.value })
+                      setEditedData({
+                        ...editedData,
+                        description: e.target.value,
+                      })
                     }
-                    isRequired
-                    min="0"
-                    step="0.01"
+                    minRows={3}
                     fullWidth
                   />
                 </div>
@@ -456,20 +452,30 @@ const EmployeesTable = ({ data, onRefresh }) => {
                   <div className="space-y-4">
                     <div>
                       <p className="text-sm text-gray-500">Name</p>
-                      <p className="text-lg font-semibold">{viewingEmployee.name || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Phone Number</p>
-                      <p className="text-lg">{viewingEmployee.phoneNumber || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Position</p>
-                      <p className="text-lg">{viewingEmployee.position || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Salary</p>
                       <p className="text-lg font-semibold">
-                        {formatCurrency(viewingEmployee.salary)}
+                        {viewingEmployee.name || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Mobile No</p>
+                      <p className="text-lg">
+                        {viewingEmployee.mobileNo ||
+                          viewingEmployee.phoneNumber ||
+                          "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Code</p>
+                      <p className="text-lg">
+                        {viewingEmployee.code || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Description</p>
+                      <p className="text-lg">
+                        {viewingEmployee.description ||
+                          viewingEmployee.position ||
+                          "—"}
                       </p>
                     </div>
                     {viewingEmployee.createdAt && (

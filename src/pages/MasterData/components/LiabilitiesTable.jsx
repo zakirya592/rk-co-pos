@@ -12,9 +12,6 @@ import {
   DropdownMenu,
   DropdownItem,
   Input,
-  Select,
-  SelectItem,
-  Chip,
   Textarea,
   useDisclosure,
   Modal,
@@ -30,15 +27,17 @@ import userRequest from "../../../utils/userRequest";
 const LiabilitiesTable = ({ data, onRefresh }) => {
   const [editingId, setEditingId] = useState(null);
   const [viewingLiability, setViewingLiability] = useState(null);
-  const [editedData, setEditedData] = useState({ 
-    description: "", 
-    amount: "", 
-    liabilityType: "payable"
+  const [editedData, setEditedData] = useState({
+    name: "",
+    mobileNo: "",
+    code: "",
+    description: "",
   });
-  const [newLiability, setNewLiability] = useState({ 
-    description: "", 
-    amount: "", 
-    liabilityType: "payable"
+  const [newLiability, setNewLiability] = useState({
+    name: "",
+    mobileNo: "",
+    code: "",
+    description: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -66,34 +65,13 @@ const LiabilitiesTable = ({ data, onRefresh }) => {
     onOpenChange: onCreateModalChange,
   } = useDisclosure();
 
-  const liabilityTypes = [
-    { key: "loan", label: "Loan" },
-    { key: "payable", label: "Payable" },
-    { key: "tax", label: "Tax" },
-    { key: "other", label: "Other" },
-  ];
-
-  const getLiabilityTypeColor = (type) => {
-    switch (type) {
-      case "loan":
-        return "warning";
-      case "payable":
-        return "danger";
-      case "tax":
-        return "primary";
-      case "other":
-        return "default";
-      default:
-        return "default";
-    }
-  };
-
   const handleEdit = (liability) => {
     setEditingId(liability._id);
     setEditedData({
+      name: liability.name || "",
+      mobileNo: liability.mobileNo || liability.phoneNumber || "",
+      code: liability.code || "",
       description: liability.description || "",
-      liabilityType: liability.liabilityType || "payable",
-      amount: liability.amount?.toString() || "",
     });
     onEditModalOpen();
   };
@@ -114,31 +92,28 @@ const LiabilitiesTable = ({ data, onRefresh }) => {
 
   const closeEditModal = () => {
     setEditingId(null);
-    setEditedData({ description: "", amount: "", liabilityType: "payable" });
+    setEditedData({ name: "", mobileNo: "", code: "", description: "" });
     onEditModalChange(false);
   };
 
   const closeCreateModal = () => {
-    setNewLiability({ description: "", amount: "", liabilityType: "payable" });
+    setNewLiability({ name: "", mobileNo: "", code: "", description: "" });
     onCreateModalChange(false);
   };
 
   const handleSave = async (id) => {
-    if (!editedData.description.trim()) {
-      toast.error("Please enter description");
-      return;
-    }
-    if (!editedData.amount || parseFloat(editedData.amount) <= 0) {
-      toast.error("Please enter a valid amount");
+    if (!editedData.name.trim()) {
+      toast.error("Please enter name");
       return;
     }
 
     try {
       setIsSubmitting(true);
       await userRequest.put(`/liabilities/${id}`, {
+        name: editedData.name,
+        mobileNo: editedData.mobileNo,
+        code: editedData.code,
         description: editedData.description,
-        amount: editedData.amount,
-        liabilityType: editedData.liabilityType,
       });
       toast.success("Liability updated successfully");
       onRefresh();
@@ -153,21 +128,18 @@ const LiabilitiesTable = ({ data, onRefresh }) => {
   };
 
   const handleCreate = async () => {
-    if (!newLiability.description.trim()) {
-      toast.error("Please enter description");
-      return;
-    }
-    if (!newLiability.amount || parseFloat(newLiability.amount) <= 0) {
-      toast.error("Please enter a valid amount");
+    if (!newLiability.name.trim()) {
+      toast.error("Please enter name");
       return;
     }
 
     try {
       setIsCreating(true);
       await userRequest.post("/liabilities", {
+        name: newLiability.name,
+        mobileNo: newLiability.mobileNo,
+        code: newLiability.code,
         description: newLiability.description,
-        amount: newLiability.amount,
-        liabilityType: newLiability.liabilityType,
       });
       toast.success("Liability created successfully");
       closeCreateModal();
@@ -206,37 +178,20 @@ const LiabilitiesTable = ({ data, onRefresh }) => {
     return date.toLocaleString();
   };
 
-  const formatCurrency = (value) => {
-    if (!value) return "0.00";
-    return parseFloat(value).toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
-
   const renderCell = (liability, columnKey) => {
     switch (columnKey) {
+      case "name":
+        return <span className="font-medium">{liability.name || "—"}</span>;
+      case "mobileNo":
+        return <span>{liability.mobileNo || liability.phoneNumber || "—"}</span>;
+      case "code":
+        return <span>{liability.code || "—"}</span>;
       case "description":
         return (
           <span className="font-medium max-w-xs truncate block">
             {liability.description || "—"}
           </span>
         );
-      case "liabilityType":
-        return (
-          <Chip
-            size="sm"
-            color={getLiabilityTypeColor(liability.liabilityType)}
-            variant="flat"
-          >
-            {liability.liabilityType
-              ? liability.liabilityType.charAt(0).toUpperCase() +
-                liability.liabilityType.slice(1)
-              : "—"}
-          </Chip>
-        );
-      case "amount":
-        return <span className="font-semibold">{formatCurrency(liability.amount)}</span>;
       case "createdAt":
         return formatDate(liability.createdAt);
       case "updatedAt":
@@ -313,9 +268,10 @@ const LiabilitiesTable = ({ data, onRefresh }) => {
 
       <Table aria-label="Liabilities table">
         <TableHeader>
+          <TableColumn key="name">NAME</TableColumn>
+          <TableColumn key="mobileNo">MOBILE NO</TableColumn>
+          <TableColumn key="code">CODE</TableColumn>
           <TableColumn key="description">DESCRIPTION</TableColumn>
-          <TableColumn key="liabilityType">LIABILITY TYPE</TableColumn>
-          <TableColumn key="amount">AMOUNT</TableColumn>
           <TableColumn key="createdAt">CREATED AT</TableColumn>
           <TableColumn key="updatedAt">UPDATED AT</TableColumn>
           <TableColumn key="actions" className="w-24">
@@ -344,44 +300,48 @@ const LiabilitiesTable = ({ data, onRefresh }) => {
               <ModalHeader>Add New Liability</ModalHeader>
               <ModalBody>
                 <div className="space-y-4">
-                  <Textarea
-                    label="Description"
-                    placeholder="Enter liability description"
-                    value={newLiability.description}
+                  <Input
+                    label="Name"
+                    placeholder="Enter name"
+                    value={newLiability.name}
                     onChange={(e) =>
-                      setNewLiability({ ...newLiability, description: e.target.value })
+                      setNewLiability({ ...newLiability, name: e.target.value })
                     }
                     isRequired
-                    minRows={3}
                     fullWidth
                   />
-                  <Select
-                    label="Liability Type"
-                    placeholder="Select liability type"
-                    selectedKeys={[newLiability.liabilityType]}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0];
-                      setNewLiability({ ...newLiability, liabilityType: selected });
-                    }}
-                    isRequired
-                  >
-                    {liabilityTypes.map((type) => (
-                      <SelectItem key={type.key} value={type.key}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </Select>
                   <Input
-                    label="Amount"
-                    type="number"
-                    placeholder="Enter liability amount"
-                    value={newLiability.amount}
+                    label="Mobile No"
+                    placeholder="Enter mobile number"
+                    value={newLiability.mobileNo}
                     onChange={(e) =>
-                      setNewLiability({ ...newLiability, amount: e.target.value })
+                      setNewLiability({
+                        ...newLiability,
+                        mobileNo: e.target.value,
+                      })
                     }
-                    isRequired
-                    min="0"
-                    step="0.01"
+                    fullWidth
+                  />
+                  <Input
+                    label="Code"
+                    placeholder="Enter code"
+                    value={newLiability.code}
+                    onChange={(e) =>
+                      setNewLiability({ ...newLiability, code: e.target.value })
+                    }
+                    fullWidth
+                  />
+                  <Textarea
+                    label="Description"
+                    placeholder="Enter description"
+                    value={newLiability.description}
+                    onChange={(e) =>
+                      setNewLiability({
+                        ...newLiability,
+                        description: e.target.value,
+                      })
+                    }
+                    minRows={3}
                     fullWidth
                   />
                 </div>
@@ -415,41 +375,44 @@ const LiabilitiesTable = ({ data, onRefresh }) => {
               <ModalHeader>Edit Liability</ModalHeader>
               <ModalBody>
                 <div className="space-y-4">
+                  <Input
+                    label="Name"
+                    value={editedData.name}
+                    onChange={(e) =>
+                      setEditedData({ ...editedData, name: e.target.value })
+                    }
+                    isRequired
+                    fullWidth
+                  />
+                  <Input
+                    label="Mobile No"
+                    value={editedData.mobileNo}
+                    onChange={(e) =>
+                      setEditedData({
+                        ...editedData,
+                        mobileNo: e.target.value,
+                      })
+                    }
+                    fullWidth
+                  />
+                  <Input
+                    label="Code"
+                    value={editedData.code}
+                    onChange={(e) =>
+                      setEditedData({ ...editedData, code: e.target.value })
+                    }
+                    fullWidth
+                  />
                   <Textarea
                     label="Description"
                     value={editedData.description}
                     onChange={(e) =>
-                      setEditedData({ ...editedData, description: e.target.value })
+                      setEditedData({
+                        ...editedData,
+                        description: e.target.value,
+                      })
                     }
-                    isRequired
                     minRows={3}
-                    fullWidth
-                  />
-                  <Select
-                    label="Liability Type"
-                    selectedKeys={[editedData.liabilityType]}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0];
-                      setEditedData({ ...editedData, liabilityType: selected });
-                    }}
-                    isRequired
-                  >
-                    {liabilityTypes.map((type) => (
-                      <SelectItem key={type.key} value={type.key}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                  <Input
-                    label="Amount"
-                    type="number"
-                    value={editedData.amount}
-                    onChange={(e) =>
-                      setEditedData({ ...editedData, amount: e.target.value })
-                    }
-                    isRequired
-                    min="0"
-                    step="0.01"
                     fullWidth
                   />
                 </div>
@@ -485,26 +448,29 @@ const LiabilitiesTable = ({ data, onRefresh }) => {
                 {viewingLiability && (
                   <div className="space-y-4">
                     <div>
-                      <p className="text-sm text-gray-500">Description</p>
-                      <p className="text-lg font-semibold">{viewingLiability.description || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Liability Type</p>
-                      <Chip
-                        size="sm"
-                        color={getLiabilityTypeColor(viewingLiability.liabilityType)}
-                        variant="flat"
-                      >
-                        {viewingLiability.liabilityType
-                          ? viewingLiability.liabilityType.charAt(0).toUpperCase() +
-                            viewingLiability.liabilityType.slice(1)
-                          : "—"}
-                      </Chip>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Amount</p>
+                      <p className="text-sm text-gray-500">Name</p>
                       <p className="text-lg font-semibold">
-                        {formatCurrency(viewingLiability.amount)}
+                        {viewingLiability.name || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Mobile No</p>
+                      <p className="text-lg">
+                        {viewingLiability.mobileNo ||
+                          viewingLiability.phoneNumber ||
+                          "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Code</p>
+                      <p className="text-lg">
+                        {viewingLiability.code || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Description</p>
+                      <p className="text-lg">
+                        {viewingLiability.description || "—"}
                       </p>
                     </div>
                     {viewingLiability.createdAt && (

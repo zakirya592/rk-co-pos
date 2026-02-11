@@ -12,9 +12,6 @@ import {
   DropdownMenu,
   DropdownItem,
   Input,
-  Select,
-  SelectItem,
-  Chip,
   Textarea,
   useDisclosure,
   Modal,
@@ -30,15 +27,17 @@ import userRequest from "../../../utils/userRequest";
 const CapitalsTable = ({ data, onRefresh }) => {
   const [editingId, setEditingId] = useState(null);
   const [viewingCapital, setViewingCapital] = useState(null);
-  const [editedData, setEditedData] = useState({ 
-    description: "", 
-    amount: "", 
-    type: "investment"
+  const [editedData, setEditedData] = useState({
+    name: "",
+    mobileNo: "",
+    code: "",
+    description: "",
   });
-  const [newCapital, setNewCapital] = useState({ 
-    description: "", 
-    amount: "", 
-    type: "investment"
+  const [newCapital, setNewCapital] = useState({
+    name: "",
+    mobileNo: "",
+    code: "",
+    description: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -66,28 +65,13 @@ const CapitalsTable = ({ data, onRefresh }) => {
     onOpenChange: onCreateModalChange,
   } = useDisclosure();
 
-  const capitalTypes = [
-    { key: "investment", label: "Investment" },
-    { key: "withdraw", label: "Withdraw" },
-  ];
-
-  const getTypeColor = (type) => {
-    switch (type) {
-      case "investment":
-        return "success";
-      case "withdraw":
-        return "warning";
-      default:
-        return "default";
-    }
-  };
-
   const handleEdit = (capital) => {
     setEditingId(capital._id);
     setEditedData({
+      name: capital.name || "",
+      mobileNo: capital.mobileNo || capital.phoneNumber || "",
+      code: capital.code || "",
       description: capital.description || "",
-      type: capital.type || "investment",
-      amount: capital.amount?.toString() || "",
     });
     onEditModalOpen();
   };
@@ -110,31 +94,28 @@ const CapitalsTable = ({ data, onRefresh }) => {
 
   const closeEditModal = () => {
     setEditingId(null);
-    setEditedData({ description: "", amount: "", type: "investment" });
+    setEditedData({ name: "", mobileNo: "", code: "", description: "" });
     onEditModalChange(false);
   };
 
   const closeCreateModal = () => {
-    setNewCapital({ description: "", amount: "", type: "investment" });
+    setNewCapital({ name: "", mobileNo: "", code: "", description: "" });
     onCreateModalChange(false);
   };
 
   const handleSave = async (id) => {
-    if (!editedData.description.trim()) {
-      toast.error("Please enter description");
-      return;
-    }
-    if (!editedData.amount || parseFloat(editedData.amount) <= 0) {
-      toast.error("Please enter a valid amount");
+    if (!editedData.name.trim()) {
+      toast.error("Please enter name");
       return;
     }
 
     try {
       setIsSubmitting(true);
       await userRequest.put(`/capitals/${id}`, {
+        name: editedData.name,
+        mobileNo: editedData.mobileNo,
+        code: editedData.code,
         description: editedData.description,
-        amount: editedData.amount,
-        type: editedData.type,
       });
       toast.success("Capital entry updated successfully");
       onRefresh();
@@ -149,21 +130,18 @@ const CapitalsTable = ({ data, onRefresh }) => {
   };
 
   const handleCreate = async () => {
-    if (!newCapital.description.trim()) {
-      toast.error("Please enter description");
-      return;
-    }
-    if (!newCapital.amount || parseFloat(newCapital.amount) <= 0) {
-      toast.error("Please enter a valid amount");
+    if (!newCapital.name.trim()) {
+      toast.error("Please enter name");
       return;
     }
 
     try {
       setIsCreating(true);
       await userRequest.post("/capitals", {
+        name: newCapital.name,
+        mobileNo: newCapital.mobileNo,
+        code: newCapital.code,
         description: newCapital.description,
-        amount: newCapital.amount,
-        type: newCapital.type,
       });
       toast.success("Capital entry created successfully");
       closeCreateModal();
@@ -202,37 +180,20 @@ const CapitalsTable = ({ data, onRefresh }) => {
     return date.toLocaleString();
   };
 
-  const formatCurrency = (value) => {
-    if (!value && value !== 0) return "0.00";
-    return parseFloat(value).toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
-
   const renderCell = (capital, columnKey) => {
     switch (columnKey) {
+      case "name":
+        return <span className="font-medium">{capital.name || "—"}</span>;
+      case "mobileNo":
+        return <span>{capital.mobileNo || capital.phoneNumber || "—"}</span>;
+      case "code":
+        return <span>{capital.code || "—"}</span>;
       case "description":
         return (
           <span className="font-medium max-w-xs truncate block">
             {capital.description || "—"}
           </span>
         );
-      case "type":
-        return (
-          <Chip
-            size="sm"
-            color={getTypeColor(capital.type)}
-            variant="flat"
-          >
-            {capital.type
-              ? capital.type.charAt(0).toUpperCase() +
-                capital.type.slice(1)
-              : "—"}
-          </Chip>
-        );
-      case "amount":
-        return <span className="font-semibold">{formatCurrency(capital.amount)}</span>;
       case "createdAt":
         return formatDate(capital.createdAt);
       case "updatedAt":
@@ -309,9 +270,10 @@ const CapitalsTable = ({ data, onRefresh }) => {
 
       <Table aria-label="Capitals table">
         <TableHeader>
+          <TableColumn key="name">NAME</TableColumn>
+          <TableColumn key="mobileNo">MOBILE NO</TableColumn>
+          <TableColumn key="code">CODE</TableColumn>
           <TableColumn key="description">DESCRIPTION</TableColumn>
-          <TableColumn key="type">TYPE</TableColumn>
-          <TableColumn key="amount">AMOUNT</TableColumn>
           <TableColumn key="createdAt">CREATED AT</TableColumn>
           <TableColumn key="updatedAt">UPDATED AT</TableColumn>
           <TableColumn key="actions" className="w-24">
@@ -340,44 +302,48 @@ const CapitalsTable = ({ data, onRefresh }) => {
               <ModalHeader>Add New Capital Entry</ModalHeader>
               <ModalBody>
                 <div className="space-y-4">
-                  <Textarea
-                    label="Description"
-                    placeholder="Enter capital entry description"
-                    value={newCapital.description}
+                  <Input
+                    label="Name"
+                    placeholder="Enter name"
+                    value={newCapital.name}
                     onChange={(e) =>
-                      setNewCapital({ ...newCapital, description: e.target.value })
+                      setNewCapital({ ...newCapital, name: e.target.value })
                     }
                     isRequired
-                    minRows={3}
                     fullWidth
                   />
-                  <Select
-                    label="Type"
-                    placeholder="Select type"
-                    selectedKeys={[newCapital.type]}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0];
-                      setNewCapital({ ...newCapital, type: selected });
-                    }}
-                    isRequired
-                  >
-                    {capitalTypes.map((type) => (
-                      <SelectItem key={type.key} value={type.key}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </Select>
                   <Input
-                    label="Amount"
-                    type="number"
-                    placeholder="Enter amount"
-                    value={newCapital.amount}
+                    label="Mobile No"
+                    placeholder="Enter mobile number"
+                    value={newCapital.mobileNo}
                     onChange={(e) =>
-                      setNewCapital({ ...newCapital, amount: e.target.value })
+                      setNewCapital({
+                        ...newCapital,
+                        mobileNo: e.target.value,
+                      })
                     }
-                    isRequired
-                    min="0"
-                    step="0.01"
+                    fullWidth
+                  />
+                  <Input
+                    label="Code"
+                    placeholder="Enter code"
+                    value={newCapital.code}
+                    onChange={(e) =>
+                      setNewCapital({ ...newCapital, code: e.target.value })
+                    }
+                    fullWidth
+                  />
+                  <Textarea
+                    label="Description"
+                    placeholder="Enter description"
+                    value={newCapital.description}
+                    onChange={(e) =>
+                      setNewCapital({
+                        ...newCapital,
+                        description: e.target.value,
+                      })
+                    }
+                    minRows={3}
                     fullWidth
                   />
                 </div>
@@ -411,41 +377,44 @@ const CapitalsTable = ({ data, onRefresh }) => {
               <ModalHeader>Edit Capital Entry</ModalHeader>
               <ModalBody>
                 <div className="space-y-4">
+                  <Input
+                    label="Name"
+                    value={editedData.name}
+                    onChange={(e) =>
+                      setEditedData({ ...editedData, name: e.target.value })
+                    }
+                    isRequired
+                    fullWidth
+                  />
+                  <Input
+                    label="Mobile No"
+                    value={editedData.mobileNo}
+                    onChange={(e) =>
+                      setEditedData({
+                        ...editedData,
+                        mobileNo: e.target.value,
+                      })
+                    }
+                    fullWidth
+                  />
+                  <Input
+                    label="Code"
+                    value={editedData.code}
+                    onChange={(e) =>
+                      setEditedData({ ...editedData, code: e.target.value })
+                    }
+                    fullWidth
+                  />
                   <Textarea
                     label="Description"
                     value={editedData.description}
                     onChange={(e) =>
-                      setEditedData({ ...editedData, description: e.target.value })
+                      setEditedData({
+                        ...editedData,
+                        description: e.target.value,
+                      })
                     }
-                    isRequired
                     minRows={3}
-                    fullWidth
-                  />
-                  <Select
-                    label="Type"
-                    selectedKeys={[editedData.type]}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0];
-                      setEditedData({ ...editedData, type: selected });
-                    }}
-                    isRequired
-                  >
-                    {capitalTypes.map((type) => (
-                      <SelectItem key={type.key} value={type.key}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                  <Input
-                    label="Amount"
-                    type="number"
-                    value={editedData.amount}
-                    onChange={(e) =>
-                      setEditedData({ ...editedData, amount: e.target.value })
-                    }
-                    isRequired
-                    min="0"
-                    step="0.01"
                     fullWidth
                   />
                 </div>
@@ -481,26 +450,29 @@ const CapitalsTable = ({ data, onRefresh }) => {
                 {viewingCapital && (
                   <div className="space-y-4">
                     <div>
-                      <p className="text-sm text-gray-500">Description</p>
-                      <p className="text-lg font-semibold">{viewingCapital.description || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Type</p>
-                      <Chip
-                        size="sm"
-                        color={getTypeColor(viewingCapital.type)}
-                        variant="flat"
-                      >
-                        {viewingCapital.type
-                          ? viewingCapital.type.charAt(0).toUpperCase() +
-                            viewingCapital.type.slice(1)
-                          : "—"}
-                      </Chip>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Amount</p>
+                      <p className="text-sm text-gray-500">Name</p>
                       <p className="text-lg font-semibold">
-                        {formatCurrency(viewingCapital.amount)}
+                        {viewingCapital.name || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Mobile No</p>
+                      <p className="text-lg">
+                        {viewingCapital.mobileNo ||
+                          viewingCapital.phoneNumber ||
+                          "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Code</p>
+                      <p className="text-lg">
+                        {viewingCapital.code || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Description</p>
+                      <p className="text-lg">
+                        {viewingCapital.description || "—"}
                       </p>
                     </div>
                     {viewingCapital.createdAt && (

@@ -12,9 +12,6 @@ import {
   DropdownMenu,
   DropdownItem,
   Input,
-  Select,
-  SelectItem,
-  Chip,
   Textarea,
   useDisclosure,
   Modal,
@@ -30,15 +27,17 @@ import userRequest from "../../../utils/userRequest";
 const CashBooksTable = ({ data, onRefresh }) => {
   const [editingId, setEditingId] = useState(null);
   const [viewingCashBook, setViewingCashBook] = useState(null);
-  const [editedData, setEditedData] = useState({ 
-    description: "", 
-    amount: "", 
-    type: "debit"
+  const [editedData, setEditedData] = useState({
+    name: "",
+    mobileNo: "",
+    code: "",
+    description: "",
   });
-  const [newCashBook, setNewCashBook] = useState({ 
-    description: "", 
-    amount: "", 
-    type: "debit"
+  const [newCashBook, setNewCashBook] = useState({
+    name: "",
+    mobileNo: "",
+    code: "",
+    description: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -66,28 +65,13 @@ const CashBooksTable = ({ data, onRefresh }) => {
     onOpenChange: onCreateModalChange,
   } = useDisclosure();
 
-  const cashBookTypes = [
-    { key: "debit", label: "Debit" },
-    { key: "credit", label: "Credit" },
-  ];
-
-  const getTypeColor = (type) => {
-    switch (type) {
-      case "debit":
-        return "danger";
-      case "credit":
-        return "success";
-      default:
-        return "default";
-    }
-  };
-
   const handleEdit = (cashBook) => {
     setEditingId(cashBook._id);
     setEditedData({
+      name: cashBook.name || "",
+      mobileNo: cashBook.mobileNo || cashBook.phoneNumber || "",
+      code: cashBook.code || "",
       description: cashBook.description || "",
-      type: cashBook.type || "debit",
-      amount: cashBook.amount?.toString() || "",
     });
     onEditModalOpen();
   };
@@ -110,31 +94,28 @@ const CashBooksTable = ({ data, onRefresh }) => {
 
   const closeEditModal = () => {
     setEditingId(null);
-    setEditedData({ description: "", amount: "", type: "debit" });
+    setEditedData({ name: "", mobileNo: "", code: "", description: "" });
     onEditModalChange(false);
   };
 
   const closeCreateModal = () => {
-    setNewCashBook({ description: "", amount: "", type: "debit" });
+    setNewCashBook({ name: "", mobileNo: "", code: "", description: "" });
     onCreateModalChange(false);
   };
 
   const handleSave = async (id) => {
-    if (!editedData.description.trim()) {
-      toast.error("Please enter description");
-      return;
-    }
-    if (!editedData.amount || parseFloat(editedData.amount) <= 0) {
-      toast.error("Please enter a valid amount");
+    if (!editedData.name.trim()) {
+      toast.error("Please enter name");
       return;
     }
 
     try {
       setIsSubmitting(true);
       await userRequest.put(`/cash-books/${id}`, {
+        name: editedData.name,
+        mobileNo: editedData.mobileNo,
+        code: editedData.code,
         description: editedData.description,
-        amount: editedData.amount,
-        type: editedData.type,
       });
       toast.success("Cash book entry updated successfully");
       onRefresh();
@@ -149,21 +130,18 @@ const CashBooksTable = ({ data, onRefresh }) => {
   };
 
   const handleCreate = async () => {
-    if (!newCashBook.description.trim()) {
-      toast.error("Please enter description");
-      return;
-    }
-    if (!newCashBook.amount || parseFloat(newCashBook.amount) <= 0) {
-      toast.error("Please enter a valid amount");
+    if (!newCashBook.name.trim()) {
+      toast.error("Please enter name");
       return;
     }
 
     try {
       setIsCreating(true);
       await userRequest.post("/cash-books", {
+        name: newCashBook.name,
+        mobileNo: newCashBook.mobileNo,
+        code: newCashBook.code,
         description: newCashBook.description,
-        amount: newCashBook.amount,
-        type: newCashBook.type,
       });
       toast.success("Cash book entry created successfully");
       closeCreateModal();
@@ -202,37 +180,20 @@ const CashBooksTable = ({ data, onRefresh }) => {
     return date.toLocaleString();
   };
 
-  const formatCurrency = (value) => {
-    if (!value && value !== 0) return "0.00";
-    return parseFloat(value).toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
-
   const renderCell = (cashBook, columnKey) => {
     switch (columnKey) {
+      case "name":
+        return <span className="font-medium">{cashBook.name || "—"}</span>;
+      case "mobileNo":
+        return <span>{cashBook.mobileNo || cashBook.phoneNumber || "—"}</span>;
+      case "code":
+        return <span>{cashBook.code || "—"}</span>;
       case "description":
         return (
           <span className="font-medium max-w-xs truncate block">
             {cashBook.description || "—"}
           </span>
         );
-      case "type":
-        return (
-          <Chip
-            size="sm"
-            color={getTypeColor(cashBook.type)}
-            variant="flat"
-          >
-            {cashBook.type
-              ? cashBook.type.charAt(0).toUpperCase() +
-                cashBook.type.slice(1)
-              : "—"}
-          </Chip>
-        );
-      case "amount":
-        return <span className="font-semibold">{formatCurrency(cashBook.amount)}</span>;
       case "createdAt":
         return formatDate(cashBook.createdAt);
       case "updatedAt":
@@ -309,9 +270,10 @@ const CashBooksTable = ({ data, onRefresh }) => {
 
       <Table aria-label="Cash books table">
         <TableHeader>
+          <TableColumn key="name">NAME</TableColumn>
+          <TableColumn key="mobileNo">MOBILE NO</TableColumn>
+          <TableColumn key="code">CODE</TableColumn>
           <TableColumn key="description">DESCRIPTION</TableColumn>
-          <TableColumn key="type">TYPE</TableColumn>
-          <TableColumn key="amount">AMOUNT</TableColumn>
           <TableColumn key="createdAt">CREATED AT</TableColumn>
           <TableColumn key="updatedAt">UPDATED AT</TableColumn>
           <TableColumn key="actions" className="w-24">
@@ -340,44 +302,48 @@ const CashBooksTable = ({ data, onRefresh }) => {
               <ModalHeader>Add New Cash Book Entry</ModalHeader>
               <ModalBody>
                 <div className="space-y-4">
-                  <Textarea
-                    label="Description"
-                    placeholder="Enter cash book entry description"
-                    value={newCashBook.description}
+                  <Input
+                    label="Name"
+                    placeholder="Enter name"
+                    value={newCashBook.name}
                     onChange={(e) =>
-                      setNewCashBook({ ...newCashBook, description: e.target.value })
+                      setNewCashBook({ ...newCashBook, name: e.target.value })
                     }
                     isRequired
-                    minRows={3}
                     fullWidth
                   />
-                  <Select
-                    label="Type"
-                    placeholder="Select type"
-                    selectedKeys={[newCashBook.type]}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0];
-                      setNewCashBook({ ...newCashBook, type: selected });
-                    }}
-                    isRequired
-                  >
-                    {cashBookTypes.map((type) => (
-                      <SelectItem key={type.key} value={type.key}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </Select>
                   <Input
-                    label="Amount"
-                    type="number"
-                    placeholder="Enter amount"
-                    value={newCashBook.amount}
+                    label="Mobile No"
+                    placeholder="Enter mobile number"
+                    value={newCashBook.mobileNo}
                     onChange={(e) =>
-                      setNewCashBook({ ...newCashBook, amount: e.target.value })
+                      setNewCashBook({
+                        ...newCashBook,
+                        mobileNo: e.target.value,
+                      })
                     }
-                    isRequired
-                    min="0"
-                    step="0.01"
+                    fullWidth
+                  />
+                  <Input
+                    label="Code"
+                    placeholder="Enter code"
+                    value={newCashBook.code}
+                    onChange={(e) =>
+                      setNewCashBook({ ...newCashBook, code: e.target.value })
+                    }
+                    fullWidth
+                  />
+                  <Textarea
+                    label="Description"
+                    placeholder="Enter description"
+                    value={newCashBook.description}
+                    onChange={(e) =>
+                      setNewCashBook({
+                        ...newCashBook,
+                        description: e.target.value,
+                      })
+                    }
+                    minRows={3}
                     fullWidth
                   />
                 </div>
@@ -411,41 +377,44 @@ const CashBooksTable = ({ data, onRefresh }) => {
               <ModalHeader>Edit Cash Book Entry</ModalHeader>
               <ModalBody>
                 <div className="space-y-4">
+                  <Input
+                    label="Name"
+                    value={editedData.name}
+                    onChange={(e) =>
+                      setEditedData({ ...editedData, name: e.target.value })
+                    }
+                    isRequired
+                    fullWidth
+                  />
+                  <Input
+                    label="Mobile No"
+                    value={editedData.mobileNo}
+                    onChange={(e) =>
+                      setEditedData({
+                        ...editedData,
+                        mobileNo: e.target.value,
+                      })
+                    }
+                    fullWidth
+                  />
+                  <Input
+                    label="Code"
+                    value={editedData.code}
+                    onChange={(e) =>
+                      setEditedData({ ...editedData, code: e.target.value })
+                    }
+                    fullWidth
+                  />
                   <Textarea
                     label="Description"
                     value={editedData.description}
                     onChange={(e) =>
-                      setEditedData({ ...editedData, description: e.target.value })
+                      setEditedData({
+                        ...editedData,
+                        description: e.target.value,
+                      })
                     }
-                    isRequired
                     minRows={3}
-                    fullWidth
-                  />
-                  <Select
-                    label="Type"
-                    selectedKeys={[editedData.type]}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0];
-                      setEditedData({ ...editedData, type: selected });
-                    }}
-                    isRequired
-                  >
-                    {cashBookTypes.map((type) => (
-                      <SelectItem key={type.key} value={type.key}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                  <Input
-                    label="Amount"
-                    type="number"
-                    value={editedData.amount}
-                    onChange={(e) =>
-                      setEditedData({ ...editedData, amount: e.target.value })
-                    }
-                    isRequired
-                    min="0"
-                    step="0.01"
                     fullWidth
                   />
                 </div>
@@ -481,26 +450,29 @@ const CashBooksTable = ({ data, onRefresh }) => {
                 {viewingCashBook && (
                   <div className="space-y-4">
                     <div>
-                      <p className="text-sm text-gray-500">Description</p>
-                      <p className="text-lg font-semibold">{viewingCashBook.description || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Type</p>
-                      <Chip
-                        size="sm"
-                        color={getTypeColor(viewingCashBook.type)}
-                        variant="flat"
-                      >
-                        {viewingCashBook.type
-                          ? viewingCashBook.type.charAt(0).toUpperCase() +
-                            viewingCashBook.type.slice(1)
-                          : "—"}
-                      </Chip>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Amount</p>
+                      <p className="text-sm text-gray-500">Name</p>
                       <p className="text-lg font-semibold">
-                        {formatCurrency(viewingCashBook.amount)}
+                        {viewingCashBook.name || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Mobile No</p>
+                      <p className="text-lg">
+                        {viewingCashBook.mobileNo ||
+                          viewingCashBook.phoneNumber ||
+                          "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Code</p>
+                      <p className="text-lg">
+                        {viewingCashBook.code || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Description</p>
+                      <p className="text-lg">
+                        {viewingCashBook.description || "—"}
                       </p>
                     </div>
                     {viewingCashBook.createdAt && (

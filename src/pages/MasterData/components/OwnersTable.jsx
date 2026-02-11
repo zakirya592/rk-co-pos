@@ -27,15 +27,17 @@ import userRequest from "../../../utils/userRequest";
 const OwnersTable = ({ data, onRefresh }) => {
   const [editingId, setEditingId] = useState(null);
   const [viewingOwner, setViewingOwner] = useState(null);
-  const [editedData, setEditedData] = useState({ 
-    name: "", 
-    phoneNumber: "", 
-    address: ""
+  const [editedData, setEditedData] = useState({
+    name: "",
+    mobileNo: "",
+    code: "",
+    description: "",
   });
-  const [newOwner, setNewOwner] = useState({ 
-    name: "", 
-    phoneNumber: "", 
-    address: ""
+  const [newOwner, setNewOwner] = useState({
+    name: "",
+    mobileNo: "",
+    code: "",
+    description: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -67,8 +69,9 @@ const OwnersTable = ({ data, onRefresh }) => {
     setEditingId(owner._id);
     setEditedData({
       name: owner.name || "",
-      phoneNumber: owner.phoneNumber || "",
-      address: owner.address || "",
+      mobileNo: owner.mobileNo || owner.phoneNumber || "",
+      code: owner.code || "",
+      description: owner.description || owner.address || "",
     });
     onEditModalOpen();
   };
@@ -91,18 +94,18 @@ const OwnersTable = ({ data, onRefresh }) => {
 
   const closeEditModal = () => {
     setEditingId(null);
-    setEditedData({ name: "", phoneNumber: "", address: "" });
+    setEditedData({ name: "", mobileNo: "", code: "", description: "" });
     onEditModalChange(false);
   };
 
   const closeCreateModal = () => {
-    setNewOwner({ name: "", phoneNumber: "", address: "" });
+    setNewOwner({ name: "", mobileNo: "", code: "", description: "" });
     onCreateModalChange(false);
   };
 
   const handleSave = async (id) => {
     if (!editedData.name.trim()) {
-      toast.error("Please enter owner name");
+      toast.error("Please enter name");
       return;
     }
 
@@ -110,8 +113,9 @@ const OwnersTable = ({ data, onRefresh }) => {
       setIsSubmitting(true);
       await userRequest.put(`/owners/${id}`, {
         name: editedData.name,
-        phoneNumber: editedData.phoneNumber,
-        address: editedData.address,
+        mobileNo: editedData.mobileNo,
+        code: editedData.code,
+        description: editedData.description,
       });
       toast.success("Owner updated successfully");
       onRefresh();
@@ -127,7 +131,7 @@ const OwnersTable = ({ data, onRefresh }) => {
 
   const handleCreate = async () => {
     if (!newOwner.name.trim()) {
-      toast.error("Please enter owner name");
+      toast.error("Please enter name");
       return;
     }
 
@@ -135,8 +139,9 @@ const OwnersTable = ({ data, onRefresh }) => {
       setIsCreating(true);
       await userRequest.post("/owners", {
         name: newOwner.name,
-        phoneNumber: newOwner.phoneNumber,
-        address: newOwner.address,
+        mobileNo: newOwner.mobileNo,
+        code: newOwner.code,
+        description: newOwner.description,
       });
       toast.success("Owner created successfully");
       closeCreateModal();
@@ -179,12 +184,14 @@ const OwnersTable = ({ data, onRefresh }) => {
     switch (columnKey) {
       case "name":
         return <span className="font-medium">{owner.name || "—"}</span>;
-      case "phoneNumber":
-        return <span>{owner.phoneNumber || "—"}</span>;
-      case "address":
+      case "mobileNo":
+        return <span>{owner.mobileNo || owner.phoneNumber || "—"}</span>;
+      case "code":
+        return <span>{owner.code || "—"}</span>;
+      case "description":
         return (
           <span className="max-w-xs truncate block">
-            {owner.address || "—"}
+            {owner.description || owner.address || "—"}
           </span>
         );
       case "createdAt":
@@ -264,8 +271,9 @@ const OwnersTable = ({ data, onRefresh }) => {
       <Table aria-label="Owners table">
         <TableHeader>
           <TableColumn key="name">NAME</TableColumn>
-          <TableColumn key="phoneNumber">PHONE NUMBER</TableColumn>
-          <TableColumn key="address">ADDRESS</TableColumn>
+          <TableColumn key="mobileNo">MOBILE NO</TableColumn>
+          <TableColumn key="code">CODE</TableColumn>
+          <TableColumn key="description">DESCRIPTION</TableColumn>
           <TableColumn key="createdAt">CREATED AT</TableColumn>
           <TableColumn key="updatedAt">UPDATED AT</TableColumn>
           <TableColumn key="actions" className="w-24">
@@ -295,8 +303,8 @@ const OwnersTable = ({ data, onRefresh }) => {
               <ModalBody>
                 <div className="space-y-4">
                   <Input
-                    label="Owner Name"
-                    placeholder="Enter owner name"
+                    label="Name"
+                    placeholder="Enter name"
                     value={newOwner.name}
                     onChange={(e) =>
                       setNewOwner({ ...newOwner, name: e.target.value })
@@ -305,20 +313,32 @@ const OwnersTable = ({ data, onRefresh }) => {
                     fullWidth
                   />
                   <Input
-                    label="Phone Number"
-                    placeholder="Enter phone number"
-                    value={newOwner.phoneNumber}
+                    label="Mobile No"
+                    placeholder="Enter mobile number"
+                    value={newOwner.mobileNo}
                     onChange={(e) =>
-                      setNewOwner({ ...newOwner, phoneNumber: e.target.value })
+                      setNewOwner({ ...newOwner, mobileNo: e.target.value })
+                    }
+                    fullWidth
+                  />
+                  <Input
+                    label="Code"
+                    placeholder="Enter code"
+                    value={newOwner.code}
+                    onChange={(e) =>
+                      setNewOwner({ ...newOwner, code: e.target.value })
                     }
                     fullWidth
                   />
                   <Textarea
-                    label="Address"
-                    placeholder="Enter owner address"
-                    value={newOwner.address}
+                    label="Description"
+                    placeholder="Enter description"
+                    value={newOwner.description}
                     onChange={(e) =>
-                      setNewOwner({ ...newOwner, address: e.target.value })
+                      setNewOwner({
+                        ...newOwner,
+                        description: e.target.value,
+                      })
                     }
                     minRows={3}
                     fullWidth
@@ -355,7 +375,7 @@ const OwnersTable = ({ data, onRefresh }) => {
               <ModalBody>
                 <div className="space-y-4">
                   <Input
-                    label="Owner Name"
+                    label="Name"
                     value={editedData.name}
                     onChange={(e) =>
                       setEditedData({ ...editedData, name: e.target.value })
@@ -364,18 +384,32 @@ const OwnersTable = ({ data, onRefresh }) => {
                     fullWidth
                   />
                   <Input
-                    label="Phone Number"
-                    value={editedData.phoneNumber}
+                    label="Mobile No"
+                    value={editedData.mobileNo}
                     onChange={(e) =>
-                      setEditedData({ ...editedData, phoneNumber: e.target.value })
+                      setEditedData({
+                        ...editedData,
+                        mobileNo: e.target.value,
+                      })
+                    }
+                    fullWidth
+                  />
+                  <Input
+                    label="Code"
+                    value={editedData.code}
+                    onChange={(e) =>
+                      setEditedData({ ...editedData, code: e.target.value })
                     }
                     fullWidth
                   />
                   <Textarea
-                    label="Address"
-                    value={editedData.address}
+                    label="Description"
+                    value={editedData.description}
                     onChange={(e) =>
-                      setEditedData({ ...editedData, address: e.target.value })
+                      setEditedData({
+                        ...editedData,
+                        description: e.target.value,
+                      })
                     }
                     minRows={3}
                     fullWidth
@@ -414,15 +448,29 @@ const OwnersTable = ({ data, onRefresh }) => {
                   <div className="space-y-4">
                     <div>
                       <p className="text-sm text-gray-500">Name</p>
-                      <p className="text-lg font-semibold">{viewingOwner.name || "—"}</p>
+                      <p className="text-lg font-semibold">
+                        {viewingOwner.name || "—"}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Phone Number</p>
-                      <p className="text-lg">{viewingOwner.phoneNumber || "—"}</p>
+                      <p className="text-sm text-gray-500">Mobile No</p>
+                      <p className="text-lg">
+                        {viewingOwner.mobileNo ||
+                          viewingOwner.phoneNumber ||
+                          "—"}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Address</p>
-                      <p className="text-lg">{viewingOwner.address || "—"}</p>
+                      <p className="text-sm text-gray-500">Code</p>
+                      <p className="text-lg">
+                        {viewingOwner.code || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Description</p>
+                      <p className="text-lg">
+                        {viewingOwner.description || viewingOwner.address || "—"}
+                      </p>
                     </div>
                     {viewingOwner.createdAt && (
                       <div>
