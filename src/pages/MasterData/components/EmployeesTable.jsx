@@ -12,6 +12,7 @@ import {
   DropdownMenu,
   DropdownItem,
   Input,
+  Textarea,
   useDisclosure,
   Modal,
   ModalContent,
