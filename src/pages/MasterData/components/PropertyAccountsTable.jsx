@@ -23,6 +23,7 @@ import {
 import { Plus, MoreVertical, Edit, Trash2, RefreshCw, Eye } from "lucide-react";
 import { toast } from "react-hot-toast";
 import userRequest from "../../../utils/userRequest";
+import FinancialPaymentsSection from "./FinancialPaymentsSection";
 
 const PropertyAccountsTable = ({ data, onRefresh }) => {
   const [editingId, setEditingId] = useState(null);
@@ -500,6 +501,10 @@ const PropertyAccountsTable = ({ data, onRefresh }) => {
                         <p className="text-sm">{formatDate(viewingProperty.updatedAt)}</p>
                       </div>
                     )}
+                    <FinancialPaymentsSection
+                      relatedModel="PropertyAccount"
+                      relatedId={viewingProperty._id}
+                    />
                   </div>
                 )}
               </ModalBody>
