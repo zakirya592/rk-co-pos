@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ERP Loader</title>
+
+<style>
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #ffffff;
+    font-family: Arial, sans-serif;
+}
+
+.loader-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.spinner {
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    border: 3px solid rgba(29, 41, 91, 0.15);
+    border-top: 3px solid #1D295B;
+    animation: spin 1s linear infinite;
+}
+
+.center-text {
+    position: absolute;
+    font-size: 32px;
+    color: #1D295B;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+</style>
+
+</head>
+<body>
+
+<div class="loader-wrapper">
+    <div class="spinner"></div>
+    <div class="center-text">ERP</div>
+</div>
+
+</body>
+</html>

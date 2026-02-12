@@ -14,6 +14,19 @@ const Login = () => {
   const { login } = useAuth();
   const navigator = useNavigate();
 
+  const LoaderOverlay = () => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80">
+      <div className="relative flex items-center justify-center">
+        <div
+          className="w-[220px] h-[220px] rounded-full border-[6px] border-[rgba(29,41,91,0.15)] border-t-[#1D295B] animate-spin"
+        />
+        <div className="absolute text-[32px] font-bold text-[#1D295B]">
+          ERP
+        </div>
+      </div>
+    </div>
+  );
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -28,7 +41,9 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <>
+      {loading && <LoaderOverlay />}
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <Card className="w-full max-w-md shadow-2xl">
         <CardBody className="p-8">
           <div className="text-center mb-8">
@@ -99,7 +114,8 @@ const Login = () => {
           </div> */}
         </CardBody>
       </Card>
-    </div>
+      </div>
+    </>
   );
 };
 
