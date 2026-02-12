@@ -442,7 +442,7 @@ const CapitalsTable = ({ data, onRefresh }) => {
       </Modal>
 
       {/* View Details Modal */}
-      <Modal isOpen={isViewModalOpen} onOpenChange={onViewModalChange} size="lg">
+      <Modal isOpen={isViewModalOpen} onOpenChange={onViewModalChange} size="2xl">
         <ModalContent>
           {(onClose) => (
             <>
