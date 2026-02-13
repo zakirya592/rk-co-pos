@@ -45,7 +45,7 @@ const BankPaymentVoucher = ({ onBack }) => {
     amount: '',
     currency: '',
     currencyExchangeRate: '1',
-    paymentMethod: 'bank_payment',
+    paymentMethod: 'bank_transfer',
     checkNumber: '',
     referenceNumber: '',
     relatedPurchase: '',
@@ -110,6 +110,97 @@ const BankPaymentVoucher = ({ onBack }) => {
     return res.data?.data || [];
   };
 
+  // Financial master data fetchers (from MasterData section)
+  const fetchAssets = async () => {
+    const { data } = await userRequest.get('/assets');
+    if (data?.data?.assets && Array.isArray(data.data.assets)) {
+      return data.data.assets;
+    }
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data)) return data;
+    return [];
+  };
+
+  const fetchIncomes = async () => {
+    const { data } = await userRequest.get('/incomes');
+    if (data?.data?.incomes && Array.isArray(data.data.incomes)) {
+      return data.data.incomes;
+    }
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data)) return data;
+    return [];
+  };
+
+  const fetchLiabilities = async () => {
+    const { data } = await userRequest.get('/liabilities');
+    if (data?.data?.liabilities && Array.isArray(data.data.liabilities)) {
+      return data.data.liabilities;
+    }
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data)) return data;
+    return [];
+  };
+
+  const fetchPartnershipAccounts = async () => {
+    const { data } = await userRequest.get('/partnership-accounts');
+    if (data?.data?.partnershipAccounts && Array.isArray(data.data.partnershipAccounts)) {
+      return data.data.partnershipAccounts;
+    }
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data)) return data;
+    return [];
+  };
+
+  const fetchCashBooks = async () => {
+    const { data } = await userRequest.get('/cash-books');
+    if (data?.data?.cashBooks && Array.isArray(data.data.cashBooks)) {
+      return data.data.cashBooks;
+    }
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data)) return data;
+    return [];
+  };
+
+  const fetchCapitals = async () => {
+    const { data } = await userRequest.get('/capitals');
+    if (data?.data?.capitals && Array.isArray(data.data.capitals)) {
+      return data.data.capitals;
+    }
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data)) return data;
+    return [];
+  };
+
+  const fetchOwners = async () => {
+    const { data } = await userRequest.get('/owners');
+    if (data?.data?.owners && Array.isArray(data.data.owners)) {
+      return data.data.owners;
+    }
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data)) return data;
+    return [];
+  };
+
+  const fetchEmployees = async () => {
+    const { data } = await userRequest.get('/employees');
+    if (data?.data?.employees && Array.isArray(data.data.employees)) {
+      return data.data.employees;
+    }
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data)) return data;
+    return [];
+  };
+
+  const fetchPropertyAccounts = async () => {
+    const { data } = await userRequest.get('/property-accounts');
+    if (data?.data?.propertyAccounts && Array.isArray(data.data.propertyAccounts)) {
+      return data.data.propertyAccounts;
+    }
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data)) return data;
+    return [];
+  };
+
   const { data: bankAccounts = [], isLoading: isLoadingBanks } = useQuery(
     ['bank-accounts'],
     fetchBankAccounts
@@ -126,7 +217,18 @@ const BankPaymentVoucher = ({ onBack }) => {
   const { data: purchases = [] } = useQuery(['purchases'], fetchPurchases);
   const { data: sales = [] } = useQuery(['sales'], fetchSales);
 
-  // Get payee options based on payeeType
+  // Financial master data queries
+  const { data: assets = [] } = useQuery(['assets'], fetchAssets);
+  const { data: incomes = [] } = useQuery(['incomes'], fetchIncomes);
+  const { data: liabilities = [] } = useQuery(['liabilities'], fetchLiabilities);
+  const { data: partnershipAccounts = [] } = useQuery(['partnership-accounts'], fetchPartnershipAccounts);
+  const { data: cashBooks = [] } = useQuery(['cash-books'], fetchCashBooks);
+  const { data: capitals = [] } = useQuery(['capitals'], fetchCapitals);
+  const { data: owners = [] } = useQuery(['owners'], fetchOwners);
+  const { data: employees = [] } = useQuery(['employees'], fetchEmployees);
+  const { data: propertyAccounts = [] } = useQuery(['property-accounts'], fetchPropertyAccounts);
+
+  // Get payee options based on payeeType (includes financial models)
   const getPayeeOptions = () => {
     switch (formData.payeeType) {
       case 'supplier':
@@ -135,6 +237,24 @@ const BankPaymentVoucher = ({ onBack }) => {
         return Array.isArray(customers) ? customers : [];
       case 'user':
         return Array.isArray(users) ? users : [];
+      case 'Asset':
+        return Array.isArray(assets) ? assets : [];
+      case 'Income':
+        return Array.isArray(incomes) ? incomes : [];
+      case 'Liability':
+        return Array.isArray(liabilities) ? liabilities : [];
+      case 'PartnershipAccount':
+        return Array.isArray(partnershipAccounts) ? partnershipAccounts : [];
+      case 'CashBook':
+        return Array.isArray(cashBooks) ? cashBooks : [];
+      case 'Capital':
+        return Array.isArray(capitals) ? capitals : [];
+      case 'Owner':
+        return Array.isArray(owners) ? owners : [];
+      case 'Employee':
+        return Array.isArray(employees) ? employees : [];
+      case 'PropertyAccount':
+        return Array.isArray(propertyAccounts) ? propertyAccounts : [];
       default:
         return [];
     }
@@ -282,7 +402,7 @@ const BankPaymentVoucher = ({ onBack }) => {
         amount: '',
         currency: '',
         currencyExchangeRate: '1',
-        paymentMethod: 'bank_payment',
+        paymentMethod: 'bank_transfer',
         checkNumber: '',
         referenceNumber: '',
         relatedPurchase: '',
@@ -493,6 +613,33 @@ const BankPaymentVoucher = ({ onBack }) => {
                     <SelectItem key="user" value="user">
                       User
                     </SelectItem>
+                    <SelectItem key="Asset" value="Asset">
+                      Asset
+                    </SelectItem>
+                    <SelectItem key="Income" value="Income">
+                      Income
+                    </SelectItem>
+                    <SelectItem key="Liability" value="Liability">
+                      Liability
+                    </SelectItem>
+                    <SelectItem key="PartnershipAccount" value="PartnershipAccount">
+                      Partnership Account
+                    </SelectItem>
+                    <SelectItem key="CashBook" value="CashBook">
+                      Cashbook
+                    </SelectItem>
+                    <SelectItem key="Capital" value="Capital">
+                      Capital
+                    </SelectItem>
+                    <SelectItem key="Owner" value="Owner">
+                      Owner
+                    </SelectItem>
+                    <SelectItem key="Employee" value="Employee">
+                      Employee
+                    </SelectItem>
+                    <SelectItem key="PropertyAccount" value="PropertyAccount">
+                      Property Account
+                    </SelectItem>
                   </Select>
 
                   <Select
@@ -620,10 +767,10 @@ const BankPaymentVoucher = ({ onBack }) => {
                   <Input
                     label="Payment Method"
                     name="paymentMethod"
-                    value="Bank Payment"
+                    value="Bank Transfer"
                     disabled
                     labelPlacement="outside"
-                    description="Fixed payment method for bank payment vouchers"
+                    description="Fixed payment method for bank transfer vouchers"
                   />
 
                   <Input
