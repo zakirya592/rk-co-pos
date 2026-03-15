@@ -145,6 +145,123 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
     }
   };
 
+  const fetchAssets = async () => {
+    try {
+      const { data } = await userRequest.get('/assets');
+      if (data?.data?.assets && Array.isArray(data.data.assets)) return data.data.assets;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching assets:', error);
+      return [];
+    }
+  };
+
+  const fetchIncomes = async () => {
+    try {
+      const { data } = await userRequest.get('/incomes');
+      if (data?.data?.incomes && Array.isArray(data.data.incomes)) return data.data.incomes;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching incomes:', error);
+      return [];
+    }
+  };
+
+  const fetchLiabilities = async () => {
+    try {
+      const { data } = await userRequest.get('/liabilities');
+      if (data?.data?.liabilities && Array.isArray(data.data.liabilities)) return data.data.liabilities;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching liabilities:', error);
+      return [];
+    }
+  };
+
+  const fetchPartnershipAccounts = async () => {
+    try {
+      const { data } = await userRequest.get('/partnership-accounts');
+      if (data?.data?.partnershipAccounts && Array.isArray(data.data.partnershipAccounts)) return data.data.partnershipAccounts;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching partnership accounts:', error);
+      return [];
+    }
+  };
+
+  const fetchCashBooks = async () => {
+    try {
+      const { data } = await userRequest.get('/cash-books');
+      if (data?.data?.cashBooks && Array.isArray(data.data.cashBooks)) return data.data.cashBooks;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching cash books:', error);
+      return [];
+    }
+  };
+
+  const fetchCapitals = async () => {
+    try {
+      const { data } = await userRequest.get('/capitals');
+      if (data?.data?.capitals && Array.isArray(data.data.capitals)) return data.data.capitals;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching capitals:', error);
+      return [];
+    }
+  };
+
+  const fetchOwners = async () => {
+    try {
+      const { data } = await userRequest.get('/owners');
+      if (data?.data?.owners && Array.isArray(data.data.owners)) return data.data.owners;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching owners:', error);
+      return [];
+    }
+  };
+
+  const fetchEmployees = async () => {
+    try {
+      const { data } = await userRequest.get('/employees');
+      if (data?.data?.employees && Array.isArray(data.data.employees)) return data.data.employees;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      return [];
+    }
+  };
+
+  const fetchPropertyAccounts = async () => {
+    try {
+      const { data } = await userRequest.get('/property-accounts');
+      if (data?.data?.propertyAccounts && Array.isArray(data.data.propertyAccounts)) return data.data.propertyAccounts;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching property accounts:', error);
+      return [];
+    }
+  };
+
   const { data: bankAccounts = [], isLoading: isLoadingBanks } = useQuery(
     ['bank-accounts'],
     fetchBankAccounts
@@ -167,6 +284,16 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
     fetchBankPaymentVouchers
   );
 
+  const { data: assets = [] } = useQuery(['assets'], fetchAssets);
+  const { data: incomes = [] } = useQuery(['incomes'], fetchIncomes);
+  const { data: liabilities = [] } = useQuery(['liabilities'], fetchLiabilities);
+  const { data: partnershipAccounts = [] } = useQuery(['partnership-accounts'], fetchPartnershipAccounts);
+  const { data: cashBooks = [] } = useQuery(['cash-books'], fetchCashBooks);
+  const { data: capitals = [] } = useQuery(['capitals'], fetchCapitals);
+  const { data: owners = [] } = useQuery(['owners'], fetchOwners);
+  const { data: employees = [] } = useQuery(['employees'], fetchEmployees);
+  const { data: propertyAccounts = [] } = useQuery(['property-accounts'], fetchPropertyAccounts);
+
   // Get account options based on accountModel
   const getAccountOptions = (accountModel) => {
     switch (accountModel) {
@@ -176,6 +303,24 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
         return Array.isArray(suppliers) ? suppliers : [];
       case 'Customer':
         return Array.isArray(customers) ? customers : [];
+      case 'Asset':
+        return Array.isArray(assets) ? assets : [];
+      case 'Income':
+        return Array.isArray(incomes) ? incomes : [];
+      case 'Liability':
+        return Array.isArray(liabilities) ? liabilities : [];
+      case 'PartnershipAccount':
+        return Array.isArray(partnershipAccounts) ? partnershipAccounts : [];
+      case 'CashBook':
+        return Array.isArray(cashBooks) ? cashBooks : [];
+      case 'Capital':
+        return Array.isArray(capitals) ? capitals : [];
+      case 'Owner':
+        return Array.isArray(owners) ? owners : [];
+      case 'Employee':
+        return Array.isArray(employees) ? employees : [];
+      case 'PropertyAccount':
+        return Array.isArray(propertyAccounts) ? propertyAccounts : [];
       default:
         return [];
     }
@@ -207,6 +352,7 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
         updatedEntries[index].accountName =
           selectedAccount.name ||
           selectedAccount.accountName ||
+          selectedAccount.title ||
           selectedAccount.email ||
           '';
       }
@@ -703,6 +849,33 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
                                 <SelectItem key="Customer" value="Customer" textValue="Customer">
                                   Customer
                                 </SelectItem>
+                                <SelectItem key="Asset" value="Asset" textValue="Asset">
+                                  Asset
+                                </SelectItem>
+                                <SelectItem key="Income" value="Income" textValue="Income">
+                                  Income
+                                </SelectItem>
+                                <SelectItem key="Liability" value="Liability" textValue="Liability">
+                                  Liability
+                                </SelectItem>
+                                <SelectItem key="PartnershipAccount" value="PartnershipAccount" textValue="Partnership Account">
+                                  Partnership Account
+                                </SelectItem>
+                                <SelectItem key="CashBook" value="CashBook" textValue="Cash Book">
+                                  Cash Book
+                                </SelectItem>
+                                <SelectItem key="Capital" value="Capital" textValue="Capital">
+                                  Capital
+                                </SelectItem>
+                                <SelectItem key="Owner" value="Owner" textValue="Owner">
+                                  Owner
+                                </SelectItem>
+                                <SelectItem key="Employee" value="Employee" textValue="Employee">
+                                  Employee
+                                </SelectItem>
+                                <SelectItem key="PropertyAccount" value="PropertyAccount" textValue="Property Account">
+                                  Property Account
+                                </SelectItem>
                               </Select>
 
                               <Select
@@ -724,12 +897,14 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
                                     textValue={
                                       account.name ||
                                       account.accountName ||
+                                      account.title ||
                                       account.email ||
                                       account._id
                                     }
                                   >
                                     {account.name ||
                                       account.accountName ||
+                                      account.title ||
                                       account.email ||
                                       account._id}
                                   </SelectItem>

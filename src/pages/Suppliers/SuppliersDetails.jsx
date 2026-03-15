@@ -644,8 +644,14 @@ const SuppliersDetails = () => {
               <TableColumn>Status</TableColumn>
               <TableColumn>Location</TableColumn>
             </TableHeader>
-            <TableBody>
-              {purchaseHistoryData?.data?.length > 0 ? (
+            <TableBody
+              emptyContent={
+                <div className="text-center text-gray-500 py-8">
+                  No purchase history found
+                </div>
+              }
+            >
+              {purchaseHistoryData?.data?.length > 0 &&
                 purchaseHistoryData.data.map((purchase, index) => {
                   const purchaseDate = purchase?.purchaseDate
                     ? new Date(purchase.purchaseDate).toLocaleDateString()
@@ -693,14 +699,7 @@ const SuppliersDetails = () => {
                       </TableCell>
                     </TableRow>
                   );
-                })
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center">
-                    No purchase history found
-                  </TableCell>
-                </TableRow>
-              )}
+                })}
             </TableBody>
           </Table>
         </CardBody>
