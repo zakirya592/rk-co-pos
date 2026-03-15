@@ -11,7 +11,6 @@ import {
   FaMoneyBillWave,
   FaBook,
   FaBalanceScale,
-  FaExchangeAlt,
   FaCoins,
   FaArrowLeft,
   FaPlus,
@@ -28,12 +27,6 @@ import UpdateJournalPaymentVoucher from './UpdateJournalPaymentVoucher';
 import OpeningBalanceVoucher from './OpeningBalanceVoucher';
 import OpeningBalanceVouchersList from './OpeningBalanceVouchersList';
 import UpdateOpeningBalanceVoucher from './UpdateOpeningBalanceVoucher';
-import ReconcileBankAccountsVoucher from './ReconcileBankAccountsVoucher';
-import ReconcileBankAccountsVouchersList from './ReconcileBankAccountsVouchersList';
-import UpdateReconcileBankAccountsVoucher from './UpdateReconcileBankAccountsVoucher';
-import BankAccountTransferVoucher from './BankAccountTransferVoucher';
-import BankAccountTransferVouchersList from './BankAccountTransferVouchersList';
-import UpdateBankAccountTransferVoucher from './UpdateBankAccountTransferVoucher';
 import SarafEntryVoucher from './SarafEntryVoucher';
 import SarafEntryVouchersList from './SarafEntryVouchersList';
 import UpdateSarafEntryVoucher from './UpdateSarafEntryVoucher';
@@ -74,20 +67,6 @@ const Vouchers = () => {
       icon: <FaBalanceScale />,
       description: 'Set opening balances for accounts',
       color: 'orange',
-    },
-    {
-      id: 'reconcile-bank',
-      title: 'Reconcile Bank Accounts Voucher',
-      icon: <FaExchangeAlt />,
-      description: 'Reconcile bank account statements',
-      color: 'indigo',
-    },
-    {
-      id: 'bank-transfer',
-      title: 'Bank Account Transfer Vouchers',
-      icon: <FaExchangeAlt />,
-      description: 'Transfer funds between bank accounts',
-      color: 'teal',
     },
     {
       id: 'saraf-entry',
@@ -131,22 +110,6 @@ const Vouchers = () => {
         active: 'bg-orange-100 border-orange-400',
         text: 'text-orange-700',
         icon: 'text-orange-600',
-      },
-      indigo: {
-        bg: 'bg-indigo-50',
-        hover: 'hover:bg-indigo-100',
-        border: 'border-indigo-200',
-        active: 'bg-indigo-100 border-indigo-400',
-        text: 'text-indigo-700',
-        icon: 'text-indigo-600',
-      },
-      teal: {
-        bg: 'bg-teal-50',
-        hover: 'hover:bg-teal-100',
-        border: 'border-teal-200',
-        active: 'bg-teal-100 border-teal-400',
-        text: 'text-teal-700',
-        icon: 'text-teal-600',
       },
       amber: {
         bg: 'bg-amber-50',
@@ -382,68 +345,6 @@ const Vouchers = () => {
               />
             ) : showList && selectedCategory === 'opening-balance' ? (
               <OpeningBalanceVouchersList
-                onAddNew={() => {
-                  setShowList(false);
-                  setShowForm(true);
-                }}
-                onView={(voucher) => {
-                  // View is handled in the list component modal
-                }}
-                onEdit={(voucherId) => {
-                  setEditVoucherId(voucherId);
-                  setShowList(false);
-                  setShowEdit(true);
-                }}
-              />
-            ) : showEdit && selectedCategory === 'reconcile-bank' ? (
-              <UpdateReconcileBankAccountsVoucher
-                voucherId={editVoucherId}
-                onBack={() => {
-                  setShowEdit(false);
-                  setShowList(true);
-                  setEditVoucherId(null);
-                }}
-              />
-            ) : showForm && selectedCategory === 'reconcile-bank' ? (
-              <ReconcileBankAccountsVoucher
-                onBack={() => {
-                  setShowForm(false);
-                  setShowList(true);
-                }}
-              />
-            ) : showList && selectedCategory === 'reconcile-bank' ? (
-              <ReconcileBankAccountsVouchersList
-                onAddNew={() => {
-                  setShowList(false);
-                  setShowForm(true);
-                }}
-                onView={(voucher) => {
-                  // View is handled in the list component modal
-                }}
-                onEdit={(voucherId) => {
-                  setEditVoucherId(voucherId);
-                  setShowList(false);
-                  setShowEdit(true);
-                }}
-              />
-            ) : showEdit && selectedCategory === 'bank-transfer' ? (
-              <UpdateBankAccountTransferVoucher
-                voucherId={editVoucherId}
-                onBack={() => {
-                  setShowEdit(false);
-                  setShowList(true);
-                  setEditVoucherId(null);
-                }}
-              />
-            ) : showForm && selectedCategory === 'bank-transfer' ? (
-              <BankAccountTransferVoucher
-                onBack={() => {
-                  setShowForm(false);
-                  setShowList(true);
-                }}
-              />
-            ) : showList && selectedCategory === 'bank-transfer' ? (
-              <BankAccountTransferVouchersList
                 onAddNew={() => {
                   setShowList(false);
                   setShowForm(true);
