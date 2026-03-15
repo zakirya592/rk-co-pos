@@ -96,7 +96,21 @@ const BankAccountTransferVoucher = ({ onBack }) => {
   const fetchBankPaymentVouchers = async () => {
     try {
       const res = await userRequest.get('/bank-payment-vouchers?limit=100');
-      return res.data?.data?.vouchers || res.data?.data || [];
+      // Handle various response structures
+      const data = res.data?.data;
+      if (data?.vouchers && Array.isArray(data.vouchers)) {
+        return data.vouchers;
+      }
+      if (data?.bankPaymentVouchers && Array.isArray(data.bankPaymentVouchers)) {
+        return data.bankPaymentVouchers;
+      }
+      if (Array.isArray(data)) {
+        return data;
+      }
+      if (Array.isArray(res.data)) {
+        return res.data;
+      }
+      return [];
     } catch (error) {
       console.error('Error fetching bank payment vouchers:', error);
       return [];
@@ -617,11 +631,17 @@ const BankAccountTransferVoucher = ({ onBack }) => {
                         labelPlacement="outside"
                         placeholder="Select bank payment voucher (optional)"
                       >
-                        {bankPaymentVouchers.map((voucher) => (
-                          <SelectItem key={voucher._id} value={voucher._id}>
-                            {voucher.voucherNumber || voucher.referCode || voucher._id}
-                          </SelectItem>
-                        ))}
+                        {Array.isArray(bankPaymentVouchers) && bankPaymentVouchers.length > 0
+                          ? bankPaymentVouchers.map((voucher) => (
+                              <SelectItem key={voucher._id} value={voucher._id}>
+                                {voucher.voucherNumber || voucher.referCode || voucher._id}
+                              </SelectItem>
+                            ))
+                          : (
+                              <SelectItem key="no-options" value="" isDisabled>
+                                No bank payment vouchers available
+                              </SelectItem>
+                            )}
                       </Select>
                       <Select
                         label="Related Sale"

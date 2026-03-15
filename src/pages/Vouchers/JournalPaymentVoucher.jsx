@@ -966,15 +966,21 @@ const JournalPaymentVoucher = ({ onBack }) => {
                         labelPlacement="outside"
                         placeholder="Select bank payment voucher (optional)"
                       >
-                        {bankPaymentVouchers.map((voucher) => (
-                          <SelectItem
-                            key={voucher._id}
-                            value={voucher._id}
-                            textValue={voucher.voucherNumber || voucher.referCode || voucher._id}
-                          >
-                            {voucher.voucherNumber || voucher.referCode || voucher._id}
-                          </SelectItem>
-                        ))}
+                        {Array.isArray(bankPaymentVouchers) && bankPaymentVouchers.length > 0
+                          ? bankPaymentVouchers.map((voucher) => (
+                              <SelectItem
+                                key={voucher._id}
+                                value={voucher._id}
+                                textValue={voucher.voucherNumber || voucher.referCode || voucher._id}
+                              >
+                                {voucher.voucherNumber || voucher.referCode || voucher._id}
+                              </SelectItem>
+                            ))
+                          : (
+                              <SelectItem key="no-options" value="" isDisabled>
+                                No bank payment vouchers available
+                              </SelectItem>
+                            )}
                       </Select>
 
                       <Input
