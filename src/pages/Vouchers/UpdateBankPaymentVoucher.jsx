@@ -52,12 +52,6 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
     currency: '',
     currencyExchangeRate: '1',
     paymentMethod: 'bank_transfer',
-    checkNumber: '',
-    referenceNumber: '',
-    relatedPurchase: '',
-    relatedSale: '',
-    relatedPayment: '',
-    relatedSupplierPayment: '',
     description: '',
     notes: '',
     status: 'draft',
@@ -88,12 +82,6 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
           currency: voucher.currency?._id || '',
           currencyExchangeRate: voucher.currencyExchangeRate?.toString() || '1',
           paymentMethod: voucher.paymentMethod || 'bank_transfer',
-          checkNumber: voucher.checkNumber || '',
-          referenceNumber: voucher.referenceNumber || '',
-          relatedPurchase: voucher.relatedPurchase?._id || '',
-          relatedSale: voucher.relatedSale?._id || '',
-          relatedPayment: voucher.relatedPayment || '',
-          relatedSupplierPayment: voucher.relatedSupplierPayment || '',
           description: voucher.description || '',
           notes: voucher.notes || '',
           status: voucher.status || 'draft',
@@ -157,16 +145,6 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
       console.error('Error fetching users:', error);
       return [];
     }
-  };
-
-  const fetchPurchases = async () => {
-    const res = await userRequest.get('/purchases?limit=100');
-    return res.data?.data || [];
-  };
-
-  const fetchSales = async () => {
-    const res = await userRequest.get('/sales?limit=100');
-    return res.data?.data || [];
   };
 
   // Financial master data fetchers (from MasterData section)
@@ -273,8 +251,6 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
   const { data: suppliers = [] } = useQuery(['suppliers'], fetchSuppliers);
   const { data: customers = [] } = useQuery(['customers'], fetchCustomers);
   const { data: users = [] } = useQuery(['users'], fetchUsers);
-  const { data: purchases = [] } = useQuery(['purchases'], fetchPurchases);
-  const { data: sales = [] } = useQuery(['sales'], fetchSales);
 
   // Financial master data queries
   const { data: assets = [] } = useQuery(['assets'], fetchAssets);
@@ -413,25 +389,6 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
       formDataToSend.append('currencyExchangeRate', formData.currencyExchangeRate || '1');
       formDataToSend.append('paymentMethod', formData.paymentMethod);
       formDataToSend.append('status', formData.status || 'draft');
-
-      if (formData.checkNumber) {
-        formDataToSend.append('checkNumber', formData.checkNumber);
-      }
-      if (formData.referenceNumber) {
-        formDataToSend.append('referenceNumber', formData.referenceNumber);
-      }
-      if (formData.relatedPurchase) {
-        formDataToSend.append('relatedPurchase', formData.relatedPurchase);
-      }
-      if (formData.relatedSale) {
-        formDataToSend.append('relatedSale', formData.relatedSale);
-      }
-      if (formData.relatedPayment) {
-        formDataToSend.append('relatedPayment', formData.relatedPayment);
-      }
-      if (formData.relatedSupplierPayment) {
-        formDataToSend.append('relatedSupplierPayment', formData.relatedSupplierPayment);
-      }
       if (formData.description) {
         formDataToSend.append('description', formData.description);
       }
@@ -851,7 +808,7 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
                   <FaFileInvoice className="text-orange-500" />
-                  Payment Method & References
+                  Payment Method
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Select
@@ -883,88 +840,6 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
                       Other
                     </SelectItem>
                   </Select>
-
-                  <Input
-                    label="Check Number"
-                    name="checkNumber"
-                    value={formData.checkNumber}
-                    onChange={handleChange}
-                    labelPlacement="outside"
-                    placeholder="Enter check number"
-                  />
-
-                  <Input
-                    label="Reference Number"
-                    name="referenceNumber"
-                    value={formData.referenceNumber}
-                    onChange={handleChange}
-                    labelPlacement="outside"
-                    placeholder="Enter reference number"
-                  />
-                </div>
-              </div>
-
-              <Divider />
-
-              {/* Related Transactions */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
-                  Related Transactions (Optional)
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Select
-                    label="Related Purchase"
-                    name="relatedPurchase"
-                    selectedKeys={formData.relatedPurchase ? [formData.relatedPurchase] : []}
-                    onSelectionChange={(keys) => {
-                      const [selected] = Array.from(keys);
-                      handleChange({ target: { name: 'relatedPurchase', value: selected || '' } });
-                    }}
-                    labelPlacement="outside"
-                    placeholder="Select purchase (optional)"
-                  >
-                    {purchases.map((purchase) => (
-                      <SelectItem key={purchase._id} value={purchase._id}>
-                        {purchase.invoiceNumber || purchase._id}
-                      </SelectItem>
-                    ))}
-                  </Select>
-
-                  <Select
-                    label="Related Sale"
-                    name="relatedSale"
-                    selectedKeys={formData.relatedSale ? [formData.relatedSale] : []}
-                    onSelectionChange={(keys) => {
-                      const [selected] = Array.from(keys);
-                      handleChange({ target: { name: 'relatedSale', value: selected || '' } });
-                    }}
-                    labelPlacement="outside"
-                    placeholder="Select sale (optional)"
-                  >
-                    {sales.map((sale) => (
-                      <SelectItem key={sale._id} value={sale._id}>
-                        {sale.invoiceNumber || sale._id}
-                      </SelectItem>
-                    ))}
-                  </Select>
-
-                  <Input
-                    label="Related Payment ID"
-                    name="relatedPayment"
-                    value={formData.relatedPayment}
-                    onChange={handleChange}
-                    labelPlacement="outside"
-                    placeholder="Enter payment ID (optional)"
-                  />
-
-                  <Input
-                    label="Related Supplier Payment ID"
-                    name="relatedSupplierPayment"
-                    value={formData.relatedSupplierPayment}
-                    onChange={handleChange}
-                    labelPlacement="outside"
-                    placeholder="Enter supplier payment ID (optional)"
-                  />
                 </div>
               </div>
 
