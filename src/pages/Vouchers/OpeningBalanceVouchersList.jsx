@@ -74,17 +74,10 @@ const OpeningBalanceVouchersList = ({ onAddNew, onView, onEdit }) => {
 
   const vouchers = data?.data?.vouchers || data?.data || [];
 
-  // Calculate totals
-  const totalDebit = vouchers.reduce((sum, v) => {
-    const debit = v.entries?.reduce((s, e) => s + (parseFloat(e.debit) || 0), 0) || 0;
-    return sum + debit;
-  }, 0);
-  const totalCredit = vouchers.reduce((sum, v) => {
-    const credit = v.entries?.reduce((s, e) => s + (parseFloat(e.credit) || 0), 0) || 0;
-    return sum + credit;
-  }, 0);
-  const approvedCount = vouchers.filter((v) => v.status === 'approved').length;
-  const pendingCount = vouchers.filter((v) => v.status === 'pending').length;
+  // New simple aggregates
+  const totalAmount = vouchers.reduce((sum, v) => sum + (parseFloat(v.amount) || 0), 0);
+  const startCount = vouchers.filter((v) => v.voucherType === 'start').length;
+  const endCount = vouchers.filter((v) => v.voucherType === 'end').length;
 
   // Filter vouchers by search term, status, and date
   const filteredVouchers = vouchers.filter((voucher) => {
@@ -93,8 +86,9 @@ const OpeningBalanceVouchersList = ({ onAddNew, onView, onEdit }) => {
       voucher.voucherNumber?.toLowerCase().includes(searchLower) ||
       voucher.referCode?.toLowerCase().includes(searchLower) ||
       voucher.financialYear?.toLowerCase().includes(searchLower) ||
-      voucher.referenceNumber?.toLowerCase().includes(searchLower) ||
-      voucher.transactionId?.toLowerCase().includes(searchLower);
+      voucher.transactionId?.toLowerCase().includes(searchLower) ||
+      voucher.accountName?.toLowerCase().includes(searchLower) ||
+      voucher.account?.name?.toLowerCase().includes(searchLower);
 
     const matchesStatus =
       statusFilter === 'all' || voucher.status === statusFilter;
@@ -358,9 +352,9 @@ const OpeningBalanceVouchersList = ({ onAddNew, onView, onEdit }) => {
             <CardBody className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-100 text-sm">Total Debit</p>
+                  <p className="text-green-100 text-sm">Total Amount</p>
                   <p className="text-2xl font-bold">
-                    {formatCurrency(totalDebit, { symbol: 'Rs' })}
+                    {formatCurrency(totalAmount, { symbol: 'Rs' })}
                   </p>
                 </div>
                 <FaMoneyBillWave className="text-3xl opacity-50" />
@@ -371,12 +365,10 @@ const OpeningBalanceVouchersList = ({ onAddNew, onView, onEdit }) => {
             <CardBody className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-100 text-sm">Total Credit</p>
-                  <p className="text-2xl font-bold">
-                    {formatCurrency(totalCredit, { symbol: 'Rs' })}
-                  </p>
+                  <p className="text-blue-100 text-sm">Opening Vouchers</p>
+                  <p className="text-2xl font-bold">{startCount}</p>
                 </div>
-                <FaChartLine className="text-3xl opacity-50" />
+                <FaClock className="text-3xl opacity-50" />
               </div>
             </CardBody>
           </Card>
@@ -384,8 +376,8 @@ const OpeningBalanceVouchersList = ({ onAddNew, onView, onEdit }) => {
             <CardBody className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-100 text-sm">Approved</p>
-                  <p className="text-2xl font-bold">{approvedCount}</p>
+                  <p className="text-purple-100 text-sm">Closing Vouchers</p>
+                  <p className="text-2xl font-bold">{endCount}</p>
                 </div>
                 <FaCheckCircle className="text-3xl opacity-50" />
               </div>
@@ -473,21 +465,17 @@ const OpeningBalanceVouchersList = ({ onAddNew, onView, onEdit }) => {
           <Table aria-label="Opening Balance Vouchers">
             <TableHeader>
               <TableColumn>VOUCHER NUMBER</TableColumn>
-              <TableColumn>REFER CODE</TableColumn>
+              <TableColumn>ACCOUNT</TableColumn>
               <TableColumn>FINANCIAL YEAR</TableColumn>
               <TableColumn>PERIOD</TableColumn>
-              <TableColumn>ENTRIES COUNT</TableColumn>
-              <TableColumn>TOTAL DEBIT</TableColumn>
-              <TableColumn>TOTAL CREDIT</TableColumn>
-              <TableColumn>REFERENCE</TableColumn>
+              <TableColumn>VOUCHER TYPE</TableColumn>
+              <TableColumn>AMOUNT</TableColumn>
               <TableColumn>STATUS</TableColumn>
               <TableColumn>VOUCHER DATE</TableColumn>
               <TableColumn>ACTIONS</TableColumn>
             </TableHeader>
             <TableBody emptyContent="No opening balance vouchers found">
               {filteredVouchers.map((voucher) => {
-                const entryDebit = voucher.entries?.reduce((sum, e) => sum + (parseFloat(e.debit) || 0), 0) || 0;
-                const entryCredit = voucher.entries?.reduce((sum, e) => sum + (parseFloat(e.credit) || 0), 0) || 0;
                 return (
                   <TableRow key={voucher._id} className="hover:bg-gray-50 transition-colors">
                     <TableCell>
@@ -497,37 +485,34 @@ const OpeningBalanceVouchersList = ({ onAddNew, onView, onEdit }) => {
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="font-semibold text-amber-600">{voucher.referCode || 'N/A'}</div>
+                      <div className="font-semibold text-amber-600">
+                        {voucher.accountName || voucher.account?.name || 'N/A'}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {voucher.accountModel || '—'}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="font-medium">{voucher.financialYear || 'N/A'}</div>
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        {voucher.periodStartDate || 'N/A'} - {voucher.periodEndDate || 'N/A'}
+                        {formatDate(voucher.periodStartDate)} - {formatDate(voucher.periodEndDate)}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="font-medium">{voucher.entries?.length || 0}</div>
+                      <Chip
+                        size="sm"
+                        variant="flat"
+                        color={voucher.voucherType === 'start' ? 'success' : 'secondary'}
+                        className="capitalize"
+                      >
+                        {voucher.voucherType || 'start'}
+                      </Chip>
                     </TableCell>
                     <TableCell>
                       <div className="font-semibold">
-                        {formatCurrency(entryDebit, voucher.currency)}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-semibold">
-                        {formatCurrency(entryCredit, voucher.currency)}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        {voucher.referenceNumber && (
-                          <div className="text-sm font-medium text-gray-900">{voucher.referenceNumber}</div>
-                        )}
-                        {!voucher.referenceNumber && (
-                          <span className="text-xs text-gray-400">-</span>
-                        )}
+                        {formatCurrency(voucher.amount, voucher.currency)}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -606,6 +591,12 @@ const OpeningBalanceVouchersList = ({ onAddNew, onView, onEdit }) => {
                       <p className="font-semibold text-amber-600">{selectedVoucher.referCode || 'N/A'}</p>
                     </div>
                     <div>
+                      <p className="text-sm text-gray-600">Voucher Type</p>
+                      <p className="font-semibold capitalize">
+                        {selectedVoucher.voucherType || 'start'}
+                      </p>
+                    </div>
+                    <div>
                       <p className="text-sm text-gray-600">Voucher Date</p>
                       <p className="font-semibold">{formatDate(selectedVoucher.voucherDate)}</p>
                     </div>
@@ -622,6 +613,12 @@ const OpeningBalanceVouchersList = ({ onAddNew, onView, onEdit }) => {
                       <p className="font-semibold">{selectedVoucher.periodEndDate || 'N/A'}</p>
                     </div>
                     <div>
+                      <p className="text-sm text-gray-600">Amount</p>
+                      <p className="font-semibold">
+                        {formatCurrency(selectedVoucher.amount, selectedVoucher.currency)}
+                      </p>
+                    </div>
+                    <div>
                       <p className="text-sm text-gray-600">Status</p>
                       <Chip color={getStatusColor(selectedVoucher.status)} variant="flat" size="sm">
                         {selectedVoucher.status?.toUpperCase() || 'DRAFT'}
@@ -633,64 +630,23 @@ const OpeningBalanceVouchersList = ({ onAddNew, onView, onEdit }) => {
                         {selectedVoucher.currency?.name || 'N/A'} ({selectedVoucher.currency?.code || 'N/A'})
                       </p>
                     </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Account</p>
+                      <p className="font-semibold">
+                        {selectedVoucher.accountName ||
+                          selectedVoucher.account?.name ||
+                          'N/A'}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {selectedVoucher.accountModel || '—'}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 <Divider />
 
-                {/* Entries */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <FaBook className="text-amber-500" />
-                    Journal Entries
-                  </h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="bg-gray-100">
-                          <th className="border p-2 text-left">Account</th>
-                          <th className="border p-2 text-left">Account Type</th>
-                          <th className="border p-2 text-right">Debit</th>
-                          <th className="border p-2 text-right">Credit</th>
-                          <th className="border p-2 text-left">Description</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedVoucher.entries?.map((entry, index) => (
-                          <tr key={index} className="hover:bg-gray-50">
-                            <td className="border p-2">{entry.accountName || 'N/A'}</td>
-                            <td className="border p-2">{entry.accountModel || 'N/A'}</td>
-                            <td className="border p-2 text-right">
-                              {entry.debit ? formatCurrency(entry.debit, selectedVoucher.currency) : '-'}
-                            </td>
-                            <td className="border p-2 text-right">
-                              {entry.credit ? formatCurrency(entry.credit, selectedVoucher.currency) : '-'}
-                            </td>
-                            <td className="border p-2">{entry.description || '-'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot>
-                        <tr className="bg-gray-100 font-bold">
-                          <td colSpan="2" className="border p-2 text-right">Total:</td>
-                          <td className="border p-2 text-right">
-                            {formatCurrency(
-                              selectedVoucher.entries?.reduce((sum, e) => sum + (parseFloat(e.debit) || 0), 0) || 0,
-                              selectedVoucher.currency
-                            )}
-                          </td>
-                          <td className="border p-2 text-right">
-                            {formatCurrency(
-                              selectedVoucher.entries?.reduce((sum, e) => sum + (parseFloat(e.credit) || 0), 0) || 0,
-                              selectedVoucher.currency
-                            )}
-                          </td>
-                          <td className="border p-2"></td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                </div>
+                {/* No journal entries in new schema */}
 
                 {selectedVoucher.description && (
                   <>
@@ -712,28 +668,6 @@ const OpeningBalanceVouchersList = ({ onAddNew, onView, onEdit }) => {
                   </>
                 )}
 
-                {selectedVoucher.attachments && selectedVoucher.attachments.length > 0 && (
-                  <>
-                    <Divider />
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2">Attachments</h3>
-                      <div className="space-y-2">
-                        {selectedVoucher.attachments.map((att, idx) => (
-                          <a
-                            key={idx}
-                            href={att.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-blue-600 hover:underline"
-                          >
-                            <FaFileInvoice />
-                            <span>{att.name || 'Attachment'}</span>
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
               </div>
             ) : null}
           </ModalBody>
