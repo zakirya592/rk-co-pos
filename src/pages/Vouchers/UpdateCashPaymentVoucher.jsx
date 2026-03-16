@@ -44,9 +44,6 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
   const [formData, setFormData] = useState({
     voucherDate: new Date().toISOString().split('T')[0],
     voucherType: 'payment',
-    cashAccount: '',
-    cashAccountType: 'main_cash',
-    shop: '',
     payeeType: 'supplier',
     payee: '',
     payeeName: '',
@@ -54,11 +51,6 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
     currency: '',
     currencyExchangeRate: '1',
     paymentMethod: 'cash',
-    referenceNumber: '',
-    relatedPurchase: '',
-    relatedSale: '',
-    relatedPayment: '',
-    relatedSupplierPayment: '',
     description: '',
     notes: '',
     status: 'draft',
@@ -81,9 +73,6 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
             ? new Date(voucher.voucherDate).toISOString().split('T')[0]
             : new Date().toISOString().split('T')[0],
           voucherType: voucher.voucherType || 'payment',
-          cashAccount: voucher.cashAccount || '',
-          cashAccountType: voucher.cashAccountType || 'main_cash',
-          shop: voucher.shop?._id || voucher.shop || '',
           payeeType: voucher.payeeType || 'supplier',
           payee: voucher.payee?._id || voucher.payee || '',
           payeeName: voucher.payeeName || voucher.payee?.name || '',
@@ -91,11 +80,6 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
           currency: voucher.currency?._id || '',
           currencyExchangeRate: voucher.currencyExchangeRate?.toString() || '1',
           paymentMethod: voucher.paymentMethod || 'cash',
-          referenceNumber: voucher.referenceNumber || '',
-          relatedPurchase: voucher.relatedPurchase?._id || '',
-          relatedSale: voucher.relatedSale?._id || '',
-          relatedPayment: voucher.relatedPayment || '',
-          relatedSupplierPayment: voucher.relatedSupplierPayment || '',
           description: voucher.description || '',
           notes: voucher.notes || '',
           status: voucher.status || 'draft',
@@ -166,16 +150,6 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
       console.error('Error fetching users:', error);
       return [];
     }
-  };
-
-  const fetchPurchases = async () => {
-    const res = await userRequest.get('/purchases?limit=100');
-    return res.data?.data || [];
-  };
-
-  const fetchSales = async () => {
-    const res = await userRequest.get('/sales?limit=100');
-    return res.data?.data || [];
   };
 
   // Financial master data fetchers (from MasterData section)
@@ -282,8 +256,6 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
   const { data: suppliers = [] } = useQuery(['suppliers'], fetchSuppliers);
   const { data: customers = [] } = useQuery(['customers'], fetchCustomers);
   const { data: users = [] } = useQuery(['users'], fetchUsers);
-  const { data: purchases = [] } = useQuery(['purchases'], fetchPurchases);
-  const { data: sales = [] } = useQuery(['sales'], fetchSales);
 
   // Financial master data queries
   const { data: assets = [] } = useQuery(['assets'], fetchAssets);
@@ -388,10 +360,6 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
     e.preventDefault();
 
     // Validation
-    if (!formData.cashAccount) {
-      toast.error('Please enter cash account name');
-      return;
-    }
     if (!formData.payee) {
       toast.error('Please select a payee');
       return;
@@ -413,11 +381,6 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
       // Append all form fields
       formDataToSend.append('voucherDate', formData.voucherDate);
       formDataToSend.append('voucherType', formData.voucherType);
-      formDataToSend.append('cashAccount', formData.cashAccount);
-      formDataToSend.append('cashAccountType', formData.cashAccountType || 'main_cash');
-      if (formData.shop) {
-        formDataToSend.append('shop', formData.shop);
-      }
       formDataToSend.append('payeeType', formData.payeeType);
       formDataToSend.append('payee', formData.payee);
       formDataToSend.append('payeeName', formData.payeeName);
@@ -426,22 +389,6 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
       formDataToSend.append('currencyExchangeRate', formData.currencyExchangeRate || '1');
       formDataToSend.append('paymentMethod', formData.paymentMethod);
       formDataToSend.append('status', formData.status || 'draft');
-
-      if (formData.referenceNumber) {
-        formDataToSend.append('referenceNumber', formData.referenceNumber);
-      }
-      if (formData.relatedPurchase) {
-        formDataToSend.append('relatedPurchase', formData.relatedPurchase);
-      }
-      if (formData.relatedSale) {
-        formDataToSend.append('relatedSale', formData.relatedSale);
-      }
-      if (formData.relatedPayment) {
-        formDataToSend.append('relatedPayment', formData.relatedPayment);
-      }
-      if (formData.relatedSupplierPayment) {
-        formDataToSend.append('relatedSupplierPayment', formData.relatedSupplierPayment);
-      }
       if (formData.description) {
         formDataToSend.append('description', formData.description);
       }
@@ -654,73 +601,13 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
 
               <Divider />
 
-              {/* Cash Account & Payee */}
+              {/* Payee */}
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
                   <FaStore className="text-green-500" />
                   Payment Details
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    isRequired
-                    label="Cash Account"
-                    name="cashAccount"
-                    value={formData.cashAccount}
-                    onChange={handleChange}
-                    labelPlacement="outside"
-                    placeholder="Enter cash account name (e.g. Main Cash)"
-                  />
-
-                  <Select
-                    label="Cash Account Type"
-                    name="cashAccountType"
-                    selectedKeys={formData.cashAccountType ? [formData.cashAccountType] : []}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] || '';
-                      setFormData((prev) => ({
-                        ...prev,
-                        cashAccountType: selected,
-                      }));
-                    }}
-                    labelPlacement="outside"
-                  >
-                    <SelectItem key="main_cash" value="main_cash">
-                      Main Cash
-                    </SelectItem>
-                    <SelectItem key="petty_cash" value="petty_cash">
-                      Petty Cash
-                    </SelectItem>
-                    <SelectItem key="other" value="other">
-                      Other
-                    </SelectItem>
-                  </Select>
-
-                  <Select
-                    label="Shop"
-                    name="shop"
-                    selectedKeys={formData.shop ? [formData.shop] : []}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] || '';
-                      setFormData((prev) => ({
-                        ...prev,
-                        shop: selected,
-                      }));
-                    }}
-                    labelPlacement="outside"
-                    placeholder="Select shop (optional)"
-                    isLoading={isLoadingShops}
-                  >
-                    {shops.map((shop) => (
-                      <SelectItem 
-                        key={shop._id} 
-                        value={shop._id}
-                        textValue={shop.name || shop._id}
-                      >
-                        {shop.name || shop._id}
-                      </SelectItem>
-                    ))}
-                  </Select>
-
                   <Select
                     isRequired
                     label="Payee Type"
@@ -894,7 +781,7 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
                   <FaFileInvoice className="text-orange-500" />
-                  Payment Method & References
+                  Payment Method
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Select
@@ -921,78 +808,6 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
                     </SelectItem>
                   </Select>
 
-                  <Input
-                    label="Reference Number"
-                    name="referenceNumber"
-                    value={formData.referenceNumber}
-                    onChange={handleChange}
-                    labelPlacement="outside"
-                    placeholder="Enter reference number"
-                  />
-                </div>
-              </div>
-
-              <Divider />
-
-              {/* Related Transactions */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
-                  Related Transactions (Optional)
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Select
-                    label="Related Purchase"
-                    name="relatedPurchase"
-                    selectedKeys={formData.relatedPurchase ? [formData.relatedPurchase] : []}
-                    onSelectionChange={(keys) => {
-                      const [selected] = Array.from(keys);
-                      handleChange({ target: { name: 'relatedPurchase', value: selected || '' } });
-                    }}
-                    labelPlacement="outside"
-                    placeholder="Select purchase (optional)"
-                  >
-                    {purchases.map((purchase) => (
-                      <SelectItem key={purchase._id} value={purchase._id}>
-                        {purchase.invoiceNumber || purchase._id}
-                      </SelectItem>
-                    ))}
-                  </Select>
-
-                  <Select
-                    label="Related Sale"
-                    name="relatedSale"
-                    selectedKeys={formData.relatedSale ? [formData.relatedSale] : []}
-                    onSelectionChange={(keys) => {
-                      const [selected] = Array.from(keys);
-                      handleChange({ target: { name: 'relatedSale', value: selected || '' } });
-                    }}
-                    labelPlacement="outside"
-                    placeholder="Select sale (optional)"
-                  >
-                    {sales.map((sale) => (
-                      <SelectItem key={sale._id} value={sale._id}>
-                        {sale.invoiceNumber || sale._id}
-                      </SelectItem>
-                    ))}
-                  </Select>
-
-                  <Input
-                    label="Related Payment ID"
-                    name="relatedPayment"
-                    value={formData.relatedPayment}
-                    onChange={handleChange}
-                    labelPlacement="outside"
-                    placeholder="Enter payment ID (optional)"
-                  />
-
-                  <Input
-                    label="Related Supplier Payment ID"
-                    name="relatedSupplierPayment"
-                    value={formData.relatedSupplierPayment}
-                    onChange={handleChange}
-                    labelPlacement="outside"
-                    placeholder="Enter supplier payment ID (optional)"
-                  />
                 </div>
               </div>
 
