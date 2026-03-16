@@ -91,8 +91,6 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
       voucher.voucherNumber?.toLowerCase().includes(searchLower) ||
       voucher.referCode?.toLowerCase().includes(searchLower) ||
       voucher.payeeName?.toLowerCase().includes(searchLower) ||
-      voucher.cashAccount?.toLowerCase().includes(searchLower) ||
-      voucher.referenceNumber?.toLowerCase().includes(searchLower) ||
       voucher.transactionId?.toLowerCase().includes(searchLower);
 
     const matchesStatus =
@@ -966,12 +964,9 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
             <TableHeader>
               <TableColumn>VOUCHER NUMBER</TableColumn>
               <TableColumn>REFER CODE</TableColumn>
-              <TableColumn>CASH ACCOUNT</TableColumn>
-              <TableColumn>SHOP</TableColumn>
               <TableColumn>PAYEE</TableColumn>
               <TableColumn>AMOUNT</TableColumn>
               <TableColumn>PAYMENT METHOD</TableColumn>
-              <TableColumn>REFERENCE</TableColumn>
               <TableColumn>STATUS</TableColumn>
               <TableColumn>VOUCHER DATE</TableColumn>
               <TableColumn>CREATED DATE</TableColumn>
@@ -994,16 +989,6 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                   <TableCell>
                     <div className="font-semibold text-green-600">
                       {voucher.referCode || 'N/A'}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="font-medium">
-                      {voucher.cashAccount || 'N/A'}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      {voucher.shop?.name || voucher.shop || 'N/A'}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -1038,23 +1023,6 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                         {voucher.transactionId}
                       </div>
                     )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      {voucher.referenceNumber && (
-                        <div className="text-sm font-medium text-gray-900">
-                          {voucher.referenceNumber}
-                        </div>
-                      )}
-                      {voucher.relatedPurchase && (
-                        <div className="text-xs text-green-600">
-                          Purchase: {voucher.relatedPurchase.invoiceNumber || 'N/A'}
-                        </div>
-                      )}
-                      {!voucher.referenceNumber && !voucher.relatedPurchase && (
-                        <span className="text-xs text-gray-400">-</span>
-                      )}
-                    </div>
                   </TableCell>
                   <TableCell>
                     <Chip
