@@ -922,41 +922,88 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
                                 placeholder="Account name"
                               />
 
-                              <Input
-                                type="number"
-                                label="Debit"
-                                value={entry.debit}
-                                onChange={(e) =>
-                                  handleEntryChange(index, 'debit', e.target.value)
-                                }
-                                labelPlacement="outside"
-                                placeholder="0.00"
-                                min="0"
-                                step="0.01"
-                                description={
-                                  entry.credit > 0
-                                    ? 'Cannot have both debit and credit'
-                                    : ''
-                                }
-                              />
+                              {/* For first entry, only show Debit */}
+                              {index === 0 && (
+                                <Input
+                                  type="number"
+                                  label="Debit"
+                                  value={entry.debit}
+                                  onChange={(e) =>
+                                    handleEntryChange(index, 'debit', e.target.value)
+                                  }
+                                  labelPlacement="outside"
+                                  placeholder="0.00"
+                                  min="0"
+                                  step="0.01"
+                                  description={
+                                    entry.credit > 0
+                                      ? 'Cannot have both debit and credit'
+                                      : ''
+                                  }
+                                />
+                              )}
 
-                              <Input
-                                type="number"
-                                label="Credit"
-                                value={entry.credit}
-                                onChange={(e) =>
-                                  handleEntryChange(index, 'credit', e.target.value)
-                                }
-                                labelPlacement="outside"
-                                placeholder="0.00"
-                                min="0"
-                                step="0.01"
-                                description={
-                                  entry.debit > 0
-                                    ? 'Cannot have both debit and credit'
-                                    : ''
-                                }
-                              />
+                              {/* For second entry, only show Credit */}
+                              {index === 1 && (
+                                <Input
+                                  type="number"
+                                  label="Credit"
+                                  value={entry.credit}
+                                  onChange={(e) =>
+                                    handleEntryChange(index, 'credit', e.target.value)
+                                  }
+                                  labelPlacement="outside"
+                                  placeholder="0.00"
+                                  min="0"
+                                  step="0.01"
+                                  description={
+                                    entry.debit > 0
+                                      ? 'Cannot have both debit and credit'
+                                      : ''
+                                  }
+                                />
+                              )}
+
+                              {/* For additional entries, show both Debit and Credit */}
+                              {index > 1 && (
+                                <>
+                                  <Input
+                                    type="number"
+                                    label="Debit"
+                                    value={entry.debit}
+                                    onChange={(e) =>
+                                      handleEntryChange(index, 'debit', e.target.value)
+                                    }
+                                    labelPlacement="outside"
+                                    placeholder="0.00"
+                                    min="0"
+                                    step="0.01"
+                                    description={
+                                      entry.credit > 0
+                                        ? 'Cannot have both debit and credit'
+                                        : ''
+                                    }
+                                  />
+
+                                  <Input
+                                    type="number"
+                                    label="Credit"
+                                    value={entry.credit}
+                                    onChange={(e) =>
+                                      handleEntryChange(index, 'credit', e.target.value)
+                                    }
+                                    labelPlacement="outside"
+                                    placeholder="0.00"
+                                    min="0"
+                                    step="0.01"
+                                    description={
+                                      entry.debit > 0
+                                        ? 'Cannot have both debit and credit'
+                                        : ''
+                                    }
+                                  />
+                                </>
+                              )}
 
                               <Textarea
                                 label="Description"

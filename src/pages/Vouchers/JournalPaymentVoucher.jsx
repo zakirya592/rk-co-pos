@@ -58,13 +58,6 @@ const JournalPaymentVoucher = ({ onBack }) => {
     ],
     currency: '',
     currencyExchangeRate: '1',
-    referenceNumber: '',
-    relatedPurchase: '',
-    relatedSale: '',
-    relatedPayment: '',
-    relatedCashPaymentVoucher: '',
-    relatedSupplierPayment: '',
-    relatedBankPaymentVoucher: '',
     description: '',
     notes: '',
   });
@@ -105,38 +98,6 @@ const JournalPaymentVoucher = ({ onBack }) => {
   const fetchCurrencies = async () => {
     const res = await userRequest.get('/currencies');
     return res.data.data || [];
-  };
-
-  const fetchPurchases = async () => {
-    const res = await userRequest.get('/purchases?limit=100');
-    return res.data?.data || [];
-  };
-
-  const fetchSales = async () => {
-    const res = await userRequest.get('/sales?limit=100');
-    return res.data?.data || [];
-  };
-
-  const fetchCashPaymentVouchers = async () => {
-    try {
-      const res = await userRequest.get('/cash-payment-vouchers?limit=100');
-      const vouchers = res.data?.data?.vouchers || res.data?.data || res.data || [];
-      return Array.isArray(vouchers) ? vouchers : [];
-    } catch (error) {
-      console.error('Error fetching cash payment vouchers:', error);
-      return [];
-    }
-  };
-
-  const fetchBankPaymentVouchers = async () => {
-    try {
-      const res = await userRequest.get('/bank-payment-vouchers?limit=100');
-      const vouchers = res.data?.data?.vouchers || res.data?.data || res.data || [];
-      return Array.isArray(vouchers) ? vouchers : [];
-    } catch (error) {
-      console.error('Error fetching bank payment vouchers:', error);
-      return [];
-    }
   };
 
   const fetchAssets = async () => {
@@ -267,16 +228,6 @@ const JournalPaymentVoucher = ({ onBack }) => {
     ['currencies'],
     fetchCurrencies
   );
-  const { data: purchases = [] } = useQuery(['purchases'], fetchPurchases);
-  const { data: sales = [] } = useQuery(['sales'], fetchSales);
-  const { data: cashPaymentVouchers = [] } = useQuery(
-    ['cash-payment-vouchers'],
-    fetchCashPaymentVouchers
-  );
-  const { data: bankPaymentVouchersData = [] } = useQuery(
-    ['bank-payment-vouchers'],
-    fetchBankPaymentVouchers
-  );
 
   const { data: assets = [] } = useQuery(['assets'], fetchAssets);
   const { data: incomes = [] } = useQuery(['incomes'], fetchIncomes);
@@ -287,10 +238,6 @@ const JournalPaymentVoucher = ({ onBack }) => {
   const { data: owners = [] } = useQuery(['owners'], fetchOwners);
   const { data: employees = [] } = useQuery(['employees'], fetchEmployees);
   const { data: propertyAccounts = [] } = useQuery(['property-accounts'], fetchPropertyAccounts);
-
-  // Ensure bankPaymentVouchers is always an array
-  const bankPaymentVouchers = Array.isArray(bankPaymentVouchersData) ? bankPaymentVouchersData : [];
-  const cashPaymentVouchersArray = Array.isArray(cashPaymentVouchers) ? cashPaymentVouchers : [];
 
   // Get account options based on accountModel
   const getAccountOptions = (accountModel) => {
@@ -515,36 +462,6 @@ const JournalPaymentVoucher = ({ onBack }) => {
       });
 
       // Append optional fields
-      if (formData.referenceNumber) {
-        formDataToSend.append('referenceNumber', formData.referenceNumber);
-      }
-      if (formData.relatedPurchase) {
-        formDataToSend.append('relatedPurchase', formData.relatedPurchase);
-      }
-      if (formData.relatedSale) {
-        formDataToSend.append('relatedSale', formData.relatedSale);
-      }
-      if (formData.relatedPayment) {
-        formDataToSend.append('relatedPayment', formData.relatedPayment);
-      }
-      if (formData.relatedCashPaymentVoucher) {
-        formDataToSend.append(
-          'relatedCashPaymentVoucher',
-          formData.relatedCashPaymentVoucher
-        );
-      }
-      if (formData.relatedSupplierPayment) {
-        formDataToSend.append(
-          'relatedSupplierPayment',
-          formData.relatedSupplierPayment
-        );
-      }
-      if (formData.relatedBankPaymentVoucher) {
-        formDataToSend.append(
-          'relatedBankPaymentVoucher',
-          formData.relatedBankPaymentVoucher
-        );
-      }
       if (formData.description) {
         formDataToSend.append('description', formData.description);
       }
@@ -590,13 +507,6 @@ const JournalPaymentVoucher = ({ onBack }) => {
         ],
         currency: '',
         currencyExchangeRate: '1',
-        referenceNumber: '',
-        relatedPurchase: '',
-        relatedSale: '',
-        relatedPayment: '',
-        relatedCashPaymentVoucher: '',
-        relatedSupplierPayment: '',
-        relatedBankPaymentVoucher: '',
         description: '',
         notes: '',
       });
@@ -898,41 +808,88 @@ const JournalPaymentVoucher = ({ onBack }) => {
                                 placeholder="Account name"
                               />
 
-                              <Input
-                                type="number"
-                                label="Debit"
-                                value={entry.debit}
-                                onChange={(e) =>
-                                  handleEntryChange(index, 'debit', e.target.value)
-                                }
-                                labelPlacement="outside"
-                                placeholder="0.00"
-                                min="0"
-                                step="0.01"
-                                description={
-                                  entry.credit > 0
-                                    ? 'Cannot have both debit and credit'
-                                    : ''
-                                }
-                              />
+                              {/* For first entry, only show Debit */}
+                              {index === 0 && (
+                                <Input
+                                  type="number"
+                                  label="Debit"
+                                  value={entry.debit}
+                                  onChange={(e) =>
+                                    handleEntryChange(index, 'debit', e.target.value)
+                                  }
+                                  labelPlacement="outside"
+                                  placeholder="0.00"
+                                  min="0"
+                                  step="0.01"
+                                  description={
+                                    entry.credit > 0
+                                      ? 'Cannot have both debit and credit'
+                                      : ''
+                                  }
+                                />
+                              )}
 
-                              <Input
-                                type="number"
-                                label="Credit"
-                                value={entry.credit}
-                                onChange={(e) =>
-                                  handleEntryChange(index, 'credit', e.target.value)
-                                }
-                                labelPlacement="outside"
-                                placeholder="0.00"
-                                min="0"
-                                step="0.01"
-                                description={
-                                  entry.debit > 0
-                                    ? 'Cannot have both debit and credit'
-                                    : ''
-                                }
-                              />
+                              {/* For second entry, only show Credit */}
+                              {index === 1 && (
+                                <Input
+                                  type="number"
+                                  label="Credit"
+                                  value={entry.credit}
+                                  onChange={(e) =>
+                                    handleEntryChange(index, 'credit', e.target.value)
+                                  }
+                                  labelPlacement="outside"
+                                  placeholder="0.00"
+                                  min="0"
+                                  step="0.01"
+                                  description={
+                                    entry.debit > 0
+                                      ? 'Cannot have both debit and credit'
+                                      : ''
+                                  }
+                                />
+                              )}
+
+                              {/* For additional entries, show both Debit and Credit */}
+                              {index > 1 && (
+                                <>
+                                  <Input
+                                    type="number"
+                                    label="Debit"
+                                    value={entry.debit}
+                                    onChange={(e) =>
+                                      handleEntryChange(index, 'debit', e.target.value)
+                                    }
+                                    labelPlacement="outside"
+                                    placeholder="0.00"
+                                    min="0"
+                                    step="0.01"
+                                    description={
+                                      entry.credit > 0
+                                        ? 'Cannot have both debit and credit'
+                                        : ''
+                                    }
+                                  />
+
+                                  <Input
+                                    type="number"
+                                    label="Credit"
+                                    value={entry.credit}
+                                    onChange={(e) =>
+                                      handleEntryChange(index, 'credit', e.target.value)
+                                    }
+                                    labelPlacement="outside"
+                                    placeholder="0.00"
+                                    min="0"
+                                    step="0.01"
+                                    description={
+                                      entry.debit > 0
+                                        ? 'Cannot have both debit and credit'
+                                        : ''
+                                    }
+                                  />
+                                </>
+                              )}
 
                               <Textarea
                                 label="Description"
@@ -1034,146 +991,6 @@ const JournalPaymentVoucher = ({ onBack }) => {
                         placeholder="1.00"
                         min="0"
                         step="0.0001"
-                      />
-                    </div>
-                  </div>
-
-                  <Divider />
-
-                  {/* References */}
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
-                      <FaFileInvoice className="text-orange-500" />
-                      References (Optional)
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Input
-                        label="Reference Number"
-                        name="referenceNumber"
-                        value={formData.referenceNumber}
-                        onChange={handleChange}
-                        labelPlacement="outside"
-                        placeholder="Enter reference number"
-                      />
-
-                      <Select
-                        label="Related Purchase"
-                        selectedKeys={formData.relatedPurchase ? [formData.relatedPurchase] : []}
-                        onSelectionChange={(keys) => {
-                          const selected = Array.from(keys)[0] || '';
-                          setFormData((prev) => ({
-                            ...prev,
-                            relatedPurchase: selected,
-                          }));
-                        }}
-                        labelPlacement="outside"
-                        placeholder="Select purchase (optional)"
-                      >
-                        {purchases.map((purchase) => (
-                          <SelectItem
-                            key={purchase._id}
-                            value={purchase._id}
-                            textValue={purchase.invoiceNumber || purchase._id}
-                          >
-                            {purchase.invoiceNumber || purchase._id}
-                          </SelectItem>
-                        ))}
-                      </Select>
-
-                      <Select
-                        label="Related Sale"
-                        selectedKeys={formData.relatedSale ? [formData.relatedSale] : []}
-                        onSelectionChange={(keys) => {
-                          const selected = Array.from(keys)[0] || '';
-                          setFormData((prev) => ({
-                            ...prev,
-                            relatedSale: selected,
-                          }));
-                        }}
-                        labelPlacement="outside"
-                        placeholder="Select sale (optional)"
-                      >
-                        {sales.map((sale) => (
-                          <SelectItem
-                            key={sale._id}
-                            value={sale._id}
-                            textValue={sale.invoiceNumber || sale._id}
-                          >
-                            {sale.invoiceNumber || sale._id}
-                          </SelectItem>
-                        ))}
-                      </Select>
-
-                      <Select
-                        label="Related Cash Payment Voucher"
-                        selectedKeys={formData.relatedCashPaymentVoucher ? [formData.relatedCashPaymentVoucher] : []}
-                        onSelectionChange={(keys) => {
-                          const selected = Array.from(keys)[0] || '';
-                          setFormData((prev) => ({
-                            ...prev,
-                            relatedCashPaymentVoucher: selected,
-                          }));
-                        }}
-                        labelPlacement="outside"
-                        placeholder="Select cash payment voucher (optional)"
-                      >
-                        {cashPaymentVouchersArray.map((voucher) => (
-                          <SelectItem
-                            key={voucher._id}
-                            value={voucher._id}
-                            textValue={voucher.voucherNumber || voucher.referCode || voucher._id}
-                          >
-                            {voucher.voucherNumber || voucher.referCode || voucher._id}
-                          </SelectItem>
-                        ))}
-                      </Select>
-
-                      <Select
-                        label="Related Bank Payment Voucher"
-                        selectedKeys={formData.relatedBankPaymentVoucher ? [formData.relatedBankPaymentVoucher] : []}
-                        onSelectionChange={(keys) => {
-                          const selected = Array.from(keys)[0] || '';
-                          setFormData((prev) => ({
-                            ...prev,
-                            relatedBankPaymentVoucher: selected,
-                          }));
-                        }}
-                        labelPlacement="outside"
-                        placeholder="Select bank payment voucher (optional)"
-                      >
-                        {Array.isArray(bankPaymentVouchers) && bankPaymentVouchers.length > 0
-                          ? bankPaymentVouchers.map((voucher) => (
-                              <SelectItem
-                                key={voucher._id}
-                                value={voucher._id}
-                                textValue={voucher.voucherNumber || voucher.referCode || voucher._id}
-                              >
-                                {voucher.voucherNumber || voucher.referCode || voucher._id}
-                              </SelectItem>
-                            ))
-                          : (
-                              <SelectItem key="no-options" value="" isDisabled>
-                                No bank payment vouchers available
-                              </SelectItem>
-                            )}
-                      </Select>
-
-                      <Input
-                        label="Related Payment ID"
-                        name="relatedPayment"
-                        value={formData.relatedPayment}
-                        onChange={handleChange}
-                        labelPlacement="outside"
-                        placeholder="Enter payment ID (optional)"
-                      />
-
-                      <Input
-                        label="Related Supplier Payment ID"
-                        name="relatedSupplierPayment"
-                        value={formData.relatedSupplierPayment}
-                        onChange={handleChange}
-                        labelPlacement="outside"
-                        placeholder="Enter supplier payment ID (optional)"
                       />
                     </div>
                   </div>
