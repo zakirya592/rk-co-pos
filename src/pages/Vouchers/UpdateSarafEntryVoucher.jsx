@@ -49,22 +49,8 @@ const UpdateSarafEntryVoucher = ({ voucherId, onBack }) => {
     marketRate: '',
     commission: '',
     commissionPercentage: '',
-    fromBankAccount: '',
-    toBankAccount: '',
-    fromCashAccount: '',
-    toCashAccount: '',
-    referenceNumber: '',
-    sarafName: '',
-    sarafContact: '',
-    purpose: '',
     description: '',
     notes: '',
-    relatedPurchase: '',
-    relatedSale: '',
-    relatedPayment: '',
-    relatedSupplierPayment: '',
-    relatedBankPaymentVoucher: '',
-    relatedCashPaymentVoucher: '',
   });
 
   // Fetch voucher data
@@ -90,22 +76,8 @@ const UpdateSarafEntryVoucher = ({ voucherId, onBack }) => {
           marketRate: voucher.marketRate?.toString() || '',
           commission: voucher.commission?.toString() || '',
           commissionPercentage: voucher.commissionPercentage?.toString() || '',
-          fromBankAccount: voucher.fromBankAccount?._id || voucher.fromBankAccount || '',
-          toBankAccount: voucher.toBankAccount?._id || voucher.toBankAccount || '',
-          fromCashAccount: voucher.fromCashAccount?._id || voucher.fromCashAccount || '',
-          toCashAccount: voucher.toCashAccount?._id || voucher.toCashAccount || '',
-          referenceNumber: voucher.referenceNumber || '',
-          sarafName: voucher.sarafName || '',
-          sarafContact: voucher.sarafContact || '',
-          purpose: voucher.purpose || '',
           description: voucher.description || '',
           notes: voucher.notes || '',
-          relatedPurchase: voucher.relatedPurchase?._id || voucher.relatedPurchase || '',
-          relatedSale: voucher.relatedSale?._id || voucher.relatedSale || '',
-          relatedPayment: voucher.relatedPayment || '',
-          relatedSupplierPayment: voucher.relatedSupplierPayment || '',
-          relatedBankPaymentVoucher: voucher.relatedBankPaymentVoucher?._id || voucher.relatedBankPaymentVoucher || '',
-          relatedCashPaymentVoucher: voucher.relatedCashPaymentVoucher?._id || voucher.relatedCashPaymentVoucher || '',
         });
 
         if (voucher.attachments && voucher.attachments.length > 0) {
@@ -135,97 +107,19 @@ const UpdateSarafEntryVoucher = ({ voucherId, onBack }) => {
     }
   };
 
-  const fetchCashAccounts = async () => {
-    try {
-      const res = await userRequest.get('/cash-accounts');
-      const data = res.data?.data || res.data || [];
-      return Array.isArray(data) ? data : [];
-    } catch (error) {
-      console.error('Error fetching cash accounts:', error);
-      return [];
-    }
-  };
 
   const fetchCurrencies = async () => {
     const res = await userRequest.get('/currencies');
     return res.data.data || [];
   };
 
-  const fetchPurchases = async () => {
-    try {
-      const res = await userRequest.get('/purchases?limit=100');
-      return res.data?.data || [];
-    } catch (error) {
-      console.error('Error fetching purchases:', error);
-      return [];
-    }
-  };
-
-  const fetchSales = async () => {
-    try {
-      const res = await userRequest.get('/sales?limit=100');
-      return res.data?.data || [];
-    } catch (error) {
-      console.error('Error fetching sales:', error);
-      return [];
-    }
-  };
-
-  const fetchBankPaymentVouchers = async () => {
-    try {
-      const res = await userRequest.get('/bank-payment-vouchers?limit=100');
-      // Handle various response structures
-      const data = res.data?.data;
-      if (data?.vouchers && Array.isArray(data.vouchers)) {
-        return data.vouchers;
-      }
-      if (data?.bankPaymentVouchers && Array.isArray(data.bankPaymentVouchers)) {
-        return data.bankPaymentVouchers;
-      }
-      if (Array.isArray(data)) {
-        return data;
-      }
-      if (Array.isArray(res.data)) {
-        return res.data;
-      }
-      return [];
-    } catch (error) {
-      console.error('Error fetching bank payment vouchers:', error);
-      return [];
-    }
-  };
-
-  const fetchCashPaymentVouchers = async () => {
-    try {
-      const res = await userRequest.get('/cash-payment-vouchers?limit=100');
-      return res.data?.data?.vouchers || res.data?.data || [];
-    } catch (error) {
-      console.error('Error fetching cash payment vouchers:', error);
-      return [];
-    }
-  };
-
   const { data: bankAccounts = [], isLoading: isLoadingBanks } = useQuery(
     ['bank-accounts'],
     fetchBankAccounts
   );
-  const { data: cashAccounts = [], isLoading: isLoadingCash } = useQuery(
-    ['cash-accounts'],
-    fetchCashAccounts
-  );
   const { data: currencies = [], isLoading: isLoadingCurrencies } = useQuery(
     ['currencies'],
     fetchCurrencies
-  );
-  const { data: purchases = [] } = useQuery(['purchases'], fetchPurchases);
-  const { data: sales = [] } = useQuery(['sales'], fetchSales);
-  const { data: bankPaymentVouchers = [] } = useQuery(
-    ['bank-payment-vouchers'],
-    fetchBankPaymentVouchers
-  );
-  const { data: cashPaymentVouchers = [] } = useQuery(
-    ['cash-payment-vouchers'],
-    fetchCashPaymentVouchers
   );
 
   // Handle form field changes
@@ -327,53 +221,11 @@ const UpdateSarafEntryVoucher = ({ voucherId, onBack }) => {
       if (formData.commissionPercentage) {
         formDataToSend.append('commissionPercentage', formData.commissionPercentage || '0');
       }
-      if (formData.fromBankAccount) {
-        formDataToSend.append('fromBankAccount', formData.fromBankAccount);
-      }
-      if (formData.toBankAccount) {
-        formDataToSend.append('toBankAccount', formData.toBankAccount);
-      }
-      if (formData.fromCashAccount) {
-        formDataToSend.append('fromCashAccount', formData.fromCashAccount);
-      }
-      if (formData.toCashAccount) {
-        formDataToSend.append('toCashAccount', formData.toCashAccount);
-      }
-      if (formData.referenceNumber) {
-        formDataToSend.append('referenceNumber', formData.referenceNumber);
-      }
-      if (formData.sarafName) {
-        formDataToSend.append('sarafName', formData.sarafName);
-      }
-      if (formData.sarafContact) {
-        formDataToSend.append('sarafContact', formData.sarafContact);
-      }
-      if (formData.purpose) {
-        formDataToSend.append('purpose', formData.purpose);
-      }
       if (formData.description) {
         formDataToSend.append('description', formData.description);
       }
       if (formData.notes) {
         formDataToSend.append('notes', formData.notes);
-      }
-      if (formData.relatedPurchase) {
-        formDataToSend.append('relatedPurchase', formData.relatedPurchase);
-      }
-      if (formData.relatedSale) {
-        formDataToSend.append('relatedSale', formData.relatedSale);
-      }
-      if (formData.relatedPayment) {
-        formDataToSend.append('relatedPayment', formData.relatedPayment);
-      }
-      if (formData.relatedSupplierPayment) {
-        formDataToSend.append('relatedSupplierPayment', formData.relatedSupplierPayment);
-      }
-      if (formData.relatedBankPaymentVoucher) {
-        formDataToSend.append('relatedBankPaymentVoucher', formData.relatedBankPaymentVoucher);
-      }
-      if (formData.relatedCashPaymentVoucher) {
-        formDataToSend.append('relatedCashPaymentVoucher', formData.relatedCashPaymentVoucher);
       }
 
       if (attachment) {
@@ -685,269 +537,6 @@ const UpdateSarafEntryVoucher = ({ voucherId, onBack }) => {
                         step="0.01"
                         readOnly
                         description="Auto-calculated based on percentage"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Accounts */}
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
-                      <FaUniversity className="text-amber-500" />
-                      Bank & Cash Accounts
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Select
-                        label="From Bank Account"
-                        name="fromBankAccount"
-                        selectedKeys={formData.fromBankAccount ? [formData.fromBankAccount] : []}
-                        onSelectionChange={(keys) => {
-                          const selected = Array.from(keys)[0] || '';
-                          setFormData((prev) => ({
-                            ...prev,
-                            fromBankAccount: selected,
-                          }));
-                        }}
-                        labelPlacement="outside"
-                        placeholder="Select source bank account (optional)"
-                        isLoading={isLoadingBanks}
-                      >
-                        {bankAccounts.map((account) => (
-                          <SelectItem
-                            key={account._id}
-                            value={account._id}
-                            textValue={account.accountName || account.name}
-                          >
-                            {account.accountName || account.name} - {account.accountNumber}
-                          </SelectItem>
-                        ))}
-                      </Select>
-                      <Select
-                        label="To Bank Account"
-                        name="toBankAccount"
-                        selectedKeys={formData.toBankAccount ? [formData.toBankAccount] : []}
-                        onSelectionChange={(keys) => {
-                          const selected = Array.from(keys)[0] || '';
-                          setFormData((prev) => ({
-                            ...prev,
-                            toBankAccount: selected,
-                          }));
-                        }}
-                        labelPlacement="outside"
-                        placeholder="Select destination bank account (optional)"
-                        isLoading={isLoadingBanks}
-                      >
-                        {bankAccounts.map((account) => (
-                          <SelectItem
-                            key={account._id}
-                            value={account._id}
-                            textValue={account.accountName || account.name}
-                          >
-                            {account.accountName || account.name} - {account.accountNumber}
-                          </SelectItem>
-                        ))}
-                      </Select>
-                      <Select
-                        label="From Cash Account"
-                        name="fromCashAccount"
-                        selectedKeys={formData.fromCashAccount ? [formData.fromCashAccount] : []}
-                        onSelectionChange={(keys) => {
-                          const selected = Array.from(keys)[0] || '';
-                          setFormData((prev) => ({
-                            ...prev,
-                            fromCashAccount: selected,
-                          }));
-                        }}
-                        labelPlacement="outside"
-                        placeholder="Select source cash account (optional)"
-                        isLoading={isLoadingCash}
-                      >
-                        {cashAccounts.map((account) => (
-                          <SelectItem
-                            key={account._id}
-                            value={account._id}
-                            textValue={account.accountName || account.name}
-                          >
-                            {account.accountName || account.name}
-                          </SelectItem>
-                        ))}
-                      </Select>
-                      <Select
-                        label="To Cash Account"
-                        name="toCashAccount"
-                        selectedKeys={formData.toCashAccount ? [formData.toCashAccount] : []}
-                        onSelectionChange={(keys) => {
-                          const selected = Array.from(keys)[0] || '';
-                          setFormData((prev) => ({
-                            ...prev,
-                            toCashAccount: selected,
-                          }));
-                        }}
-                        labelPlacement="outside"
-                        placeholder="Select destination cash account (optional)"
-                        isLoading={isLoadingCash}
-                      >
-                        {cashAccounts.map((account) => (
-                          <SelectItem
-                            key={account._id}
-                            value={account._id}
-                            textValue={account.accountName || account.name}
-                          >
-                            {account.accountName || account.name}
-                          </SelectItem>
-                        ))}
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Saraf Information */}
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
-                      <FaCoins className="text-amber-500" />
-                      Saraf Information
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Input
-                        label="Saraf Name"
-                        name="sarafName"
-                        value={formData.sarafName}
-                        onChange={handleChange}
-                        labelPlacement="outside"
-                        placeholder="Enter saraf name"
-                      />
-                      <Input
-                        label="Saraf Contact"
-                        name="sarafContact"
-                        value={formData.sarafContact}
-                        onChange={handleChange}
-                        labelPlacement="outside"
-                        placeholder="Enter contact number"
-                      />
-                      <Input
-                        label="Reference Number"
-                        name="referenceNumber"
-                        value={formData.referenceNumber}
-                        onChange={handleChange}
-                        labelPlacement="outside"
-                        placeholder="Enter reference number"
-                      />
-                      <Input
-                        label="Purpose"
-                        name="purpose"
-                        value={formData.purpose}
-                        onChange={handleChange}
-                        labelPlacement="outside"
-                        placeholder="Enter purpose"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Related Transactions */}
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
-                      Related Transactions (Optional)
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Select
-                        label="Related Purchase"
-                        name="relatedPurchase"
-                        selectedKeys={formData.relatedPurchase ? [formData.relatedPurchase] : []}
-                        onSelectionChange={(keys) => {
-                          const selected = Array.from(keys)[0] || '';
-                          setFormData((prev) => ({
-                            ...prev,
-                            relatedPurchase: selected,
-                          }));
-                        }}
-                        labelPlacement="outside"
-                        placeholder="Select purchase (optional)"
-                      >
-                        {purchases.map((purchase) => (
-                          <SelectItem key={purchase._id} value={purchase._id}>
-                            {purchase.invoiceNumber || purchase._id}
-                          </SelectItem>
-                        ))}
-                      </Select>
-                      <Select
-                        label="Related Sale"
-                        name="relatedSale"
-                        selectedKeys={formData.relatedSale ? [formData.relatedSale] : []}
-                        onSelectionChange={(keys) => {
-                          const selected = Array.from(keys)[0] || '';
-                          setFormData((prev) => ({
-                            ...prev,
-                            relatedSale: selected,
-                          }));
-                        }}
-                        labelPlacement="outside"
-                        placeholder="Select sale (optional)"
-                      >
-                        {sales.map((sale) => (
-                          <SelectItem key={sale._id} value={sale._id}>
-                            {sale.invoiceNumber || sale._id}
-                          </SelectItem>
-                        ))}
-                      </Select>
-                      <Select
-                        label="Related Bank Payment Voucher"
-                        name="relatedBankPaymentVoucher"
-                        selectedKeys={formData.relatedBankPaymentVoucher ? [formData.relatedBankPaymentVoucher] : []}
-                        onSelectionChange={(keys) => {
-                          const selected = Array.from(keys)[0] || '';
-                          setFormData((prev) => ({
-                            ...prev,
-                            relatedBankPaymentVoucher: selected,
-                          }));
-                        }}
-                        labelPlacement="outside"
-                        placeholder="Select bank payment voucher (optional)"
-                      >
-                        {Array.isArray(bankPaymentVouchers) && bankPaymentVouchers.length > 0
-                          ? bankPaymentVouchers.map((voucher) => (
-                              <SelectItem key={voucher._id} value={voucher._id}>
-                                {voucher.voucherNumber || voucher.referCode || voucher._id}
-                              </SelectItem>
-                            ))
-                          : (
-                              <SelectItem key="no-options" value="" isDisabled>
-                                No bank payment vouchers available
-                              </SelectItem>
-                            )}
-                      </Select>
-                      <Select
-                        label="Related Cash Payment Voucher"
-                        name="relatedCashPaymentVoucher"
-                        selectedKeys={formData.relatedCashPaymentVoucher ? [formData.relatedCashPaymentVoucher] : []}
-                        onSelectionChange={(keys) => {
-                          const selected = Array.from(keys)[0] || '';
-                          setFormData((prev) => ({
-                            ...prev,
-                            relatedCashPaymentVoucher: selected,
-                          }));
-                        }}
-                        labelPlacement="outside"
-                        placeholder="Select cash payment voucher (optional)"
-                      >
-                        {cashPaymentVouchers.map((voucher) => (
-                          <SelectItem key={voucher._id} value={voucher._id}>
-                            {voucher.voucherNumber || voucher.referCode || voucher._id}
-                          </SelectItem>
-                        ))}
-                      </Select>
-                      <Input
-                        label="Related Payment ID"
-                        name="relatedPayment"
-                        value={formData.relatedPayment}
-                        onChange={handleChange}
-                        labelPlacement="outside"
-                        placeholder="Enter payment ID (optional)"
-                      />
-                      <Input
-                        label="Related Supplier Payment ID"
-                        name="relatedSupplierPayment"
-                        value={formData.relatedSupplierPayment}
-                        onChange={handleChange}
-                        labelPlacement="outside"
-                        placeholder="Enter supplier payment ID (optional)"
                       />
                     </div>
                   </div>
