@@ -41,6 +41,7 @@ const JournalPaymentVoucher = ({ onBack }) => {
     entries: [
       {
         account: '',
+        bankAccount: '',
         accountModel: 'BankAccount',
         accountName: '',
         debit: '',
@@ -49,6 +50,7 @@ const JournalPaymentVoucher = ({ onBack }) => {
       },
       {
         account: '',
+        bankAccount: '',
         accountModel: 'BankAccount',
         accountName: '',
         debit: '',
@@ -293,6 +295,7 @@ const JournalPaymentVoucher = ({ onBack }) => {
       const accountModel = updatedEntries[index].accountModel;
       const accounts = getAccountOptions(accountModel);
       const selectedAccount = accounts.find((a) => a._id === value);
+      updatedEntries[index].bankAccount = accountModel === 'BankAccount' ? value : '';
       if (selectedAccount) {
         updatedEntries[index].accountName =
           selectedAccount.name ||
@@ -306,6 +309,7 @@ const JournalPaymentVoucher = ({ onBack }) => {
     // Reset account when accountModel changes
     if (field === 'accountModel') {
       updatedEntries[index].account = '';
+      updatedEntries[index].bankAccount = '';
       updatedEntries[index].accountName = '';
     }
 
@@ -323,6 +327,7 @@ const JournalPaymentVoucher = ({ onBack }) => {
         ...prev.entries,
         {
           account: '',
+          bankAccount: '',
           accountModel: 'BankAccount',
           accountName: '',
           debit: '',
@@ -444,6 +449,10 @@ const JournalPaymentVoucher = ({ onBack }) => {
       formData.entries.forEach((entry, index) => {
         formDataToSend.append(`entries[${index}][account]`, entry.account);
         formDataToSend.append(
+          `entries[${index}][bankAccount]`,
+          entry.bankAccount || (entry.accountModel === 'BankAccount' ? entry.account : '')
+        );
+        formDataToSend.append(
           `entries[${index}][accountModel]`,
           entry.accountModel
         );
@@ -490,6 +499,7 @@ const JournalPaymentVoucher = ({ onBack }) => {
         entries: [
           {
             account: '',
+            bankAccount: '',
             accountModel: 'BankAccount',
             accountName: '',
             debit: '',
@@ -498,6 +508,7 @@ const JournalPaymentVoucher = ({ onBack }) => {
           },
           {
             account: '',
+            bankAccount: '',
             accountModel: 'BankAccount',
             accountName: '',
             debit: '',
@@ -792,6 +803,36 @@ const JournalPaymentVoucher = ({ onBack }) => {
                                       account.accountName ||
                                       account.title ||
                                       account.email ||
+                                      account._id}
+                                  </SelectItem>
+                                ))}
+                              </Select>
+
+                              <Select
+                                label="Bank Account"
+                                selectedKeys={entry.bankAccount ? [entry.bankAccount] : []}
+                                onSelectionChange={(keys) => {
+                                  const selected = Array.from(keys)[0] || '';
+                                  handleEntryChange(index, 'bankAccount', selected);
+                                }}
+                                labelPlacement="outside"
+                                placeholder="Select bank account"
+                                isLoading={isLoadingBanks}
+                              >
+                                {bankAccounts.map((account) => (
+                                  <SelectItem
+                                    key={account._id}
+                                    value={account._id}
+                                    textValue={
+                                      account.accountName ||
+                                      account.name ||
+                                      account.accountNumber ||
+                                      account._id
+                                    }
+                                  >
+                                    {account.accountName ||
+                                      account.name ||
+                                      account.accountNumber ||
                                       account._id}
                                   </SelectItem>
                                 ))}
