@@ -428,41 +428,12 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
     setAttachmentPreview(null);
   };
 
-  // Validate entries (debits must equal credits)
+  // Keep validation flexible for mixed journal use-cases
   const validateEntries = () => {
-    const totalDebit = formData.entries.reduce(
-      (sum, entry) => sum + (parseFloat(entry.debit) || 0),
-      0
-    );
-    const totalCredit = formData.entries.reduce(
-      (sum, entry) => sum + (parseFloat(entry.credit) || 0),
-      0
-    );
-
-    if (Math.abs(totalDebit - totalCredit) > 0.01) {
-      toast.error(
-        `Debits (${totalDebit}) must equal Credits (${totalCredit})`
-      );
-      return false;
-    }
-
-    // Validate each entry
     for (let i = 0; i < formData.entries.length; i++) {
       const entry = formData.entries[i];
-      if (!entry.account) {
-        toast.error(`Entry ${i + 1}: Please select an account`);
-        return false;
-      }
-      if (!entry.accountName) {
-        toast.error(`Entry ${i + 1}: Account name is required`);
-        return false;
-      }
       const debit = parseFloat(entry.debit) || 0;
       const credit = parseFloat(entry.credit) || 0;
-      if (debit === 0 && credit === 0) {
-        toast.error(`Entry ${i + 1}: Either debit or credit must be greater than 0`);
-        return false;
-      }
       if (debit > 0 && credit > 0) {
         toast.error(`Entry ${i + 1}: Cannot have both debit and credit`);
         return false;
@@ -475,12 +446,6 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Validation
-    if (!formData.currency) {
-      toast.error('Please select a currency');
-      return;
-    }
 
     if (!validateEntries()) {
       return;
@@ -675,13 +640,9 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
   );
   const isBalanced = Math.abs(totalDebit - totalCredit) < 0.01;
   
-  // Check if any entries have values
   const hasEntriesWithValues = formData.entries.some(
     (entry) => (parseFloat(entry.debit) || 0) > 0 || (parseFloat(entry.credit) || 0) > 0
   );
-  
-  // Only disable if entries have values but are not balanced
-  const shouldDisableButton = hasEntriesWithValues && !isBalanced;
 
   if (isLoading) {
     return (
@@ -717,7 +678,7 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
                     Update Journal Payment Voucher
                   </h1>
                   <p className="text-purple-100 text-sm md:text-base mt-1">
-                    {voucherInfo?.voucherNumber || voucherInfo?.referCode || 'Edit journal entry'} • Debits must equal Credits
+                    {voucherInfo?.voucherNumber || voucherInfo?.referCode || 'Edit journal entry'} • Flexible journal edit
                   </p>
                 </div>
               </div>
@@ -766,7 +727,6 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <Input
-                        isRequired
                         type="date"
                         label="Voucher Date"
                         name="voucherDate"
@@ -776,7 +736,6 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
                       />
 
                       <Select
-                        isRequired
                         label="Voucher Type"
                         name="voucherType"
                         selectedKeys={formData.voucherType ? [formData.voucherType] : []}
@@ -843,7 +802,6 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <Select
-                                isRequired
                                 label="Account Model"
                                 selectedKeys={entry.accountModel ? [entry.accountModel] : []}
                                 onSelectionChange={(keys) => {
@@ -891,7 +849,6 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
                               </Select>
 
                               <Select
-                                isRequired
                                 label="Account"
                                 selectedKeys={entry.account ? [entry.account] : []}
                                 onSelectionChange={(keys) => {
@@ -954,7 +911,6 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
                               </Select>
 
                               <Input
-                                isRequired
                                 label="Account Name"
                                 value={entry.accountName}
                                 onChange={(e) =>
@@ -1111,7 +1067,6 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <Select
-                        isRequired
                         label="Currency"
                         name="currency"
                         selectedKeys={formData.currency ? [formData.currency] : []}
@@ -1402,7 +1357,6 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
                       isLoading={isSubmitting}
                       startContent={!isSubmitting && <FaSave />}
                       className="bg-gradient-to-r from-purple-500 to-indigo-600"
-                      isDisabled={shouldDisableButton}
                     >
                       {isSubmitting ? 'Updating...' : 'Update Voucher'}
                     </Button>
@@ -1423,22 +1377,21 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
                 <div className="space-y-4">
                   <div className="bg-white p-4 rounded-lg">
                     <p className="text-sm font-semibold text-gray-900 mb-2">
-                      Required Fields
+                      Flexible Entry
                     </p>
                     <ul className="text-xs text-gray-600 space-y-1">
-                      <li>• Voucher Date</li>
-                      <li>• At least 2 Entries</li>
-                      <li>• Account for each entry</li>
-                      <li>• Debit or Credit for each entry</li>
-                      <li>• Currency</li>
+                      <li>• No fields are strictly required</li>
+                      <li>• Use only fields needed for your flow</li>
+                      <li>• Supports bank, supplier, customer, asset, etc.</li>
+                      <li>• Debit/Credit can be used as needed</li>
                     </ul>
                   </div>
                   <div className="bg-white p-4 rounded-lg">
                     <p className="text-sm font-semibold text-gray-900 mb-2">
-                      Balance Rule
+                      Optional Guideline
                     </p>
                     <p className="text-xs text-gray-600">
-                      Total Debits must equal Total Credits for the entry to be valid.
+                      For accounting consistency, avoid filling both debit and credit in the same line.
                     </p>
                   </div>
                 </div>
