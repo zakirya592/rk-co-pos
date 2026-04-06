@@ -43,6 +43,7 @@ import {
   FaStore,
   FaFileInvoice,
   FaPrint,
+  FaBook,
 } from 'react-icons/fa';
 import { useQuery, useQueryClient } from 'react-query';
 import userRequest from '../../utils/userRequest';
@@ -73,25 +74,135 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
     fetchVouchers
   );
 
-  const vouchers = data?.data?.vouchers || [];
+  const vouchers =
+    data?.data?.vouchers ||
+    data?.data?.data?.vouchers ||
+    data?.vouchers ||
+    (Array.isArray(data?.data) ? data.data : []) ||
+    [];
+
+  const getBankAccountLabel = (ba) => {
+    if (!ba) return '';
+    if (typeof ba === 'object') {
+      return (
+        ba.accountName ||
+        ba.name ||
+        [ba.bankName, ba.accountNumber].filter(Boolean).join(' · ') ||
+        ''
+      );
+    }
+    return '';
+  };
+
+  const getEntryLineLabel = (entry) => {
+    if (!entry) return '';
+    const name =
+      (entry.accountName && String(entry.accountName).trim()) ||
+      (typeof entry.account === 'object' &&
+        (entry.account?.name || entry.account?.accountName)) ||
+      getBankAccountLabel(entry.bankAccount) ||
+      '';
+    if (name) return name;
+    if (entry.accountModel) return String(entry.accountModel);
+    return '';
+  };
+
+  const getVoucherAmount = (voucher) => {
+    if (voucher?.amount != null && voucher.amount !== '') {
+      const n = parseFloat(voucher.amount);
+      if (!Number.isNaN(n)) return n;
+    }
+    const entries = Array.isArray(voucher?.entries) ? voucher.entries : [];
+    let totalDebit = 0;
+    let totalCredit = 0;
+    entries.forEach((e) => {
+      totalDebit += parseFloat(e.debit) || 0;
+      totalCredit += parseFloat(e.credit) || 0;
+    });
+    if (totalDebit > 0) return totalDebit;
+    if (totalCredit > 0) return totalCredit;
+    return 0;
+  };
+
+  const getVoucherEntriesSummary = (voucher) => {
+    const entries = Array.isArray(voucher?.entries) ? voucher.entries : [];
+    if (entries.length === 0) {
+      const fallback =
+        voucher.payee?.name || voucher.payeeName || '';
+      return {
+        oneLiner: fallback || '—',
+        debitPart: '',
+        creditPart: '',
+      };
+    }
+    const debits = entries.filter((e) => (parseFloat(e.debit) || 0) > 0);
+    const credits = entries.filter((e) => (parseFloat(e.credit) || 0) > 0);
+    const debitPart =
+      debits.map(getEntryLineLabel).filter(Boolean).join(', ') || '—';
+    const creditPart =
+      credits.map(getEntryLineLabel).filter(Boolean).join(', ') || '—';
+    return {
+      debitPart,
+      creditPart,
+      oneLiner: `Dr: ${debitPart} → Cr: ${creditPart}`,
+    };
+  };
+
+  const buildVoucherSearchText = (v) => {
+    const parts = [
+      v.voucherNumber,
+      v.referCode,
+      v.transactionId,
+      v.payeeName,
+      v.payee?.name,
+      v.payee?.email,
+      v.cashAccountType,
+      v.paymentMethod,
+      v.status,
+      ...(Array.isArray(v.entries)
+        ? v.entries.flatMap((e) => [
+            e.accountName,
+            e.accountModel,
+            e.description,
+            getEntryLineLabel(e),
+            getBankAccountLabel(e.bankAccount),
+          ])
+        : []),
+    ];
+    return parts.filter(Boolean).join(' ').toLowerCase();
+  };
+
+  const formatCashAccountType = (t) => {
+    if (!t) return '';
+    return String(t)
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  };
+
+  const getCashAccountDisplay = (voucher) => {
+    if (voucher.cashAccount && typeof voucher.cashAccount === 'string') {
+      return voucher.cashAccount;
+    }
+    if (voucher.cashAccountType) {
+      return formatCashAccountType(voucher.cashAccountType);
+    }
+    return 'N/A';
+  };
 
   // Calculate totals
-  const totalAmount = vouchers.reduce((sum, v) => sum + (parseFloat(v.amount) || 0), 0);
+  const totalAmount = vouchers.reduce((sum, v) => sum + getVoucherAmount(v), 0);
   const approvedAmount = vouchers
-    .filter((v) => v.status === 'approved')
-    .reduce((sum, v) => sum + (parseFloat(v.amount) || 0), 0);
+    .filter((v) => v.status === 'approved' || v.status === 'completed')
+    .reduce((sum, v) => sum + getVoucherAmount(v), 0);
   const pendingAmount = vouchers
     .filter((v) => v.status === 'pending')
-    .reduce((sum, v) => sum + (parseFloat(v.amount) || 0), 0);
+    .reduce((sum, v) => sum + getVoucherAmount(v), 0);
 
   // Filter vouchers by search term, status, and date
   const filteredVouchers = vouchers.filter((voucher) => {
-    const searchLower = searchTerm.toLowerCase();
+    const searchLower = searchTerm.toLowerCase().trim();
     const matchesSearch =
-      voucher.voucherNumber?.toLowerCase().includes(searchLower) ||
-      voucher.referCode?.toLowerCase().includes(searchLower) ||
-      voucher.payeeName?.toLowerCase().includes(searchLower) ||
-      voucher.transactionId?.toLowerCase().includes(searchLower);
+      !searchLower || buildVoucherSearchText(voucher).includes(searchLower);
 
     const matchesStatus =
       statusFilter === 'all' || voucher.status === statusFilter;
@@ -168,12 +279,14 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'approved':
+      case 'completed':
         return 'success';
       case 'pending':
         return 'warning';
       case 'draft':
         return 'default';
       case 'rejected':
+      case 'cancelled':
         return 'danger';
       default:
         return 'default';
@@ -252,6 +365,25 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
 
   // Generate print-friendly HTML content
   const generatePrintContent = (voucher) => {
+    const entriesTableRows =
+      Array.isArray(voucher.entries) && voucher.entries.length > 0
+        ? voucher.entries
+            .map(
+              (e, i) => `
+              <tr>
+                <td style="padding:8px;border:1px solid #ddd;">${i + 1}</td>
+                <td style="padding:8px;border:1px solid #ddd;">${e.accountModel || ''}</td>
+                <td style="padding:8px;border:1px solid #ddd;">${getEntryLineLabel(e) || '—'}</td>
+                <td style="padding:8px;border:1px solid #ddd;text-align:right;">${parseFloat(e.debit) || 0}</td>
+                <td style="padding:8px;border:1px solid #ddd;text-align:right;">${parseFloat(e.credit) || 0}</td>
+                <td style="padding:8px;border:1px solid #ddd;">${e.description || ''}</td>
+              </tr>`
+            )
+            .join('')
+        : '';
+
+    const printAmount = getVoucherAmount(voucher);
+
     return `
       <!DOCTYPE html>
       <html>
@@ -401,11 +533,17 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
             </div>
 
             <div class="info-section">
-              <h3>Cash Account</h3>
+              <h3>Cash / voucher context</h3>
               <div class="info-row">
-                <span class="info-label">Cash Account:</span>
-                <span class="info-value">${voucher.cashAccount || 'N/A'}</span>
+                <span class="info-label">Cash account:</span>
+                <span class="info-value">${getCashAccountDisplay(voucher)}</span>
               </div>
+              ${voucher.cashAccountType ? `
+              <div class="info-row">
+                <span class="info-label">Cash account type:</span>
+                <span class="info-value">${formatCashAccountType(voucher.cashAccountType)}</span>
+              </div>
+              ` : ''}
               ${voucher.shop ? `
               <div class="info-row">
                 <span class="info-label">Shop:</span>
@@ -415,9 +553,32 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
             </div>
           </div>
 
+          ${
+            entriesTableRows
+              ? `
+          <div class="info-section" style="margin: 20px 0;">
+            <h3>Voucher entries</h3>
+            <table style="width:100%;border-collapse:collapse;font-size:11px;">
+              <thead>
+                <tr style="background:#eee;">
+                  <th style="padding:8px;border:1px solid #ddd;text-align:left;">#</th>
+                  <th style="padding:8px;border:1px solid #ddd;text-align:left;">Model</th>
+                  <th style="padding:8px;border:1px solid #ddd;text-align:left;">Account</th>
+                  <th style="padding:8px;border:1px solid #ddd;text-align:right;">Debit</th>
+                  <th style="padding:8px;border:1px solid #ddd;text-align:right;">Credit</th>
+                  <th style="padding:8px;border:1px solid #ddd;text-align:left;">Note</th>
+                </tr>
+              </thead>
+              <tbody>${entriesTableRows}</tbody>
+            </table>
+          </div>
+          `
+              : ''
+          }
+
           <div class="voucher-info">
             <div class="info-section">
-              <h3>Payee Information</h3>
+              <h3>Payee (legacy / other)</h3>
               <div class="info-row">
                 <span class="info-label">Name:</span>
                 <span class="info-value">${voucher.payee?.name || voucher.payeeName || 'N/A'}</span>
@@ -463,7 +624,7 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
 
           <div class="amount-section">
             <h2>Total Amount</h2>
-            <div class="amount-value">${formatCurrency(voucher.amount, voucher.currency)}</div>
+            <div class="amount-value">${formatCurrency(printAmount, voucher.currency)}</div>
             <p style="margin-top: 10px; font-size: 14px;">
               Currency: ${voucher.currency?.code || 'N/A'} (${voucher.currency?.name || ''})
               ${voucher.currencyExchangeRate && voucher.currencyExchangeRate !== 1 ? ` | Exchange Rate: ${voucher.currencyExchangeRate}` : ''}
@@ -551,7 +712,7 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
           color="primary"
           variant="flat"
           className="mt-4"
-          onPress={() => queryClient.invalidateQueries(['bank-payment-vouchers'])}
+          onPress={() => queryClient.invalidateQueries(['cash-payment-vouchers'])}
         >
           Retry
         </Button>
@@ -564,21 +725,27 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
   const rejectedCount = vouchers.filter((v) => v.status === 'rejected').length;
   const rejectedAmount = vouchers
     .filter((v) => v.status === 'rejected')
-    .reduce((sum, v) => sum + (parseFloat(v.amount) || 0), 0);
+    .reduce((sum, v) => sum + getVoucherAmount(v), 0);
   
   // Get recent vouchers (last 5)
   const recentVouchers = [...vouchers]
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 5);
 
-  // Get top payees
+  // Top parties: primary debit-side label per voucher (fallback payee)
   const payeeStats = vouchers.reduce((acc, v) => {
-    const payeeName = v.payee?.name || v.payeeName || 'Unknown';
-    if (!acc[payeeName]) {
-      acc[payeeName] = { count: 0, total: 0 };
+    const amt = getVoucherAmount(v);
+    const entries = Array.isArray(v.entries) ? v.entries : [];
+    const debitEntry = entries.find((e) => (parseFloat(e.debit) || 0) > 0);
+    const label = debitEntry
+      ? getEntryLineLabel(debitEntry)
+      : v.payee?.name || v.payeeName || 'Other';
+    const key = label || 'Other';
+    if (!acc[key]) {
+      acc[key] = { count: 0, total: 0 };
     }
-    acc[payeeName].count++;
-    acc[payeeName].total += parseFloat(v.amount) || 0;
+    acc[key].count++;
+    acc[key].total += amt;
     return acc;
   }, {});
   const topPayees = Object.entries(payeeStats)
@@ -597,7 +764,9 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                   <p className="text-green-100 text-sm font-medium mb-1">
                     Total Vouchers
                   </p>
-                  <p className="text-3xl font-bold">{data?.totalVouchers || 0}</p>
+                  <p className="text-3xl font-bold">
+                    {data?.totalVouchers ?? vouchers.length}
+                  </p>
                   <p className="text-green-100 text-xs mt-1">
                     {filteredVouchers.length} shown
                   </p>
@@ -614,10 +783,15 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-green-100 text-sm font-medium mb-1">
-                    Approved
+                    Approved / Done
                   </p>
                   <p className="text-3xl font-bold">
-                    {vouchers.filter((v) => v.status === 'approved').length}
+                    {
+                      vouchers.filter(
+                        (v) =>
+                          v.status === 'approved' || v.status === 'completed'
+                      ).length
+                    }
                   </p>
                   <p className="text-green-100 text-xs mt-1">
                     {formatCurrency(approvedAmount, vouchers[0]?.currency)}
@@ -763,7 +937,11 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                     <p className="text-2xl font-bold text-green-600">
                       {vouchers.length > 0
                         ? Math.round(
-                            (vouchers.filter((v) => v.status === 'approved').length /
+                            (vouchers.filter(
+                              (v) =>
+                                v.status === 'approved' ||
+                                v.status === 'completed'
+                            ).length /
                               vouchers.length) *
                               100
                           )
@@ -808,7 +986,7 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                     <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" />
                     <input
                       type="text"
-                      placeholder="Search by voucher number, refer code, payee, or reference..."
+                      placeholder="Search voucher #, refer code, transaction ID, entries, accounts..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -964,7 +1142,7 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
             <TableHeader>
               <TableColumn>VOUCHER NUMBER</TableColumn>
               <TableColumn>REFER CODE</TableColumn>
-              <TableColumn>PAYEE</TableColumn>
+              <TableColumn>ENTRIES (DR → CR)</TableColumn>
               <TableColumn>AMOUNT</TableColumn>
               <TableColumn>PAYMENT METHOD</TableColumn>
               <TableColumn>STATUS</TableColumn>
@@ -973,7 +1151,10 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
               <TableColumn>ACTIONS</TableColumn>
             </TableHeader>
             <TableBody emptyContent="No vouchers found">
-              {filteredVouchers.map((voucher, index) => (
+              {filteredVouchers.map((voucher) => {
+                const entrySummary = getVoucherEntriesSummary(voucher);
+                const displayAmount = getVoucherAmount(voucher);
+                return (
                 <TableRow
                   key={voucher._id}
                   className="hover:bg-gray-50 transition-colors"
@@ -992,18 +1173,23 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div>
-                      <div className="font-medium">
-                        {voucher.payee?.name || voucher.payeeName || 'N/A'}
+                    <div className="max-w-[280px]">
+                      <div
+                        className="font-medium text-sm leading-snug"
+                        title={entrySummary.oneLiner}
+                      >
+                        {entrySummary.oneLiner}
                       </div>
-                      <div className="text-xs text-gray-500 capitalize">
-                        {voucher.payeeType || ''}
+                      <div className="text-xs text-gray-500 mt-1">
+                        {[formatCashAccountType(voucher.cashAccountType), voucher.payeeType]
+                          .filter(Boolean)
+                          .join(' · ')}
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="font-semibold">
-                      {formatCurrency(voucher.amount, voucher.currency)}
+                      {formatCurrency(displayAmount, voucher.currency)}
                     </div>
                     <div className="text-xs text-gray-500">
                       {voucher.currency?.code || ''}
@@ -1092,7 +1278,8 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              );
+              })}
               </TableBody>
             </Table>
             </div>
@@ -1147,7 +1334,7 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                       {formatCurrency(
-                        filteredVouchers.reduce((sum, v) => sum + (parseFloat(v.amount) || 0), 0),
+                        filteredVouchers.reduce((sum, v) => sum + getVoucherAmount(v), 0),
                         vouchers[0]?.currency
                       )}
                     </p>
@@ -1155,13 +1342,21 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                   <div className="bg-green-50 p-4 rounded-lg">
                     <p className="text-xs text-gray-600 mb-1">Approved in Filter</p>
                     <p className="text-2xl font-bold text-green-600">
-                      {filteredVouchers.filter((v) => v.status === 'approved').length}
+                      {
+                        filteredVouchers.filter(
+                          (v) =>
+                            v.status === 'approved' || v.status === 'completed'
+                        ).length
+                      }
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                       {formatCurrency(
                         filteredVouchers
-                          .filter((v) => v.status === 'approved')
-                          .reduce((sum, v) => sum + (parseFloat(v.amount) || 0), 0),
+                          .filter(
+                            (v) =>
+                              v.status === 'approved' || v.status === 'completed'
+                          )
+                          .reduce((sum, v) => sum + getVoucherAmount(v), 0),
                         vouchers[0]?.currency
                       )}
                     </p>
@@ -1175,7 +1370,7 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                       {formatCurrency(
                         filteredVouchers
                           .filter((v) => v.status === 'pending')
-                          .reduce((sum, v) => sum + (parseFloat(v.amount) || 0), 0),
+                          .reduce((sum, v) => sum + getVoucherAmount(v), 0),
                         vouchers[0]?.currency
                       )}
                     </p>
@@ -1185,7 +1380,7 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                     <p className="text-2xl font-bold text-purple-600">
                       {filteredVouchers.length > 0
                         ? formatCurrency(
-                            filteredVouchers.reduce((sum, v) => sum + (parseFloat(v.amount) || 0), 0) /
+                            filteredVouchers.reduce((sum, v) => sum + getVoucherAmount(v), 0) /
                               filteredVouchers.length,
                             vouchers[0]?.currency
                           )
@@ -1230,7 +1425,7 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                           </Chip>
                         </div>
                         <p className="text-xs text-gray-600 mb-1">
-                          {formatCurrency(voucher.amount, voucher.currency)}
+                          {formatCurrency(getVoucherAmount(voucher), voucher.currency)}
                         </p>
                         <p className="text-xs text-gray-500">
                           {formatDate(voucher.createdAt)}
@@ -1251,7 +1446,7 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
               <CardBody className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <FaMoneyBillWave className="text-green-500" />
-                  Top Payees
+                  Top debit parties
                 </h3>
                 <div className="space-y-3">
                   {topPayees.length > 0 ? (
@@ -1280,7 +1475,7 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                           <div
                             className="bg-green-500 h-1.5 rounded-full"
                             style={{
-                              width: `${(stats.total / totalAmount) * 100}%`,
+                              width: `${totalAmount > 0 ? (stats.total / totalAmount) * 100 : 0}%`,
                             }}
                           ></div>
                         </div>
@@ -1288,7 +1483,7 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                     ))
                   ) : (
                     <p className="text-sm text-gray-500 text-center py-4">
-                      No payee data available
+                      No entry party data yet
                     </p>
                   )}
                 </div>
@@ -1310,7 +1505,7 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                         acc[method] = { count: 0, total: 0 };
                       }
                       acc[method].count++;
-                      acc[method].total += parseFloat(v.amount) || 0;
+                      acc[method].total += getVoucherAmount(v);
                       return acc;
                     }, {});
                     return Object.entries(methodStats).length > 0 ? (
@@ -1409,17 +1604,28 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                   </div>
                 </div>
 
-                {/* Bank Account & Payee - Side by Side */}
+                {/* Cash context & payee */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                       <FaStore className="text-green-500" />
-                      Cash Account
+                      Cash account
                     </p>
                     <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
                       <p className="font-bold text-gray-900 text-lg">
-                        {selectedVoucher.cashAccount || 'N/A'}
+                        {getCashAccountDisplay(selectedVoucher)}
                       </p>
+                      {selectedVoucher.cashAccountType && (
+                        <p className="text-sm text-gray-700 mt-1">
+                          Type: {formatCashAccountType(selectedVoucher.cashAccountType)}
+                        </p>
+                      )}
+                      {selectedVoucher.cashBalanceApplied != null && (
+                        <p className="text-xs text-gray-600 mt-2">
+                          Cash balance applied:{' '}
+                          {selectedVoucher.cashBalanceApplied ? 'Yes' : 'No'}
+                        </p>
+                      )}
                       {selectedVoucher.shop && (
                         <p className="text-sm text-gray-700 mt-1">
                           Shop: {selectedVoucher.shop?.name || selectedVoucher.shop || 'N/A'}
@@ -1431,14 +1637,14 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                   <div>
                     <p className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                       <FaUser className="text-green-500" />
-                      Payee Information
+                      Payee / other
                     </p>
                     <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
                       <p className="font-bold text-gray-900 text-lg">
-                        {selectedVoucher.payee?.name || selectedVoucher.payeeName || 'N/A'}
+                        {selectedVoucher.payee?.name || selectedVoucher.payeeName || '—'}
                       </p>
                       <p className="text-sm text-gray-700 mt-1 capitalize">
-                        Type: {selectedVoucher.payeeType || 'N/A'}
+                        Payee type: {selectedVoucher.payeeType || 'N/A'}
                       </p>
                       {selectedVoucher.payee?.email && (
                         <p className="text-sm text-gray-600 mt-1">
@@ -1454,13 +1660,64 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                   </div>
                 </div>
 
+                {/* Entries */}
+                {Array.isArray(selectedVoucher.entries) &&
+                  selectedVoucher.entries.length > 0 && (
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        <FaBook className="text-green-600" />
+                        Voucher entries
+                      </p>
+                      <div className="overflow-x-auto rounded-lg border border-gray-200">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-100 text-left">
+                            <tr>
+                              <th className="p-2 font-semibold">#</th>
+                              <th className="p-2 font-semibold">Model</th>
+                              <th className="p-2 font-semibold">Account</th>
+                              <th className="p-2 font-semibold text-right">Debit</th>
+                              <th className="p-2 font-semibold text-right">Credit</th>
+                              <th className="p-2 font-semibold">Note</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedVoucher.entries.map((e, idx) => (
+                              <tr key={e._id || idx} className="border-t border-gray-100">
+                                <td className="p-2">{idx + 1}</td>
+                                <td className="p-2">{e.accountModel || '—'}</td>
+                                <td className="p-2 font-medium">
+                                  {getEntryLineLabel(e) || '—'}
+                                </td>
+                                <td className="p-2 text-right tabular-nums">
+                                  {parseFloat(e.debit) || 0}
+                                </td>
+                                <td className="p-2 text-right tabular-nums">
+                                  {parseFloat(e.credit) || 0}
+                                </td>
+                                <td className="p-2 text-gray-600 max-w-[200px] truncate" title={e.description}>
+                                  {e.description || '—'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        {getVoucherEntriesSummary(selectedVoucher).oneLiner}
+                      </p>
+                    </div>
+                  )}
+
                 {/* Amount - Enhanced */}
                 <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-xl">
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <p className="text-indigo-100 text-sm font-medium mb-1">Total Amount</p>
                       <p className="text-4xl font-bold">
-                        {formatCurrency(selectedVoucher.amount, selectedVoucher.currency)}
+                        {formatCurrency(
+                          getVoucherAmount(selectedVoucher),
+                          selectedVoucher.currency
+                        )}
                       </p>
                     </div>
                     <div className="bg-white/20 rounded-full p-4">

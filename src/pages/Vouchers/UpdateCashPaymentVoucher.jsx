@@ -16,14 +16,14 @@ import {
   FaFileUpload,
   FaTimes,
   FaSave,
+  FaPlus,
   FaEdit,
+  FaTrash,
   FaInfoCircle,
   FaCalendarAlt,
-  FaStore,
-  FaUser,
+  FaBook,
   FaMoneyBillWave,
   FaFileInvoice,
-  FaEye,
 } from 'react-icons/fa';
 import userRequest from '../../utils/userRequest';
 import toast from 'react-hot-toast';
@@ -31,9 +31,9 @@ import { useQuery, useQueryClient } from 'react-query';
 
 const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { id } = useParams();
   const actualId = voucherId || id;
+  const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [attachment, setAttachment] = useState(null);
@@ -44,79 +44,48 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
   const [formData, setFormData] = useState({
     voucherDate: new Date().toISOString().split('T')[0],
     voucherType: 'payment',
-    payeeType: 'supplier',
-    payee: '',
-    payeeName: '',
-    amount: '',
+    entries: [
+      {
+        account: '',
+        bankAccount: '',
+        accountModel: 'BankAccount',
+        accountName: '',
+        debit: '',
+        credit: '',
+        description: '',
+      },
+      {
+        account: '',
+        bankAccount: '',
+        accountModel: 'BankAccount',
+        accountName: '',
+        debit: '',
+        credit: '',
+        description: '',
+      },
+    ],
     currency: '',
     currencyExchangeRate: '1',
-    paymentMethod: 'cash',
+    referenceNumber: '',
+    relatedPurchase: '',
+    relatedSale: '',
+    relatedPayment: '',
+    relatedCashPaymentVoucher: '',
+    relatedSupplierPayment: '',
+    relatedBankPaymentVoucher: '',
     description: '',
     notes: '',
-    status: 'draft',
   });
 
-  // Fetch voucher data
-  useEffect(() => {
-    const fetchVoucher = async () => {
-      try {
-        setIsLoading(true);
-        const response = await userRequest.get(`/cash-payment-vouchers/${actualId}`);
-        // API returns { status: "success", data: { voucher: {...} } }
-        const voucher = response.data?.data?.voucher || response.data?.data || response.data;
-
-        // Store full voucher info for display
-        setVoucherInfo(voucher);
-
-        setFormData({
-          voucherDate: voucher.voucherDate
-            ? new Date(voucher.voucherDate).toISOString().split('T')[0]
-            : new Date().toISOString().split('T')[0],
-          voucherType: voucher.voucherType || 'payment',
-          payeeType: voucher.payeeType || 'supplier',
-          payee: voucher.payee?._id || voucher.payee || '',
-          payeeName: voucher.payeeName || voucher.payee?.name || '',
-          amount: voucher.amount || '',
-          currency: voucher.currency?._id || '',
-          currencyExchangeRate: voucher.currencyExchangeRate?.toString() || '1',
-          paymentMethod: voucher.paymentMethod || 'cash',
-          description: voucher.description || '',
-          notes: voucher.notes || '',
-          status: voucher.status || 'draft',
-        });
-
-        if (voucher.attachments && voucher.attachments.length > 0) {
-          setExistingAttachments(voucher.attachments);
-        }
-      } catch (error) {
-        console.error('Error fetching voucher:', error);
-        toast.error('Failed to load voucher data');
-        onBack(); // Go back if fetching fails
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (actualId) {
-      fetchVoucher();
-    }
-  }, [actualId]);
-
-  // Fetch data (same as create form)
-  const fetchShops = async () => {
+  // Fetch data
+  const fetchBankAccounts = async () => {
     try {
-      const res = await userRequest.get('/shops');
-      const data = res.data?.data || res.data || [];
-      return Array.isArray(data) ? data : [];
+      const res = await userRequest.get('/bank-accounts');
+      return res?.data?.data?.bankAccounts || res?.data?.data || [];
     } catch (error) {
-      console.error('Error fetching shops:', error);
+      console.error('Error fetching bank accounts:', error);
       return [];
     }
-  };
-
-  const fetchCurrencies = async () => {
-    const res = await userRequest.get('/currencies');
-    return res.data.data || [];
   };
 
   const fetchSuppliers = async () => {
@@ -141,123 +110,182 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
     }
   };
 
-  const fetchUsers = async () => {
+  const fetchCurrencies = async () => {
+    const res = await userRequest.get('/currencies');
+    return res.data.data || [];
+  };
+
+  const fetchPurchases = async () => {
+    const res = await userRequest.get('/purchases?limit=100');
+    return res.data?.data || [];
+  };
+
+  const fetchSales = async () => {
+    const res = await userRequest.get('/sales?limit=100');
+    return res.data?.data || [];
+  };
+
+  const fetchCashPaymentVouchers = async () => {
     try {
-      const res = await userRequest.get('/users');
-      const data = res.data?.data || res.data || [];
-      return Array.isArray(data) ? data : [];
+      const res = await userRequest.get('/cash-payment-vouchers?limit=100');
+      const vouchers = res.data?.data?.vouchers || res.data?.data || res.data || [];
+      return Array.isArray(vouchers) ? vouchers : [];
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Error fetching cash payment vouchers:', error);
       return [];
     }
   };
 
-  // Financial master data fetchers (from MasterData section)
-  const fetchAssets = async () => {
-    const { data } = await userRequest.get('/assets');
-    if (data?.data?.assets && Array.isArray(data.data.assets)) {
-      return data.data.assets;
+  const fetchBankPaymentVouchers = async () => {
+    try {
+      const res = await userRequest.get('/bank-payment-vouchers?limit=100');
+      const vouchers = res.data?.data?.vouchers || res.data?.data || res.data || [];
+      return Array.isArray(vouchers) ? vouchers : [];
+    } catch (error) {
+      console.error('Error fetching bank payment vouchers:', error);
+      return [];
     }
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data)) return data;
-    return [];
+  };
+
+  const fetchAssets = async () => {
+    try {
+      const { data } = await userRequest.get('/assets');
+      if (data?.data?.assets && Array.isArray(data.data.assets)) return data.data.assets;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching assets:', error);
+      return [];
+    }
   };
 
   const fetchIncomes = async () => {
-    const { data } = await userRequest.get('/incomes');
-    if (data?.data?.incomes && Array.isArray(data.data.incomes)) {
-      return data.data.incomes;
+    try {
+      const { data } = await userRequest.get('/incomes');
+      if (data?.data?.incomes && Array.isArray(data.data.incomes)) return data.data.incomes;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching incomes:', error);
+      return [];
     }
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data)) return data;
-    return [];
   };
 
   const fetchLiabilities = async () => {
-    const { data } = await userRequest.get('/liabilities');
-    if (data?.data?.liabilities && Array.isArray(data.data.liabilities)) {
-      return data.data.liabilities;
+    try {
+      const { data } = await userRequest.get('/liabilities');
+      if (data?.data?.liabilities && Array.isArray(data.data.liabilities)) return data.data.liabilities;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching liabilities:', error);
+      return [];
     }
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data)) return data;
-    return [];
   };
 
   const fetchPartnershipAccounts = async () => {
-    const { data } = await userRequest.get('/partnership-accounts');
-    if (data?.data?.partnershipAccounts && Array.isArray(data.data.partnershipAccounts)) {
-      return data.data.partnershipAccounts;
+    try {
+      const { data } = await userRequest.get('/partnership-accounts');
+      if (data?.data?.partnershipAccounts && Array.isArray(data.data.partnershipAccounts)) return data.data.partnershipAccounts;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching partnership accounts:', error);
+      return [];
     }
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data)) return data;
-    return [];
   };
 
   const fetchCashBooks = async () => {
-    const { data } = await userRequest.get('/cash-books');
-    if (data?.data?.cashBooks && Array.isArray(data.data.cashBooks)) {
-      return data.data.cashBooks;
+    try {
+      const { data } = await userRequest.get('/cash-books');
+      if (data?.data?.cashBooks && Array.isArray(data.data.cashBooks)) return data.data.cashBooks;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching cash books:', error);
+      return [];
     }
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data)) return data;
-    return [];
   };
 
   const fetchCapitals = async () => {
-    const { data } = await userRequest.get('/capitals');
-    if (data?.data?.capitals && Array.isArray(data.data.capitals)) {
-      return data.data.capitals;
+    try {
+      const { data } = await userRequest.get('/capitals');
+      if (data?.data?.capitals && Array.isArray(data.data.capitals)) return data.data.capitals;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching capitals:', error);
+      return [];
     }
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data)) return data;
-    return [];
   };
 
   const fetchOwners = async () => {
-    const { data } = await userRequest.get('/owners');
-    if (data?.data?.owners && Array.isArray(data.data.owners)) {
-      return data.data.owners;
+    try {
+      const { data } = await userRequest.get('/owners');
+      if (data?.data?.owners && Array.isArray(data.data.owners)) return data.data.owners;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching owners:', error);
+      return [];
     }
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data)) return data;
-    return [];
   };
 
   const fetchEmployees = async () => {
-    const { data } = await userRequest.get('/employees');
-    if (data?.data?.employees && Array.isArray(data.data.employees)) {
-      return data.data.employees;
+    try {
+      const { data } = await userRequest.get('/employees');
+      if (data?.data?.employees && Array.isArray(data.data.employees)) return data.data.employees;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      return [];
     }
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data)) return data;
-    return [];
   };
 
   const fetchPropertyAccounts = async () => {
-    const { data } = await userRequest.get('/property-accounts');
-    if (data?.data?.propertyAccounts && Array.isArray(data.data.propertyAccounts)) {
-      return data.data.propertyAccounts;
+    try {
+      const { data } = await userRequest.get('/property-accounts');
+      if (data?.data?.propertyAccounts && Array.isArray(data.data.propertyAccounts)) return data.data.propertyAccounts;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching property accounts:', error);
+      return [];
     }
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data)) return data;
-    return [];
   };
 
-  const { data: shops = [], isLoading: isLoadingShops } = useQuery(
-    ['shops'],
-    fetchShops
-  );
-
-  const { data: currencies = [], isLoading: isLoadingCurrencies } = useQuery(
-    ['currencies'],
-    fetchCurrencies
+  const { data: bankAccounts = [], isLoading: isLoadingBanks } = useQuery(
+    ['bank-accounts'],
+    fetchBankAccounts
   );
 
   const { data: suppliers = [] } = useQuery(['suppliers'], fetchSuppliers);
   const { data: customers = [] } = useQuery(['customers'], fetchCustomers);
-  const { data: users = [] } = useQuery(['users'], fetchUsers);
+  const { data: currencies = [], isLoading: isLoadingCurrencies } = useQuery(
+    ['currencies'],
+    fetchCurrencies
+  );
+  const { data: purchases = [] } = useQuery(['purchases'], fetchPurchases);
+  const { data: sales = [] } = useQuery(['sales'], fetchSales);
+  const { data: cashPaymentVouchers = [] } = useQuery(
+    ['cash-payment-vouchers'],
+    fetchCashPaymentVouchers
+  );
+  const { data: bankPaymentVouchers = [] } = useQuery(
+    ['bank-payment-vouchers'],
+    fetchBankPaymentVouchers
+  );
 
-  // Financial master data queries
   const { data: assets = [] } = useQuery(['assets'], fetchAssets);
   const { data: incomes = [] } = useQuery(['incomes'], fetchIncomes);
   const { data: liabilities = [] } = useQuery(['liabilities'], fetchLiabilities);
@@ -268,15 +296,15 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
   const { data: employees = [] } = useQuery(['employees'], fetchEmployees);
   const { data: propertyAccounts = [] } = useQuery(['property-accounts'], fetchPropertyAccounts);
 
-  // Get payee options based on payeeType (includes financial models)
-  const getPayeeOptions = () => {
-    switch (formData.payeeType) {
-      case 'supplier':
+  // Get account options based on accountModel
+  const getAccountOptions = (accountModel) => {
+    switch (accountModel) {
+      case 'BankAccount':
+        return Array.isArray(bankAccounts) ? bankAccounts : [];
+      case 'Supplier':
         return Array.isArray(suppliers) ? suppliers : [];
-      case 'customer':
+      case 'Customer':
         return Array.isArray(customers) ? customers : [];
-      case 'user':
-        return Array.isArray(users) ? users : [];
       case 'Asset':
         return Array.isArray(assets) ? assets : [];
       case 'Income':
@@ -307,28 +335,74 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
       ...prev,
       [name]: value,
     }));
+  };
 
-    // Update payeeName when payee changes
-    if (name === 'payee') {
-      const payees = getPayeeOptions();
-      if (Array.isArray(payees) && payees.length > 0) {
-        const selectedPayee = payees.find((p) => p._id === value);
-        if (selectedPayee) {
-          setFormData((prev) => ({
-            ...prev,
-            payeeName: selectedPayee.name || selectedPayee.email || '',
-          }));
-        }
+  // Handle entry changes
+  const handleEntryChange = (index, field, value) => {
+    const updatedEntries = [...formData.entries];
+    updatedEntries[index] = {
+      ...updatedEntries[index],
+      [field]: value,
+    };
+
+    // Auto-fill accountName when account is selected
+    if (field === 'account') {
+      const accountModel = updatedEntries[index].accountModel;
+      const accounts = getAccountOptions(accountModel);
+      const selectedAccount = accounts.find((a) => a._id === value);
+      updatedEntries[index].bankAccount = accountModel === 'BankAccount' ? value : '';
+      if (selectedAccount) {
+        updatedEntries[index].accountName =
+          selectedAccount.name ||
+          selectedAccount.accountName ||
+          selectedAccount.title ||
+          selectedAccount.email ||
+          '';
       }
     }
 
-    // Reset payee when payeeType changes
-    if (name === 'payeeType') {
+    // Reset account when accountModel changes
+    if (field === 'accountModel') {
+      updatedEntries[index].account = '';
+      updatedEntries[index].bankAccount = '';
+      updatedEntries[index].accountName = '';
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      entries: updatedEntries,
+    }));
+  };
+
+  // Add new entry
+  const addEntry = () => {
+    setFormData((prev) => ({
+      ...prev,
+      entries: [
+        ...prev.entries,
+        {
+          account: '',
+          bankAccount: '',
+          accountModel: 'BankAccount',
+          accountName: '',
+          debit: '',
+          credit: '',
+          description: '',
+        },
+      ],
+    }));
+  };
+
+  // Remove entry
+  const removeEntry = (index) => {
+    if (formData.entries.length > 2) {
+      const updatedEntries = formData.entries.filter((_, i) => i !== index);
       setFormData((prev) => ({
         ...prev,
-        payee: '',
-        payeeName: '',
+        entries: updatedEntries,
       }));
+    } else {
+      toast.error('At least 2 entries are required');
     }
   };
 
@@ -337,7 +411,6 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
     const file = e.target.files[0];
     if (file) {
       setAttachment(file);
-      // Create preview for images
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -355,21 +428,26 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
     setAttachmentPreview(null);
   };
 
+  // Keep validation flexible for mixed voucher use-cases
+  const validateEntries = () => {
+    for (let i = 0; i < formData.entries.length; i++) {
+      const entry = formData.entries[i];
+      const debit = parseFloat(entry.debit) || 0;
+      const credit = parseFloat(entry.credit) || 0;
+      if (debit > 0 && credit > 0) {
+        toast.error(`Entry ${i + 1}: Cannot have both debit and credit`);
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
-    if (!formData.payee) {
-      toast.error('Please select a payee');
-      return;
-    }
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      toast.error('Please enter a valid amount');
-      return;
-    }
-    if (!formData.currency) {
-      toast.error('Please select a currency');
+    if (!validateEntries()) {
       return;
     }
 
@@ -378,17 +456,71 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
     try {
       const formDataToSend = new FormData();
 
-      // Append all form fields
+      // Append basic fields
       formDataToSend.append('voucherDate', formData.voucherDate);
       formDataToSend.append('voucherType', formData.voucherType);
-      formDataToSend.append('payeeType', formData.payeeType);
-      formDataToSend.append('payee', formData.payee);
-      formDataToSend.append('payeeName', formData.payeeName);
-      formDataToSend.append('amount', formData.amount);
       formDataToSend.append('currency', formData.currency);
-      formDataToSend.append('currencyExchangeRate', formData.currencyExchangeRate || '1');
-      formDataToSend.append('paymentMethod', formData.paymentMethod);
-      formDataToSend.append('status', formData.status || 'draft');
+      formDataToSend.append(
+        'currencyExchangeRate',
+        formData.currencyExchangeRate || '1'
+      );
+
+      // Append entries array
+      formData.entries.forEach((entry, index) => {
+        formDataToSend.append(`entries[${index}][account]`, entry.account);
+        formDataToSend.append(
+          `entries[${index}][bankAccount]`,
+          entry.bankAccount || (entry.accountModel === 'BankAccount' ? entry.account : '')
+        );
+        formDataToSend.append(
+          `entries[${index}][accountModel]`,
+          entry.accountModel
+        );
+        formDataToSend.append(
+          `entries[${index}][accountName]`,
+          entry.accountName
+        );
+        formDataToSend.append(`entries[${index}][debit]`, entry.debit || '0');
+        formDataToSend.append(`entries[${index}][credit]`, entry.credit || '0');
+        if (entry.description) {
+          formDataToSend.append(
+            `entries[${index}][description]`,
+            entry.description
+          );
+        }
+      });
+
+      // Append optional fields
+      if (formData.referenceNumber) {
+        formDataToSend.append('referenceNumber', formData.referenceNumber);
+      }
+      if (formData.relatedPurchase) {
+        formDataToSend.append('relatedPurchase', formData.relatedPurchase);
+      }
+      if (formData.relatedSale) {
+        formDataToSend.append('relatedSale', formData.relatedSale);
+      }
+      if (formData.relatedPayment) {
+        formDataToSend.append('relatedPayment', formData.relatedPayment);
+      }
+      if (formData.relatedCashPaymentVoucher) {
+        formDataToSend.append(
+          'relatedCashPaymentVoucher',
+          formData.relatedCashPaymentVoucher
+        );
+      }
+      if (formData.relatedSupplierPayment) {
+        formDataToSend.append(
+          'relatedSupplierPayment',
+          formData.relatedSupplierPayment
+        );
+      }
+      if (formData.relatedBankPaymentVoucher) {
+        formDataToSend.append(
+          'relatedBankPaymentVoucher',
+          formData.relatedBankPaymentVoucher
+        );
+      }
       if (formData.description) {
         formDataToSend.append('description', formData.description);
       }
@@ -401,61 +533,125 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
         formDataToSend.append('attachment', attachment);
       }
 
-        await userRequest.put(`/cash-payment-vouchers/${actualId}`, formDataToSend, {
+      await userRequest.put(`/cash-payment-vouchers/${actualId}`, formDataToSend, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       toast.success('Cash Payment Voucher updated successfully');
-      
-      // Invalidate queries to refresh the list
+
+      // Invalidate queries
       queryClient.invalidateQueries(['cash-payment-vouchers']);
-      
-      // Go back to vouchers list
-      if (onBack) {
-        onBack();
-      } else {
-        navigate('/vouchers');
-      }
+      onBack();
     } catch (error) {
       console.error('Error updating voucher:', error);
       toast.error(
-        error.response?.data?.message || 'Failed to update bank payment voucher'
+        error.response?.data?.message || 'Failed to update cash payment voucher'
       );
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Fetch voucher data
+  useEffect(() => {
+    const fetchVoucher = async () => {
+      if (!actualId) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        setIsLoading(true);
+        const response = await userRequest.get(`/cash-payment-vouchers/${actualId}`);
+        const voucher = response.data?.data?.voucher || response.data?.data || response.data;
+        
+        setVoucherInfo(voucher);
+
+        setFormData({
+          voucherDate: voucher.voucherDate
+            ? new Date(voucher.voucherDate).toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0],
+          voucherType: voucher.voucherType || 'payment',
+          entries: voucher.entries && voucher.entries.length > 0 
+            ? voucher.entries.map(entry => ({
+                account: entry.account?._id || entry.account || '',
+                bankAccount: entry.bankAccount?._id || entry.bankAccount || '',
+                accountModel: entry.accountModel || 'BankAccount',
+                accountName: entry.accountName || '',
+                debit: entry.debit?.toString() || '',
+                credit: entry.credit?.toString() || '',
+                description: entry.description || '',
+              }))
+            : [
+                {
+                  account: '',
+                  bankAccount: '',
+                  accountModel: 'BankAccount',
+                  accountName: '',
+                  debit: '',
+                  credit: '',
+                  description: '',
+                },
+                {
+                  account: '',
+                  bankAccount: '',
+                  accountModel: 'BankAccount',
+                  accountName: '',
+                  debit: '',
+                  credit: '',
+                  description: '',
+                },
+              ],
+          currency: voucher.currency?._id || '',
+          currencyExchangeRate: voucher.currencyExchangeRate?.toString() || '1',
+          referenceNumber: voucher.referenceNumber || '',
+          relatedPurchase: voucher.relatedPurchase?._id || '',
+          relatedSale: voucher.relatedSale?._id || '',
+          relatedPayment: voucher.relatedPayment || '',
+          relatedCashPaymentVoucher: voucher.relatedCashPaymentVoucher?._id || voucher.relatedCashPaymentVoucher || '',
+          relatedSupplierPayment: voucher.relatedSupplierPayment || '',
+          relatedBankPaymentVoucher: voucher.relatedBankPaymentVoucher?._id || voucher.relatedBankPaymentVoucher || '',
+          description: voucher.description || '',
+          notes: voucher.notes || '',
+        });
+
+        if (voucher.attachments && voucher.attachments.length > 0) {
+          setExistingAttachments(voucher.attachments);
+        }
+      } catch (error) {
+        console.error('Error fetching voucher:', error);
+        toast.error('Failed to load voucher data');
+        onBack();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchVoucher();
+  }, [actualId, onBack]);
+
+  // Calculate totals
+  const totalDebit = formData.entries.reduce(
+    (sum, entry) => sum + (parseFloat(entry.debit) || 0),
+    0
+  );
+  const totalCredit = formData.entries.reduce(
+    (sum, entry) => sum + (parseFloat(entry.credit) || 0),
+    0
+  );
+  const isBalanced = Math.abs(totalDebit - totalCredit) < 0.01;
+  
+  const hasEntriesWithValues = formData.entries.some(
+    (entry) => (parseFloat(entry.debit) || 0) > 0 || (parseFloat(entry.credit) || 0) > 0
+  );
+
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-12">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
         <Spinner size="lg" />
+        <p className="ml-4 text-gray-600">Loading voucher data...</p>
       </div>
     );
   }
-
-  // Format currency
-  const formatCurrency = (amount, currency) => {
-    if (!amount) return 'N/A';
-    const symbol = currency?.symbol || 'Rs';
-    const numAmount = parseFloat(amount || 0);
-    // Check if amount is a whole number
-    const isWholeNumber = numAmount % 1 === 0;
-    return `${symbol} ${new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: isWholeNumber ? 0 : 2,
-      maximumFractionDigits: isWholeNumber ? 0 : 2,
-    }).format(numAmount)}`;
-  };
-
-  // Format date
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -482,21 +678,19 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
                     Update Cash Payment Voucher
                   </h1>
                   <p className="text-green-100 text-sm md:text-base mt-1">
-                    {voucherInfo?.voucherNumber || voucherInfo?.referCode || 'Edit voucher details'}
+                    {voucherInfo?.voucherNumber || voucherInfo?.referCode || 'Edit cash voucher'} • Flexible cash voucher edit
                   </p>
                 </div>
               </div>
             </div>
-            {voucherInfo && (
-              <div className="hidden md:flex items-center gap-3">
-                <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-                  <p className="text-white text-xs font-medium">Current Status</p>
-                  <p className="text-green-100 text-sm font-semibold capitalize">
-                    {voucherInfo.status || 'Draft'}
-                  </p>
-                </div>
+            <div className="hidden md:flex items-center gap-3">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+                <p className="text-white text-xs font-medium">Update Entry</p>
+                <p className="text-green-100 text-sm font-semibold">
+                  {hasEntriesWithValues ? (isBalanced ? 'Balanced' : 'Unbalanced') : 'Ready'}
+                </p>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
@@ -507,700 +701,705 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
           <div className="xl:col-span-3">
             <Card className="shadow-xl border-0">
               <CardBody className="p-6 md:p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Form Header */}
-              <div className="mb-6 pb-4 border-b-2 border-gray-200">
-                <div className="flex items-center gap-3">
-                  <div className="bg-green-100 p-2 rounded-lg">
-                    <FaEdit className="text-green-600 text-xl" />
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Form Header */}
+                  <div className="mb-6 pb-4 border-b-2 border-gray-200">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-green-100 p-2 rounded-lg">
+                        <FaEdit className="text-green-600 text-xl" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-gray-900">
+                          Edit cash voucher
+                        </h2>
+                        <p className="text-sm text-gray-600">
+                          Update the voucher information below
+                        </p>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Basic Information */}
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">
-                      Edit Voucher Details
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
+                      <FaCalendarAlt className="text-green-500" />
+                      Basic Information
                     </h2>
-                    <p className="text-sm text-gray-600">
-                      Update the information below and save changes
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        type="date"
+                        label="Voucher Date"
+                        name="voucherDate"
+                        value={formData.voucherDate}
+                        onChange={handleChange}
+                        labelPlacement="outside"
+                      />
+
+                      <Select
+                        label="Voucher Type"
+                        name="voucherType"
+                        selectedKeys={formData.voucherType ? [formData.voucherType] : []}
+                        onSelectionChange={(keys) => {
+                          const selected = Array.from(keys)[0] || '';
+                          setFormData((prev) => ({
+                            ...prev,
+                            voucherType: selected,
+                          }));
+                        }}
+                        labelPlacement="outside"
+                        description="Select voucher type"
+                      >
+                        <SelectItem key="payment" value="payment">Payment</SelectItem>
+                        <SelectItem key="receipt" value="receipt">Receipt</SelectItem>
+                        <SelectItem key="transfer" value="transfer">Transfer</SelectItem>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <Divider />
+
+                  {/* Voucher Entries */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-semibold text-gray-900 pb-2 border-b border-gray-200 flex items-center gap-2 flex-1">
+                        <FaBook className="text-green-500" />
+                        Voucher Entries
+                      </h2>
+                      <Button
+                        size="sm"
+                        color="primary"
+                        variant="flat"
+                        startContent={<FaPlus />}
+                        onPress={addEntry}
+                      >
+                        Add Entry
+                      </Button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {formData.entries.map((entry, index) => (
+                        <Card
+                          key={index}
+                          className="border-2 border-gray-200 bg-gray-50"
+                        >
+                          <CardBody className="p-4">
+                            <div className="flex items-center justify-between mb-4">
+                              <h3 className="font-semibold text-gray-900">
+                                Entry {index + 1}
+                              </h3>
+                              {formData.entries.length > 2 && (
+                                <Button
+                                  isIconOnly
+                                  size="sm"
+                                  color="danger"
+                                  variant="light"
+                                  onPress={() => removeEntry(index)}
+                                >
+                                  <FaTrash />
+                                </Button>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <Select
+                                label="Account Model"
+                                selectedKeys={entry.accountModel ? [entry.accountModel] : []}
+                                onSelectionChange={(keys) => {
+                                  const selected = Array.from(keys)[0] || '';
+                                  handleEntryChange(index, 'accountModel', selected);
+                                }}
+                                labelPlacement="outside"
+                              >
+                                <SelectItem key="BankAccount" value="BankAccount" textValue="Bank Account">
+                                  Bank Account
+                                </SelectItem>
+                                <SelectItem key="Supplier" value="Supplier" textValue="Supplier">
+                                  Supplier
+                                </SelectItem>
+                                <SelectItem key="Customer" value="Customer" textValue="Customer">
+                                  Customer
+                                </SelectItem>
+                                <SelectItem key="Asset" value="Asset" textValue="Asset">
+                                  Asset
+                                </SelectItem>
+                                <SelectItem key="Income" value="Income" textValue="Income">
+                                  Income
+                                </SelectItem>
+                                <SelectItem key="Liability" value="Liability" textValue="Liability">
+                                  Liability
+                                </SelectItem>
+                                <SelectItem key="PartnershipAccount" value="PartnershipAccount" textValue="Partnership Account">
+                                  Partnership Account
+                                </SelectItem>
+                                <SelectItem key="CashBook" value="CashBook" textValue="Cash Book">
+                                  Cash Book
+                                </SelectItem>
+                                <SelectItem key="Capital" value="Capital" textValue="Capital">
+                                  Capital
+                                </SelectItem>
+                                <SelectItem key="Owner" value="Owner" textValue="Owner">
+                                  Owner
+                                </SelectItem>
+                                <SelectItem key="Employee" value="Employee" textValue="Employee">
+                                  Employee
+                                </SelectItem>
+                                <SelectItem key="PropertyAccount" value="PropertyAccount" textValue="Property Account">
+                                  Property Account
+                                </SelectItem>
+                              </Select>
+
+                              <Select
+                                label="Account"
+                                selectedKeys={entry.account ? [entry.account] : []}
+                                onSelectionChange={(keys) => {
+                                  const selected = Array.from(keys)[0] || '';
+                                  handleEntryChange(index, 'account', selected);
+                                }}
+                                labelPlacement="outside"
+                                placeholder="Select account"
+                                isDisabled={!entry.accountModel}
+                              >
+                                {getAccountOptions(entry.accountModel).map((account) => (
+                                  <SelectItem
+                                    key={account._id}
+                                    value={account._id}
+                                    textValue={
+                                      account.name ||
+                                      account.accountName ||
+                                      account.title ||
+                                      account.email ||
+                                      account._id
+                                    }
+                                  >
+                                    {account.name ||
+                                      account.accountName ||
+                                      account.title ||
+                                      account.email ||
+                                      account._id}
+                                  </SelectItem>
+                                ))}
+                              </Select>
+
+                              <Select
+                                label="Bank Account"
+                                selectedKeys={entry.bankAccount ? [entry.bankAccount] : []}
+                                onSelectionChange={(keys) => {
+                                  const selected = Array.from(keys)[0] || '';
+                                  handleEntryChange(index, 'bankAccount', selected);
+                                }}
+                                labelPlacement="outside"
+                                placeholder="Select bank account"
+                                isLoading={isLoadingBanks}
+                              >
+                                {bankAccounts.map((account) => (
+                                  <SelectItem
+                                    key={account._id}
+                                    value={account._id}
+                                    textValue={
+                                      account.accountName ||
+                                      account.name ||
+                                      account.accountNumber ||
+                                      account._id
+                                    }
+                                  >
+                                    {account.accountName ||
+                                      account.name ||
+                                      account.accountNumber ||
+                                      account._id}
+                                  </SelectItem>
+                                ))}
+                              </Select>
+
+                              <Input
+                                label="Account Name"
+                                value={entry.accountName}
+                                onChange={(e) =>
+                                  handleEntryChange(index, 'accountName', e.target.value)
+                                }
+                                labelPlacement="outside"
+                                placeholder="Account name"
+                              />
+
+                              {/* For first entry, only show Debit */}
+                              {index === 0 && (
+                                <Input
+                                  type="number"
+                                  label="Debit"
+                                  value={entry.debit}
+                                  onChange={(e) =>
+                                    handleEntryChange(index, 'debit', e.target.value)
+                                  }
+                                  labelPlacement="outside"
+                                  placeholder="0.00"
+                                  min="0"
+                                  step="0.01"
+                                  description={
+                                    entry.credit > 0
+                                      ? 'Cannot have both debit and credit'
+                                      : ''
+                                  }
+                                />
+                              )}
+
+                              {/* For second entry, only show Credit */}
+                              {index === 1 && (
+                                <Input
+                                  type="number"
+                                  label="Credit"
+                                  value={entry.credit}
+                                  onChange={(e) =>
+                                    handleEntryChange(index, 'credit', e.target.value)
+                                  }
+                                  labelPlacement="outside"
+                                  placeholder="0.00"
+                                  min="0"
+                                  step="0.01"
+                                  description={
+                                    entry.debit > 0
+                                      ? 'Cannot have both debit and credit'
+                                      : ''
+                                  }
+                                />
+                              )}
+
+                              {/* For additional entries, show both Debit and Credit */}
+                              {index > 1 && (
+                                <>
+                                  <Input
+                                    type="number"
+                                    label="Debit"
+                                    value={entry.debit}
+                                    onChange={(e) =>
+                                      handleEntryChange(index, 'debit', e.target.value)
+                                    }
+                                    labelPlacement="outside"
+                                    placeholder="0.00"
+                                    min="0"
+                                    step="0.01"
+                                    description={
+                                      entry.credit > 0
+                                        ? 'Cannot have both debit and credit'
+                                        : ''
+                                    }
+                                  />
+
+                                  <Input
+                                    type="number"
+                                    label="Credit"
+                                    value={entry.credit}
+                                    onChange={(e) =>
+                                      handleEntryChange(index, 'credit', e.target.value)
+                                    }
+                                    labelPlacement="outside"
+                                    placeholder="0.00"
+                                    min="0"
+                                    step="0.01"
+                                    description={
+                                      entry.debit > 0
+                                        ? 'Cannot have both debit and credit'
+                                        : ''
+                                    }
+                                  />
+                                </>
+                              )}
+
+                              <Textarea
+                                label="Description"
+                                value={entry.description}
+                                onChange={(e) =>
+                                  handleEntryChange(index, 'description', e.target.value)
+                                }
+                                labelPlacement="outside"
+                                placeholder="Entry description"
+                                minRows={2}
+                              />
+                            </div>
+                          </CardBody>
+                        </Card>
+                      ))}
+                    </div>
+
+                    {/* Balance Summary */}
+                    <Card className="mt-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200">
+                      <CardBody className="p-4">
+                        <div className="grid grid-cols-3 gap-4 text-center">
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">Total Debit</p>
+                            <p className="text-xl font-bold text-gray-900">
+                              {totalDebit.toFixed(2)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">Total Credit</p>
+                            <p className="text-xl font-bold text-gray-900">
+                              {totalCredit.toFixed(2)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">Balance</p>
+                            <p
+                              className={`text-xl font-bold ${
+                                isBalanced ? 'text-green-600' : 'text-red-600'
+                              }`}
+                            >
+                              {(totalDebit - totalCredit).toFixed(2)}
+                            </p>
+                            {isBalanced ? (
+                              <p className="text-xs text-green-600 mt-1">✓ Balanced</p>
+                            ) : (
+                              <p className="text-xs text-red-600 mt-1">
+                                Debits must equal Credits
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </CardBody>
+                    </Card>
+                  </div>
+
+                  <Divider />
+
+                  {/* Currency */}
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
+                      <FaMoneyBillWave className="text-green-500" />
+                      Currency
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Select
+                        label="Currency"
+                        name="currency"
+                        selectedKeys={formData.currency ? [formData.currency] : []}
+                        onSelectionChange={(keys) => {
+                          const selected = Array.from(keys)[0] || '';
+                          setFormData((prev) => ({
+                            ...prev,
+                            currency: selected,
+                          }));
+                        }}
+                        labelPlacement="outside"
+                        placeholder="Select currency"
+                        isLoading={isLoadingCurrencies}
+                      >
+                        {currencies.map((currency) => (
+                          <SelectItem
+                            key={currency._id}
+                            value={currency._id}
+                            textValue={`${currency.code} - ${currency.name} (${currency.symbol})`}
+                          >
+                            {currency.code} - {currency.name} ({currency.symbol})
+                          </SelectItem>
+                        ))}
+                      </Select>
+
+                      <Input
+                        type="number"
+                        label="Currency Exchange Rate"
+                        name="currencyExchangeRate"
+                        value={formData.currencyExchangeRate}
+                        onChange={handleChange}
+                        labelPlacement="outside"
+                        placeholder="1.00"
+                        min="0"
+                        step="0.0001"
+                      />
+                    </div>
+                  </div>
+
+                  <Divider />
+
+                  {/* References */}
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
+                      <FaFileInvoice className="text-orange-500" />
+                      References (Optional)
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        label="Reference Number"
+                        name="referenceNumber"
+                        value={formData.referenceNumber}
+                        onChange={handleChange}
+                        labelPlacement="outside"
+                        placeholder="Enter reference number"
+                      />
+
+                      <Select
+                        label="Related Purchase"
+                        selectedKeys={formData.relatedPurchase ? [formData.relatedPurchase] : []}
+                        onSelectionChange={(keys) => {
+                          const selected = Array.from(keys)[0] || '';
+                          setFormData((prev) => ({
+                            ...prev,
+                            relatedPurchase: selected,
+                          }));
+                        }}
+                        labelPlacement="outside"
+                        placeholder="Select purchase (optional)"
+                      >
+                        {purchases.map((purchase) => (
+                          <SelectItem
+                            key={purchase._id}
+                            value={purchase._id}
+                            textValue={purchase.invoiceNumber || purchase._id}
+                          >
+                            {purchase.invoiceNumber || purchase._id}
+                          </SelectItem>
+                        ))}
+                      </Select>
+
+                      <Select
+                        label="Related Sale"
+                        selectedKeys={formData.relatedSale ? [formData.relatedSale] : []}
+                        onSelectionChange={(keys) => {
+                          const selected = Array.from(keys)[0] || '';
+                          setFormData((prev) => ({
+                            ...prev,
+                            relatedSale: selected,
+                          }));
+                        }}
+                        labelPlacement="outside"
+                        placeholder="Select sale (optional)"
+                      >
+                        {sales.map((sale) => (
+                          <SelectItem
+                            key={sale._id}
+                            value={sale._id}
+                            textValue={sale.invoiceNumber || sale._id}
+                          >
+                            {sale.invoiceNumber || sale._id}
+                          </SelectItem>
+                        ))}
+                      </Select>
+
+                      <Select
+                        label="Related Cash Payment Voucher"
+                        selectedKeys={formData.relatedCashPaymentVoucher ? [formData.relatedCashPaymentVoucher] : []}
+                        onSelectionChange={(keys) => {
+                          const selected = Array.from(keys)[0] || '';
+                          setFormData((prev) => ({
+                            ...prev,
+                            relatedCashPaymentVoucher: selected,
+                          }));
+                        }}
+                        labelPlacement="outside"
+                        placeholder="Select cash payment voucher (optional)"
+                      >
+                        {Array.isArray(cashPaymentVouchers) &&
+                          cashPaymentVouchers
+                            .filter((v) => v._id !== actualId)
+                            .map((voucher) => (
+                              <SelectItem
+                                key={voucher._id}
+                                value={voucher._id}
+                                textValue={voucher.voucherNumber || voucher.referCode || voucher._id}
+                              >
+                                {voucher.voucherNumber || voucher.referCode || voucher._id}
+                              </SelectItem>
+                            ))}
+                      </Select>
+
+                      <Select
+                        label="Related Bank Payment Voucher"
+                        selectedKeys={formData.relatedBankPaymentVoucher ? [formData.relatedBankPaymentVoucher] : []}
+                        onSelectionChange={(keys) => {
+                          const selected = Array.from(keys)[0] || '';
+                          setFormData((prev) => ({
+                            ...prev,
+                            relatedBankPaymentVoucher: selected,
+                          }));
+                        }}
+                        labelPlacement="outside"
+                        placeholder="Select bank payment voucher (optional)"
+                      >
+                        {Array.isArray(bankPaymentVouchers) && bankPaymentVouchers.map((voucher) => (
+                          <SelectItem
+                            key={voucher._id}
+                            value={voucher._id}
+                            textValue={voucher.voucherNumber || voucher.referCode || voucher._id}
+                          >
+                            {voucher.voucherNumber || voucher.referCode || voucher._id}
+                          </SelectItem>
+                        ))}
+                      </Select>
+
+                      <Input
+                        label="Related Payment ID"
+                        name="relatedPayment"
+                        value={formData.relatedPayment}
+                        onChange={handleChange}
+                        labelPlacement="outside"
+                        placeholder="Enter payment ID (optional)"
+                      />
+
+                      <Input
+                        label="Related Supplier Payment ID"
+                        name="relatedSupplierPayment"
+                        value={formData.relatedSupplierPayment}
+                        onChange={handleChange}
+                        labelPlacement="outside"
+                        placeholder="Enter supplier payment ID (optional)"
+                      />
+                    </div>
+                  </div>
+
+                  <Divider />
+
+                  {/* Description & Notes */}
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                      Additional Information
+                    </h2>
+                    <div className="space-y-4">
+                      <Textarea
+                        label="Description"
+                        name="description"
+                        value={formData.description}
+                        onChange={handleChange}
+                        labelPlacement="outside"
+                        placeholder="Enter description"
+                        minRows={2}
+                      />
+
+                      <Textarea
+                        label="Notes"
+                        name="notes"
+                        value={formData.notes}
+                        onChange={handleChange}
+                        labelPlacement="outside"
+                        placeholder="Enter additional notes"
+                        minRows={3}
+                      />
+                    </div>
+                  </div>
+
+                  <Divider />
+
+                  {/* Attachment */}
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                      Attachment
+                    </h2>
+                    <div className="space-y-4">
+                      {!attachment ? (
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors">
+                          <input
+                            type="file"
+                            id="attachment"
+                            onChange={handleAttachmentChange}
+                            className="hidden"
+                            accept="image/*,.pdf,.doc,.docx"
+                          />
+                          <label
+                            htmlFor="attachment"
+                            className="cursor-pointer flex flex-col items-center"
+                          >
+                            <FaFileUpload className="text-4xl text-gray-400 mb-2" />
+                            <span className="text-sm text-gray-600">
+                              Click to upload attachment
+                            </span>
+                            <span className="text-xs text-gray-400 mt-1">
+                              Supports: Images, PDF, DOC, DOCX
+                            </span>
+                          </label>
+                        </div>
+                      ) : (
+                        <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              {attachmentPreview ? (
+                                <img
+                                  src={attachmentPreview}
+                                  alt="Preview"
+                                  className="w-16 h-16 object-cover rounded"
+                                />
+                              ) : (
+                                <div className="w-16 h-16 bg-green-100 rounded flex items-center justify-center">
+                                  <FaFileUpload className="text-2xl text-green-600" />
+                                </div>
+                              )}
+                              <div>
+                                <p className="font-medium text-gray-900">
+                                  {attachment.name}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {(attachment.size / 1024).toFixed(2)} KB
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              isIconOnly
+                              variant="light"
+                              color="danger"
+                              onPress={removeAttachment}
+                            >
+                              <FaTimes />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <Divider />
+
+                  {/* Submit Button */}
+                  <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
+                    <Button
+                      variant="flat"
+                      size="lg"
+                      onPress={() => (onBack ? onBack() : navigate('/vouchers'))}
+                      disabled={isSubmitting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      color="primary"
+                      type="submit"
+                      size="lg"
+                      isLoading={isSubmitting}
+                      startContent={!isSubmitting && <FaSave />}
+                      className="bg-gradient-to-r from-green-500 to-emerald-600"
+                    >
+                      {isSubmitting ? 'Updating...' : 'Update Voucher'}
+                    </Button>
+                  </div>
+                </form>
+              </CardBody>
+            </Card>
+          </div>
+
+          {/* Right Sidebar */}
+          <div className="xl:col-span-1 space-y-6">
+            <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50 to-emerald-50">
+              <CardBody className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <FaInfoCircle className="text-green-600 text-xl" />
+                  <h3 className="text-lg font-bold text-gray-900">Quick Guide</h3>
+                </div>
+                <div className="space-y-4">
+                  <div className="bg-white p-4 rounded-lg">
+                    <p className="text-sm font-semibold text-gray-900 mb-2">
+                      Flexible Entry
+                    </p>
+                    <ul className="text-xs text-gray-600 space-y-1">
+                      <li>• No fields are strictly required</li>
+                      <li>• Use only fields needed for your flow</li>
+                      <li>• Supports bank, supplier, customer, asset, etc.</li>
+                      <li>• Debit/Credit can be used as needed</li>
+                    </ul>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg">
+                    <p className="text-sm font-semibold text-gray-900 mb-2">
+                      Optional Guideline
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      For accounting consistency, avoid filling both debit and credit in the same line.
                     </p>
                   </div>
                 </div>
-              </div>
-
-              {/* Basic Information */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
-                  <FaCalendarAlt className="text-blue-500" />
-                  Basic Information
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    isRequired
-                    type="date"
-                    label="Voucher Date"
-                    name="voucherDate"
-                    value={formData.voucherDate}
-                    onChange={handleChange}
-                    labelPlacement="outside"
-                  />
-
-                  <Select
-                    isRequired
-                    label="Voucher Type"
-                    name="voucherType"
-                    selectedKeys={formData.voucherType ? [formData.voucherType] : []}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] || '';
-                      setFormData((prev) => ({
-                        ...prev,
-                        voucherType: selected,
-                      }));
-                    }}
-                    labelPlacement="outside"
-                    description="Select voucher type"
-                  >
-                    <SelectItem key="payment" value="payment">Payment</SelectItem>
-                    <SelectItem key="receipt" value="receipt">Receipt</SelectItem>
-                    <SelectItem key="transfer" value="transfer">Transfer</SelectItem>
-                  </Select>
-
-                  <Select
-                    isRequired
-                    label="Status"
-                    name="status"
-                    selectedKeys={formData.status ? [formData.status] : []}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] || '';
-                      setFormData((prev) => ({
-                        ...prev,
-                        status: selected,
-                      }));
-                    }}
-                    labelPlacement="outside"
-                    description="Current status of the voucher"
-                  >
-                    <SelectItem key="draft" value="draft">
-                      Draft
-                    </SelectItem>
-                    <SelectItem key="pending" value="pending">
-                      Pending
-                    </SelectItem>
-                    <SelectItem key="approved" value="approved">
-                      Approved
-                    </SelectItem>
-                    <SelectItem key="completed" value="completed">
-                      Completed
-                    </SelectItem>
-                    <SelectItem key="cancelled" value="cancelled">
-                      Cancelled
-                    </SelectItem>
-                    <SelectItem key="rejected" value="rejected">
-                      Rejected
-                    </SelectItem>
-                  </Select>
-                </div>
-              </div>
-
-              <Divider />
-
-              {/* Payee */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
-                  <FaStore className="text-green-500" />
-                  Payment Details
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Select
-                    isRequired
-                    label="Payee Type"
-                    name="payeeType"
-                    selectedKeys={formData.payeeType ? [formData.payeeType] : []}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] || '';
-                      setFormData((prev) => ({
-                        ...prev,
-                        payeeType: selected,
-                        payee: '', // Reset payee when type changes
-                        payeeName: '',
-                      }));
-                    }}
-                    labelPlacement="outside"
-                  >
-                    <SelectItem key="supplier" value="supplier">
-                      Supplier
-                    </SelectItem>
-                    <SelectItem key="customer" value="customer">
-                      Customer
-                    </SelectItem>
-                    <SelectItem key="user" value="user">
-                      User
-                    </SelectItem>
-                    <SelectItem key="Asset" value="Asset">
-                      Asset
-                    </SelectItem>
-                    <SelectItem key="Income" value="Income">
-                      Income
-                    </SelectItem>
-                    <SelectItem key="Liability" value="Liability">
-                      Liability
-                    </SelectItem>
-                    <SelectItem key="PartnershipAccount" value="PartnershipAccount">
-                      Partnership Account
-                    </SelectItem>
-                    <SelectItem key="CashBook" value="CashBook">
-                      Cashbook
-                    </SelectItem>
-                    <SelectItem key="Capital" value="Capital">
-                      Capital
-                    </SelectItem>
-                    <SelectItem key="Owner" value="Owner">
-                      Owner
-                    </SelectItem>
-                    <SelectItem key="Employee" value="Employee">
-                      Employee
-                    </SelectItem>
-                    <SelectItem key="PropertyAccount" value="PropertyAccount">
-                      Property Account
-                    </SelectItem>
-                  </Select>
-
-                  <Select
-                    isRequired
-                    label={`Select ${formData.payeeType?.charAt(0).toUpperCase() + formData.payeeType?.slice(1)}`}
-                    name="payee"
-                    selectedKeys={formData.payee ? [formData.payee] : []}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] || '';
-                      const payees = getPayeeOptions();
-                      const selectedPayee = payees.find((p) => p._id === selected);
-                      setFormData((prev) => ({
-                        ...prev,
-                        payee: selected,
-                        payeeName: selectedPayee?.name || selectedPayee?.email || '',
-                      }));
-                    }}
-                    labelPlacement="outside"
-                    placeholder={`Select ${formData.payeeType || 'payee'}`}
-                    isDisabled={!formData.payeeType}
-                  >
-                    {(() => {
-                      const payeeOptions = getPayeeOptions();
-                      return Array.isArray(payeeOptions) && payeeOptions.length > 0
-                        ? payeeOptions.map((payee) => (
-                            <SelectItem 
-                              key={payee._id} 
-                              value={payee._id}
-                              textValue={payee.name || payee.email || payee._id}
-                            >
-                              {payee.name || payee.email || payee._id}
-                            </SelectItem>
-                          ))
-                        : (
-                            <SelectItem key="no-options" value="" isDisabled>
-                              No {formData.payeeType || 'payee'} available
-                            </SelectItem>
-                          );
-                    })()}
-                  </Select>
-
-                  <Input
-                    label="Payee Name"
-                    name="payeeName"
-                    value={formData.payeeName}
-                    disabled
-                    labelPlacement="outside"
-                    description="Auto-filled from selected payee"
-                  />
-                </div>
-              </div>
-
-              <Divider />
-
-              {/* Amount & Currency */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
-                  <FaMoneyBillWave className="text-purple-500" />
-                  Amount & Currency
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Input
-                    isRequired
-                    type="number"
-                    label="Amount"
-                    name="amount"
-                    value={formData.amount}
-                    onChange={handleChange}
-                    labelPlacement="outside"
-                    placeholder="0.00"
-                    min="0"
-                    step="0.01"
-                  />
-
-                  <Select
-                    isRequired
-                    label="Currency"
-                    name="currency"
-                    selectedKeys={formData.currency ? [formData.currency] : []}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] || '';
-                      setFormData((prev) => ({
-                        ...prev,
-                        currency: selected,
-                      }));
-                    }}
-                    labelPlacement="outside"
-                    placeholder="Select currency"
-                    isLoading={isLoadingCurrencies}
-                  >
-                    {currencies.map((currency) => (
-                      <SelectItem 
-                        key={currency._id} 
-                        value={currency._id}
-                        textValue={`${currency.code} - ${currency.name} (${currency.symbol})`}
-                      >
-                        {currency.code} - {currency.name} ({currency.symbol})
-                      </SelectItem>
-                    ))}
-                  </Select>
-
-                  <Input
-                    type="number"
-                    label="Currency Exchange Rate"
-                    name="currencyExchangeRate"
-                    value={formData.currencyExchangeRate}
-                    onChange={handleChange}
-                    labelPlacement="outside"
-                    placeholder="1.00"
-                    min="0"
-                    step="0.0001"
-                  />
-                </div>
-              </div>
-
-              <Divider />
-
-              {/* Payment Method & References */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
-                  <FaFileInvoice className="text-orange-500" />
-                  Payment Method
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Select
-                    label="Payment Method"
-                    name="paymentMethod"
-                    selectedKeys={formData.paymentMethod ? [formData.paymentMethod] : []}
-                    onSelectionChange={(keys) => {
-                      const [selected] = Array.from(keys);
-                      handleChange({ target: { name: 'paymentMethod', value: selected || '' } });
-                    }}
-                    labelPlacement="outside"
-                  >
-                    <SelectItem key="cash" value="cash" textValue="Cash">
-                      Cash
-                    </SelectItem>
-                    <SelectItem key="petty_cash" value="petty_cash" textValue="Petty Cash">
-                      Petty Cash
-                    </SelectItem>
-                    <SelectItem key="cash_register" value="cash_register" textValue="Cash Register">
-                      Cash Register
-                    </SelectItem>
-                    <SelectItem key="other" value="other" textValue="Other">
-                      Other
-                    </SelectItem>
-                  </Select>
-
-                </div>
-              </div>
-
-              <Divider />
-
-              {/* Description & Notes */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
-                  Additional Information
-                </h2>
-                <div className="space-y-4">
-                  <Textarea
-                    label="Description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    labelPlacement="outside"
-                    placeholder="Enter description"
-                    minRows={2}
-                  />
-
-                  <Textarea
-                    label="Notes"
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    labelPlacement="outside"
-                    placeholder="Enter additional notes"
-                    minRows={3}
-                  />
-                </div>
-              </div>
-
-              <Divider />
-
-              {/* Existing Attachments */}
-              {existingAttachments.length > 0 && (
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
-                    Existing Attachments
-                  </h2>
-                  <div className="space-y-2">
-                    {existingAttachments.map((attachment, index) => (
-                      <div
-                        key={index}
-                        className="border border-gray-200 rounded-lg p-4 bg-gray-50 flex items-center justify-between"
-                      >
-                        <div className="flex items-center gap-3">
-                          {attachment.type?.startsWith('image/') ? (
-                            <img
-                              src={attachment.url}
-                              alt={attachment.name}
-                              className="w-16 h-16 object-cover rounded"
-                            />
-                          ) : (
-                            <div className="w-16 h-16 bg-blue-100 rounded flex items-center justify-center">
-                              <FaFileUpload className="text-2xl text-green-600" />
-                            </div>
-                          )}
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {attachment.name}
-                            </p>
-                            <a
-                              href={attachment.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-green-600 hover:underline"
-                            >
-                              View Attachment
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <Divider />
-
-              {/* New Attachment */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
-                  Add New Attachment (Optional)
-                </h2>
-                <div className="space-y-4">
-                  {!attachment ? (
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
-                      <input
-                        type="file"
-                        id="attachment"
-                        onChange={handleAttachmentChange}
-                        className="hidden"
-                        accept="image/*,.pdf,.doc,.docx"
-                      />
-                      <label
-                        htmlFor="attachment"
-                        className="cursor-pointer flex flex-col items-center"
-                      >
-                        <FaFileUpload className="text-4xl text-gray-400 mb-2" />
-                        <span className="text-sm text-gray-600">
-                          Click to upload new attachment
-                        </span>
-                        <span className="text-xs text-gray-400 mt-1">
-                          Supports: Images, PDF, DOC, DOCX
-                        </span>
-                      </label>
-                    </div>
-                  ) : (
-                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {attachmentPreview ? (
-                            <img
-                              src={attachmentPreview}
-                              alt="Preview"
-                              className="w-16 h-16 object-cover rounded"
-                            />
-                          ) : (
-                            <div className="w-16 h-16 bg-blue-100 rounded flex items-center justify-center">
-                              <FaFileUpload className="text-2xl text-green-600" />
-                            </div>
-                          )}
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {attachment.name}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {(attachment.size / 1024).toFixed(2)} KB
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          isIconOnly
-                          variant="light"
-                          color="danger"
-                          onPress={removeAttachment}
-                        >
-                          <FaTimes />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <Divider />
-
-              {/* Submit Button */}
-              <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
-                <Button
-                  variant="flat"
-                  size="lg"
-                  onPress={() => (onBack ? onBack() : navigate('/vouchers'))}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  color="primary"
-                  type="submit"
-                  size="lg"
-                  isLoading={isSubmitting}
-                  startContent={!isSubmitting && <FaSave />}
-                  className="bg-gradient-to-r from-green-500 to-green-600"
-                >
-                  {isSubmitting ? 'Updating...' : 'Update Voucher'}
-                </Button>
-              </div>
-            </form>
-          </CardBody>
-        </Card>
-          </div>
-
-          {/* Right Sidebar - Voucher Information */}
-          <div className="xl:col-span-1 space-y-6">
-            {/* Current Voucher Info */}
-            {voucherInfo && (
-              <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 to-indigo-50">
-                <CardBody className="p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <FaInfoCircle className="text-green-600 text-xl" />
-                    <h3 className="text-lg font-bold text-gray-900">
-                      Voucher Information
-                    </h3>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="bg-white p-4 rounded-lg">
-                      <p className="text-xs text-gray-600 mb-1">Voucher Number</p>
-                      <p className="font-bold text-lg text-green-600">
-                        {voucherInfo.voucherNumber || 'N/A'}
-                      </p>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg">
-                      <p className="text-xs text-gray-600 mb-1">Refer Code</p>
-                      <p className="font-semibold text-gray-900">
-                        {voucherInfo.referCode || 'N/A'}
-                      </p>
-                    </div>
-                    {voucherInfo.transactionId && (
-                      <div className="bg-white p-4 rounded-lg">
-                        <p className="text-xs text-gray-600 mb-1">Transaction ID</p>
-                        <p className="font-medium text-sm text-gray-700 break-all">
-                          {voucherInfo.transactionId}
-                        </p>
-                      </div>
-                    )}
-                    <div className="bg-white p-4 rounded-lg">
-                      <p className="text-xs text-gray-600 mb-1">Current Amount</p>
-                      <p className="font-bold text-xl text-green-600">
-                        {formatCurrency(voucherInfo.amount, voucherInfo.currency)}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {voucherInfo.currency?.code || ''}
-                      </p>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg">
-                      <p className="text-xs text-gray-600 mb-1">Status</p>
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`w-3 h-3 rounded-full ${
-                            voucherInfo.status === 'approved'
-                              ? 'bg-green-500'
-                              : voucherInfo.status === 'pending'
-                              ? 'bg-yellow-500'
-                              : voucherInfo.status === 'rejected'
-                              ? 'bg-red-500'
-                              : 'bg-gray-500'
-                          }`}
-                        ></div>
-                        <p className="font-semibold capitalize text-gray-900">
-                          {voucherInfo.status || 'Draft'}
-                        </p>
-                      </div>
-                    </div>
-                    {voucherInfo.user && (
-                      <div className="bg-white p-4 rounded-lg">
-                        <p className="text-xs text-gray-600 mb-1">Created By</p>
-                        <p className="font-medium text-gray-900">
-                          {voucherInfo.user.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {voucherInfo.user.email}
-                        </p>
-                      </div>
-                    )}
-                    <div className="bg-white p-4 rounded-lg">
-                      <p className="text-xs text-gray-600 mb-1">Created Date</p>
-                      <p className="font-medium text-gray-900">
-                        {formatDate(voucherInfo.createdAt)}
-                      </p>
-                      {voucherInfo.updatedAt && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          Updated: {formatDate(voucherInfo.updatedAt)}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
-            )}
-
-            {/* Quick Actions */}
-            <Card className="shadow-lg border-0">
-              <CardBody className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <FaFileInvoice className="text-purple-500" />
-                  Quick Actions
-                </h3>
-                <div className="space-y-3">
-                  <Button
-                    variant="flat"
-                    className="w-full justify-start"
-                    onPress={() => {
-                      if (voucherInfo) {
-                        window.open(
-                          `/vouchers/view/${voucherInfo._id}`,
-                          '_blank'
-                        );
-                      }
-                    }}
-                  >
-                    <FaEye className="mr-2" />
-                    View Details
-                  </Button>
-                  <Button
-                    variant="flat"
-                    color="primary"
-                    className="w-full justify-start"
-                    onPress={() => {
-                      // Duplicate voucher functionality
-                      toast.info('Duplicate functionality coming soon');
-                    }}
-                  >
-                    <FaFileUpload className="mr-2" />
-                    Duplicate Voucher
-                  </Button>
-                </div>
               </CardBody>
             </Card>
-
-            {/* Payment Summary */}
-            {voucherInfo && (
-              <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50 to-emerald-50">
-                <CardBody className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <FaMoneyBillWave className="text-green-600" />
-                    Payment Summary
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 bg-white rounded-lg">
-                      <span className="text-sm text-gray-600">Amount</span>
-                      <span className="font-bold text-green-600">
-                        {formatCurrency(voucherInfo.amount, voucherInfo.currency)}
-                      </span>
-                    </div>
-                    {voucherInfo.paymentMethod && (
-                      <div className="flex justify-between items-center p-3 bg-white rounded-lg">
-                        <span className="text-sm text-gray-600">Method</span>
-                        <span className="font-medium text-gray-900">
-                          {(() => {
-                            const methodMap = {
-                              'bank_transfer': 'Bank Transfer',
-                              'check': 'Check',
-                              'online_payment': 'Online Payment',
-                              'wire_transfer': 'Wire Transfer',
-                              'dd': 'Demand Draft (DD)',
-                              'other': 'Other',
-                            };
-                            return methodMap[voucherInfo.paymentMethod] || voucherInfo.paymentMethod.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                          })()}
-                        </span>
-                      </div>
-                    )}
-                    {voucherInfo.referenceNumber && (
-                      <div className="flex justify-between items-center p-3 bg-white rounded-lg">
-                        <span className="text-sm text-gray-600">Reference</span>
-                        <span className="font-medium text-gray-900">
-                          {voucherInfo.referenceNumber}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </CardBody>
-              </Card>
-            )}
-
-            {/* Cash Account Info */}
-            {voucherInfo?.cashAccount && (
-              <Card className="shadow-lg border-0">
-                <CardBody className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <FaStore className="text-green-500" />
-                    Cash Account
-                  </h3>
-                  <div className="space-y-2">
-                    <div className="p-3 bg-green-50 rounded-lg">
-                      <p className="font-semibold text-gray-900">
-                        {voucherInfo.cashAccount}
-                      </p>
-                      {voucherInfo.shop && (
-                        <p className="text-sm text-gray-600 mt-1">
-                          Shop: {voucherInfo.shop?.name || voucherInfo.shop || 'N/A'}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
-            )}
-
-            {/* Payee Info */}
-            {voucherInfo?.payee && (
-              <Card className="shadow-lg border-0">
-                <CardBody className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <FaUser className="text-green-500" />
-                    Payee Information
-                  </h3>
-                  <div className="space-y-2">
-                    <div className="p-3 bg-green-50 rounded-lg">
-                      <p className="font-semibold text-gray-900">
-                        {voucherInfo.payee.name || voucherInfo.payeeName}
-                      </p>
-                      <p className="text-sm text-gray-600 capitalize">
-                        Type: {voucherInfo.payeeType}
-                      </p>
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
-            )}
           </div>
         </div>
       </div>

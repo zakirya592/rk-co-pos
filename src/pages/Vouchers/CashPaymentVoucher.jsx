@@ -8,7 +8,6 @@ import {
   Select,
   SelectItem,
   Textarea,
-  Spinner,
   Divider,
 } from '@nextui-org/react';
 import {
@@ -17,12 +16,11 @@ import {
   FaTimes,
   FaSave,
   FaPlus,
+  FaTrash,
   FaInfoCircle,
   FaCalendarAlt,
-  FaStore,
-  FaUser,
+  FaBook,
   FaMoneyBillWave,
-  FaFileInvoice,
 } from 'react-icons/fa';
 import userRequest from '../../utils/userRequest';
 import toast from 'react-hot-toast';
@@ -38,32 +36,41 @@ const CashPaymentVoucher = ({ onBack }) => {
   const [formData, setFormData] = useState({
     voucherDate: new Date().toISOString().split('T')[0],
     voucherType: 'payment',
-    payeeType: 'supplier',
-    payee: '',
-    payeeName: '',
-    amount: '',
+    entries: [
+      {
+        account: '',
+        bankAccount: '',
+        accountModel: 'BankAccount',
+        accountName: '',
+        debit: '',
+        credit: '',
+        description: '',
+      },
+      {
+        account: '',
+        bankAccount: '',
+        accountModel: 'BankAccount',
+        accountName: '',
+        debit: '',
+        credit: '',
+        description: '',
+      },
+    ],
     currency: '',
     currencyExchangeRate: '1',
-    paymentMethod: 'cash',
     description: '',
     notes: '',
   });
 
   // Fetch data
-  const fetchShops = async () => {
+  const fetchBankAccounts = async () => {
     try {
-      const res = await userRequest.get('/shops');
-      const data = res.data?.data || res.data || [];
-      return Array.isArray(data) ? data : [];
+      const res = await userRequest.get('/bank-accounts');
+      return res?.data?.data?.bankAccounts || res?.data?.data || [];
     } catch (error) {
-      console.error('Error fetching shops:', error);
+      console.error('Error fetching bank accounts:', error);
       return [];
     }
-  };
-
-  const fetchCurrencies = async () => {
-    const res = await userRequest.get('/currencies');
-    return res.data.data || [];
   };
 
   const fetchSuppliers = async () => {
@@ -88,123 +95,140 @@ const CashPaymentVoucher = ({ onBack }) => {
     }
   };
 
-  const fetchUsers = async () => {
+  const fetchCurrencies = async () => {
+    const res = await userRequest.get('/currencies');
+    return res.data.data || [];
+  };
+
+  const fetchAssets = async () => {
     try {
-      const res = await userRequest.get('/users');
-      const data = res.data?.data || res.data || [];
-      return Array.isArray(data) ? data : [];
+      const { data } = await userRequest.get('/assets');
+      if (data?.data?.assets && Array.isArray(data.data.assets)) return data.data.assets;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Error fetching assets:', error);
       return [];
     }
   };
 
-  // Financial master data fetchers (from MasterData section)
-  const fetchAssets = async () => {
-    const { data } = await userRequest.get('/assets');
-    if (data?.data?.assets && Array.isArray(data.data.assets)) {
-      return data.data.assets;
-    }
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data)) return data;
-    return [];
-  };
-
   const fetchIncomes = async () => {
-    const { data } = await userRequest.get('/incomes');
-    if (data?.data?.incomes && Array.isArray(data.data.incomes)) {
-      return data.data.incomes;
+    try {
+      const { data } = await userRequest.get('/incomes');
+      if (data?.data?.incomes && Array.isArray(data.data.incomes)) return data.data.incomes;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching incomes:', error);
+      return [];
     }
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data)) return data;
-    return [];
   };
 
   const fetchLiabilities = async () => {
-    const { data } = await userRequest.get('/liabilities');
-    if (data?.data?.liabilities && Array.isArray(data.data.liabilities)) {
-      return data.data.liabilities;
+    try {
+      const { data } = await userRequest.get('/liabilities');
+      if (data?.data?.liabilities && Array.isArray(data.data.liabilities)) return data.data.liabilities;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching liabilities:', error);
+      return [];
     }
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data)) return data;
-    return [];
   };
 
   const fetchPartnershipAccounts = async () => {
-    const { data } = await userRequest.get('/partnership-accounts');
-    if (data?.data?.partnershipAccounts && Array.isArray(data.data.partnershipAccounts)) {
-      return data.data.partnershipAccounts;
+    try {
+      const { data } = await userRequest.get('/partnership-accounts');
+      if (data?.data?.partnershipAccounts && Array.isArray(data.data.partnershipAccounts)) return data.data.partnershipAccounts;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching partnership accounts:', error);
+      return [];
     }
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data)) return data;
-    return [];
   };
 
   const fetchCashBooks = async () => {
-    const { data } = await userRequest.get('/cash-books');
-    if (data?.data?.cashBooks && Array.isArray(data.data.cashBooks)) {
-      return data.data.cashBooks;
+    try {
+      const { data } = await userRequest.get('/cash-books');
+      if (data?.data?.cashBooks && Array.isArray(data.data.cashBooks)) return data.data.cashBooks;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching cash books:', error);
+      return [];
     }
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data)) return data;
-    return [];
   };
 
   const fetchCapitals = async () => {
-    const { data } = await userRequest.get('/capitals');
-    if (data?.data?.capitals && Array.isArray(data.data.capitals)) {
-      return data.data.capitals;
+    try {
+      const { data } = await userRequest.get('/capitals');
+      if (data?.data?.capitals && Array.isArray(data.data.capitals)) return data.data.capitals;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching capitals:', error);
+      return [];
     }
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data)) return data;
-    return [];
   };
 
   const fetchOwners = async () => {
-    const { data } = await userRequest.get('/owners');
-    if (data?.data?.owners && Array.isArray(data.data.owners)) {
-      return data.data.owners;
+    try {
+      const { data } = await userRequest.get('/owners');
+      if (data?.data?.owners && Array.isArray(data.data.owners)) return data.data.owners;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching owners:', error);
+      return [];
     }
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data)) return data;
-    return [];
   };
 
   const fetchEmployees = async () => {
-    const { data } = await userRequest.get('/employees');
-    if (data?.data?.employees && Array.isArray(data.data.employees)) {
-      return data.data.employees;
+    try {
+      const { data } = await userRequest.get('/employees');
+      if (data?.data?.employees && Array.isArray(data.data.employees)) return data.data.employees;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      return [];
     }
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data)) return data;
-    return [];
   };
 
   const fetchPropertyAccounts = async () => {
-    const { data } = await userRequest.get('/property-accounts');
-    if (data?.data?.propertyAccounts && Array.isArray(data.data.propertyAccounts)) {
-      return data.data.propertyAccounts;
+    try {
+      const { data } = await userRequest.get('/property-accounts');
+      if (data?.data?.propertyAccounts && Array.isArray(data.data.propertyAccounts)) return data.data.propertyAccounts;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data)) return data;
+      return [];
+    } catch (error) {
+      console.error('Error fetching property accounts:', error);
+      return [];
     }
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data)) return data;
-    return [];
   };
 
-  const { data: shops = [], isLoading: isLoadingShops } = useQuery(
-    ['shops'],
-    fetchShops
+  const { data: bankAccounts = [], isLoading: isLoadingBanks } = useQuery(
+    ['bank-accounts'],
+    fetchBankAccounts
   );
 
+  const { data: suppliers = [] } = useQuery(['suppliers'], fetchSuppliers);
+  const { data: customers = [] } = useQuery(['customers'], fetchCustomers);
   const { data: currencies = [], isLoading: isLoadingCurrencies } = useQuery(
     ['currencies'],
     fetchCurrencies
   );
 
-  const { data: suppliers = [] } = useQuery(['suppliers'], fetchSuppliers);
-  const { data: customers = [] } = useQuery(['customers'], fetchCustomers);
-  const { data: users = [] } = useQuery(['users'], fetchUsers);
-
-  // Financial master data queries
   const { data: assets = [] } = useQuery(['assets'], fetchAssets);
   const { data: incomes = [] } = useQuery(['incomes'], fetchIncomes);
   const { data: liabilities = [] } = useQuery(['liabilities'], fetchLiabilities);
@@ -215,15 +239,15 @@ const CashPaymentVoucher = ({ onBack }) => {
   const { data: employees = [] } = useQuery(['employees'], fetchEmployees);
   const { data: propertyAccounts = [] } = useQuery(['property-accounts'], fetchPropertyAccounts);
 
-  // Get payee options based on payeeType (includes financial models)
-  const getPayeeOptions = () => {
-    switch (formData.payeeType) {
-      case 'supplier':
+  // Get account options based on accountModel
+  const getAccountOptions = (accountModel) => {
+    switch (accountModel) {
+      case 'BankAccount':
+        return Array.isArray(bankAccounts) ? bankAccounts : [];
+      case 'Supplier':
         return Array.isArray(suppliers) ? suppliers : [];
-      case 'customer':
+      case 'Customer':
         return Array.isArray(customers) ? customers : [];
-      case 'user':
-        return Array.isArray(users) ? users : [];
       case 'Asset':
         return Array.isArray(assets) ? assets : [];
       case 'Income':
@@ -254,28 +278,74 @@ const CashPaymentVoucher = ({ onBack }) => {
       ...prev,
       [name]: value,
     }));
+  };
 
-    // Update payeeName when payee changes
-    if (name === 'payee') {
-      const payees = getPayeeOptions();
-      if (Array.isArray(payees) && payees.length > 0) {
-        const selectedPayee = payees.find((p) => p._id === value);
-        if (selectedPayee) {
-          setFormData((prev) => ({
-            ...prev,
-            payeeName: selectedPayee.name || selectedPayee.email || '',
-          }));
-        }
+  // Handle entry changes
+  const handleEntryChange = (index, field, value) => {
+    const updatedEntries = [...formData.entries];
+    updatedEntries[index] = {
+      ...updatedEntries[index],
+      [field]: value,
+    };
+
+    // Auto-fill accountName when account is selected
+    if (field === 'account') {
+      const accountModel = updatedEntries[index].accountModel;
+      const accounts = getAccountOptions(accountModel);
+      const selectedAccount = accounts.find((a) => a._id === value);
+      updatedEntries[index].bankAccount = accountModel === 'BankAccount' ? value : '';
+      if (selectedAccount) {
+        updatedEntries[index].accountName =
+          selectedAccount.name ||
+          selectedAccount.accountName ||
+          selectedAccount.title ||
+          selectedAccount.email ||
+          '';
       }
     }
 
-    // Reset payee when payeeType changes
-    if (name === 'payeeType') {
+    // Reset account when accountModel changes
+    if (field === 'accountModel') {
+      updatedEntries[index].account = '';
+      updatedEntries[index].bankAccount = '';
+      updatedEntries[index].accountName = '';
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      entries: updatedEntries,
+    }));
+  };
+
+  // Add new entry
+  const addEntry = () => {
+    setFormData((prev) => ({
+      ...prev,
+      entries: [
+        ...prev.entries,
+        {
+          account: '',
+          bankAccount: '',
+          accountModel: 'BankAccount',
+          accountName: '',
+          debit: '',
+          credit: '',
+          description: '',
+        },
+      ],
+    }));
+  };
+
+  // Remove entry
+  const removeEntry = (index) => {
+    if (formData.entries.length > 2) {
+      const updatedEntries = formData.entries.filter((_, i) => i !== index);
       setFormData((prev) => ({
         ...prev,
-        payee: '',
-        payeeName: '',
+        entries: updatedEntries,
       }));
+    } else {
+      toast.error('At least 2 entries are required');
     }
   };
 
@@ -284,7 +354,6 @@ const CashPaymentVoucher = ({ onBack }) => {
     const file = e.target.files[0];
     if (file) {
       setAttachment(file);
-      // Create preview for images
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -302,21 +371,26 @@ const CashPaymentVoucher = ({ onBack }) => {
     setAttachmentPreview(null);
   };
 
+  // Keep validation flexible for mixed voucher use-cases
+  const validateEntries = () => {
+    for (let i = 0; i < formData.entries.length; i++) {
+      const entry = formData.entries[i];
+      const debit = parseFloat(entry.debit) || 0;
+      const credit = parseFloat(entry.credit) || 0;
+      if (debit > 0 && credit > 0) {
+        toast.error(`Entry ${i + 1}: Cannot have both debit and credit`);
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
-    if (!formData.payee) {
-      toast.error('Please select a payee');
-      return;
-    }
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      toast.error('Please enter a valid amount');
-      return;
-    }
-    if (!formData.currency) {
-      toast.error('Please select a currency');
+    if (!validateEntries()) {
       return;
     }
 
@@ -325,16 +399,41 @@ const CashPaymentVoucher = ({ onBack }) => {
     try {
       const formDataToSend = new FormData();
 
-      // Append all form fields
+      // Append basic fields
       formDataToSend.append('voucherDate', formData.voucherDate);
       formDataToSend.append('voucherType', formData.voucherType);
-      formDataToSend.append('payeeType', formData.payeeType);
-      formDataToSend.append('payee', formData.payee);
-      formDataToSend.append('payeeName', formData.payeeName);
-      formDataToSend.append('amount', formData.amount);
       formDataToSend.append('currency', formData.currency);
-      formDataToSend.append('currencyExchangeRate', formData.currencyExchangeRate || '1');
-      formDataToSend.append('paymentMethod', formData.paymentMethod);
+      formDataToSend.append(
+        'currencyExchangeRate',
+        formData.currencyExchangeRate || '1'
+      );
+
+      // Append entries array
+      formData.entries.forEach((entry, index) => {
+        formDataToSend.append(`entries[${index}][account]`, entry.account);
+        formDataToSend.append(
+          `entries[${index}][bankAccount]`,
+          entry.bankAccount || (entry.accountModel === 'BankAccount' ? entry.account : '')
+        );
+        formDataToSend.append(
+          `entries[${index}][accountModel]`,
+          entry.accountModel
+        );
+        formDataToSend.append(
+          `entries[${index}][accountName]`,
+          entry.accountName
+        );
+        formDataToSend.append(`entries[${index}][debit]`, entry.debit || '0');
+        formDataToSend.append(`entries[${index}][credit]`, entry.credit || '0');
+        if (entry.description) {
+          formDataToSend.append(
+            `entries[${index}][description]`,
+            entry.description
+          );
+        }
+      });
+
+      // Append optional fields
       if (formData.description) {
         formDataToSend.append('description', formData.description);
       }
@@ -352,27 +451,42 @@ const CashPaymentVoucher = ({ onBack }) => {
       });
 
       toast.success('Cash Payment Voucher created successfully');
-      
-      // Invalidate queries to refresh the list
+
+      // Invalidate queries
       queryClient.invalidateQueries(['cash-payment-vouchers']);
-      
+
       // Reset form
       setFormData({
         voucherDate: new Date().toISOString().split('T')[0],
         voucherType: 'payment',
-        payeeType: 'supplier',
-        payee: '',
-        payeeName: '',
-        amount: '',
+        entries: [
+          {
+            account: '',
+            bankAccount: '',
+            accountModel: 'BankAccount',
+            accountName: '',
+            debit: '',
+            credit: '',
+            description: '',
+          },
+          {
+            account: '',
+            bankAccount: '',
+            accountModel: 'BankAccount',
+            accountName: '',
+            debit: '',
+            credit: '',
+            description: '',
+          },
+        ],
         currency: '',
         currencyExchangeRate: '1',
-        paymentMethod: 'cash',
         description: '',
         notes: '',
       });
       setAttachment(null);
       setAttachmentPreview(null);
-      
+
       // Go back to vouchers list
       if (onBack) {
         onBack();
@@ -382,7 +496,7 @@ const CashPaymentVoucher = ({ onBack }) => {
     } catch (error) {
       console.error('Error creating voucher:', error);
       toast.error(
-        error.response?.data?.message || 'Failed to create cash payment voucher'
+        error.response?.data?.message || 'Failed to create Cash Payment Voucher'
       );
     } finally {
       setIsSubmitting(false);
@@ -407,6 +521,17 @@ const CashPaymentVoucher = ({ onBack }) => {
     }
   }, [currencies]);
 
+  // Calculate totals
+  const totalDebit = formData.entries.reduce(
+    (sum, entry) => sum + (parseFloat(entry.debit) || 0),
+    0
+  );
+  const totalCredit = formData.entries.reduce(
+    (sum, entry) => sum + (parseFloat(entry.credit) || 0),
+    0
+  );
+  const isBalanced = Math.abs(totalDebit - totalCredit) < 0.01;
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Enhanced Header */}
@@ -432,15 +557,17 @@ const CashPaymentVoucher = ({ onBack }) => {
                     Create Cash Payment Voucher
                   </h1>
                   <p className="text-green-100 text-sm md:text-base mt-1">
-                    Add a new cash payment transaction • Complete all required fields
+                    Add a new flexible cash voucher entry
                   </p>
                 </div>
               </div>
             </div>
             <div className="hidden md:flex items-center gap-3">
               <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-                <p className="text-white text-xs font-medium">New Voucher</p>
-                <p className="text-green-100 text-sm font-semibold">Draft Status</p>
+                <p className="text-white text-xs font-medium">New Entry</p>
+                <p className="text-green-100 text-sm font-semibold">
+                  {isBalanced ? 'Balanced' : 'Unbalanced'}
+                </p>
               </div>
             </div>
           </div>
@@ -453,495 +580,563 @@ const CashPaymentVoucher = ({ onBack }) => {
           <div className="xl:col-span-3">
             <Card className="shadow-xl border-0">
               <CardBody className="p-6 md:p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Form Header */}
-              <div className="mb-6 pb-4 border-b-2 border-gray-200">
-                <div className="flex items-center gap-3">
-                  <div className="bg-green-100 p-2 rounded-lg">
-                    <FaPlus className="text-green-600 text-xl" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900">
-                      New Voucher Details
-                    </h2>
-                    <p className="text-sm text-gray-600">
-                      Fill in all required information to create the voucher
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Basic Information */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
-                  <FaCalendarAlt className="text-green-500" />
-                  Basic Information
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    isRequired
-                    type="date"
-                    label="Voucher Date"
-                    name="voucherDate"
-                    value={formData.voucherDate}
-                    onChange={handleChange}
-                    labelPlacement="outside"
-                  />
-
-                  <Select
-                    isRequired
-                    label="Voucher Type"
-                    name="voucherType"
-                    selectedKeys={formData.voucherType ? [formData.voucherType] : []}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] || '';
-                      setFormData((prev) => ({
-                        ...prev,
-                        voucherType: selected,
-                      }));
-                    }}
-                    labelPlacement="outside"
-                    description="Select voucher type"
-                  >
-                    <SelectItem key="payment" value="payment">Payment</SelectItem>
-                    <SelectItem key="receipt" value="receipt">Receipt</SelectItem>
-                    <SelectItem key="transfer" value="transfer">Transfer</SelectItem>
-                  </Select>
-                </div>
-              </div>
-
-              <Divider />
-
-              {/* Payee */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
-                  <FaStore className="text-green-500" />
-                  Payment Details
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Select
-                    isRequired
-                    label="Payee Type"
-                    name="payeeType"
-                    selectedKeys={formData.payeeType ? [formData.payeeType] : []}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] || '';
-                      setFormData((prev) => ({
-                        ...prev,
-                        payeeType: selected,
-                        payee: '', // Reset payee when type changes
-                        payeeName: '',
-                      }));
-                    }}
-                    labelPlacement="outside"
-                  >
-                    <SelectItem key="supplier" value="supplier">
-                      Supplier
-                    </SelectItem>
-                    <SelectItem key="customer" value="customer">
-                      Customer
-                    </SelectItem>
-                    <SelectItem key="user" value="user">
-                      User
-                    </SelectItem>
-                    <SelectItem key="Asset" value="Asset">
-                      Asset
-                    </SelectItem>
-                    <SelectItem key="Income" value="Income">
-                      Income
-                    </SelectItem>
-                    <SelectItem key="Liability" value="Liability">
-                      Liability
-                    </SelectItem>
-                    <SelectItem key="PartnershipAccount" value="PartnershipAccount">
-                      Partnership Account
-                    </SelectItem>
-                    <SelectItem key="CashBook" value="CashBook">
-                      Cashbook
-                    </SelectItem>
-                    <SelectItem key="Capital" value="Capital">
-                      Capital
-                    </SelectItem>
-                    <SelectItem key="Owner" value="Owner">
-                      Owner
-                    </SelectItem>
-                    <SelectItem key="Employee" value="Employee">
-                      Employee
-                    </SelectItem>
-                    <SelectItem key="PropertyAccount" value="PropertyAccount">
-                      Property Account
-                    </SelectItem>
-                  </Select>
-
-                  <Select
-                    isRequired
-                    label={`Select ${formData.payeeType?.charAt(0).toUpperCase() + formData.payeeType?.slice(1)}`}
-                    name="payee"
-                    selectedKeys={formData.payee ? [formData.payee] : []}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] || '';
-                      const payees = getPayeeOptions();
-                      const selectedPayee = payees.find((p) => p._id === selected);
-                      setFormData((prev) => ({
-                        ...prev,
-                        payee: selected,
-                        payeeName: selectedPayee?.name || selectedPayee?.email || '',
-                      }));
-                    }}
-                    labelPlacement="outside"
-                    placeholder={`Select ${formData.payeeType || 'payee'}`}
-                    isDisabled={!formData.payeeType}
-                  >
-                    {(() => {
-                      const payeeOptions = getPayeeOptions();
-                      return Array.isArray(payeeOptions) && payeeOptions.length > 0
-                        ? payeeOptions.map((payee) => (
-                            <SelectItem 
-                              key={payee._id} 
-                              value={payee._id}
-                              textValue={payee.name || payee.email || payee._id}
-                            >
-                              {payee.name || payee.email || payee._id}
-                            </SelectItem>
-                          ))
-                        : (
-                            <SelectItem key="no-options" value="" isDisabled>
-                              No {formData.payeeType || 'payee'} available
-                            </SelectItem>
-                          );
-                    })()}
-                  </Select>
-
-                  <Input
-                    label="Payee Name"
-                    name="payeeName"
-                    value={formData.payeeName}
-                    disabled
-                    labelPlacement="outside"
-                    description="Auto-filled from selected payee"
-                  />
-                </div>
-              </div>
-
-              <Divider />
-
-              {/* Amount & Currency */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
-                  <FaMoneyBillWave className="text-purple-500" />
-                  Amount & Currency
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Input
-                    isRequired
-                    type="number"
-                    label="Amount"
-                    name="amount"
-                    value={formData.amount}
-                    onChange={handleChange}
-                    labelPlacement="outside"
-                    placeholder="0.00"
-                    min="0"
-                    step="0.01"
-                  />
-
-                  <Select
-                    isRequired
-                    label="Currency"
-                    name="currency"
-                    selectedKeys={formData.currency ? [formData.currency] : []}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] || '';
-                      setFormData((prev) => ({
-                        ...prev,
-                        currency: selected,
-                      }));
-                    }}
-                    labelPlacement="outside"
-                    placeholder="Select currency"
-                    isLoading={isLoadingCurrencies}
-                  >
-                    {currencies.map((currency) => (
-                      <SelectItem 
-                        key={currency._id} 
-                        value={currency._id}
-                        textValue={`${currency.code} - ${currency.name} (${currency.symbol})`}
-                      >
-                        {currency.code} - {currency.name} ({currency.symbol})
-                      </SelectItem>
-                    ))}
-                  </Select>
-
-                  <Input
-                    type="number"
-                    label="Currency Exchange Rate"
-                    name="currencyExchangeRate"
-                    value={formData.currencyExchangeRate}
-                    onChange={handleChange}
-                    labelPlacement="outside"
-                    placeholder="1.00"
-                    min="0"
-                    step="0.0001"
-                  />
-                </div>
-              </div>
-
-              <Divider />
-
-              {/* Payment Method & References */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
-                  <FaFileInvoice className="text-orange-500" />
-                  Payment Method
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Select
-                    label="Payment Method"
-                    name="paymentMethod"
-                    selectedKeys={formData.paymentMethod ? [formData.paymentMethod] : []}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] || '';
-                      setFormData((prev) => ({
-                        ...prev,
-                        paymentMethod: selected,
-                      }));
-                    }}
-                    labelPlacement="outside"
-                  >
-                    <SelectItem key="cash" value="cash" textValue="Cash">
-                      Cash
-                    </SelectItem>
-                    <SelectItem key="petty_cash" value="petty_cash" textValue="Petty Cash">
-                      Petty Cash
-                    </SelectItem>
-                    <SelectItem key="cash_register" value="cash_register" textValue="Cash Register">
-                      Cash Register
-                    </SelectItem>
-                    <SelectItem key="other" value="other" textValue="Other">
-                      Other
-                    </SelectItem>
-                  </Select>
-
-                </div>
-              </div>
-
-              <Divider />
-
-              {/* Description & Notes */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
-                  Additional Information
-                </h2>
-                <div className="space-y-4">
-                  <Textarea
-                    label="Description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    labelPlacement="outside"
-                    placeholder="Enter description"
-                    minRows={2}
-                  />
-
-                  <Textarea
-                    label="Notes"
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    labelPlacement="outside"
-                    placeholder="Enter additional notes"
-                    minRows={3}
-                  />
-                </div>
-              </div>
-
-              <Divider />
-
-              {/* Attachment */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
-                  Attachment
-                </h2>
-                <div className="space-y-4">
-                  {!attachment ? (
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors">
-                      <input
-                        type="file"
-                        id="attachment"
-                        onChange={handleAttachmentChange}
-                        className="hidden"
-                        accept="image/*,.pdf,.doc,.docx"
-                      />
-                      <label
-                        htmlFor="attachment"
-                        className="cursor-pointer flex flex-col items-center"
-                      >
-                        <FaFileUpload className="text-4xl text-gray-400 mb-2" />
-                        <span className="text-sm text-gray-600">
-                          Click to upload attachment
-                        </span>
-                        <span className="text-xs text-gray-400 mt-1">
-                          Supports: Images, PDF, DOC, DOCX
-                        </span>
-                      </label>
-                    </div>
-                  ) : (
-                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {attachmentPreview ? (
-                            <img
-                              src={attachmentPreview}
-                              alt="Preview"
-                              className="w-16 h-16 object-cover rounded"
-                            />
-                          ) : (
-                            <div className="w-16 h-16 bg-green-100 rounded flex items-center justify-center">
-                              <FaFileUpload className="text-2xl text-green-600" />
-                            </div>
-                          )}
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {attachment.name}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {(attachment.size / 1024).toFixed(2)} KB
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          isIconOnly
-                          variant="light"
-                          color="danger"
-                          onPress={removeAttachment}
-                        >
-                          <FaTimes />
-                        </Button>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Form Header */}
+                  <div className="mb-6 pb-4 border-b-2 border-gray-200">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-green-100 p-2 rounded-lg">
+                        <FaPlus className="text-green-600 text-xl" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-gray-900">
+                          New Cash Voucher Entry
+                        </h2>
+                        <p className="text-sm text-gray-600">
+                          Flexible cash voucher ? use the fields you need
+                        </p>
                       </div>
                     </div>
-                  )}
-                </div>
-              </div>
+                  </div>
 
-              <Divider />
+                  {/* Basic Information */}
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
+                      <FaCalendarAlt className="text-green-500" />
+                      Basic Information
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        type="date"
+                        label="Voucher Date"
+                        name="voucherDate"
+                        value={formData.voucherDate}
+                        onChange={handleChange}
+                        labelPlacement="outside"
+                      />
 
-              {/* Submit Button */}
-              <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
-                <Button
-                  variant="flat"
-                  size="lg"
-                  onPress={() => (onBack ? onBack() : navigate('/vouchers'))}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  color="primary"
-                  type="submit"
-                  size="lg"
-                  isLoading={isSubmitting}
-                  startContent={!isSubmitting && <FaSave />}
-                  className="bg-gradient-to-r from-green-500 to-green-600"
-                >
-                  {isSubmitting ? 'Creating...' : 'Create Voucher'}
-                </Button>
-              </div>
-            </form>
-          </CardBody>
-        </Card>
+                      <Select
+                        label="Voucher Type"
+                        name="voucherType"
+                        selectedKeys={formData.voucherType ? [formData.voucherType] : []}
+                        onSelectionChange={(keys) => {
+                          const selected = Array.from(keys)[0] || '';
+                          setFormData((prev) => ({
+                            ...prev,
+                            voucherType: selected,
+                          }));
+                        }}
+                        labelPlacement="outside"
+                        description="Select voucher type"
+                      >
+                        <SelectItem key="payment" value="payment">Payment</SelectItem>
+                        <SelectItem key="receipt" value="receipt">Receipt</SelectItem>
+                        <SelectItem key="transfer" value="transfer">Transfer</SelectItem>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <Divider />
+
+                  {/* Voucher Entries */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-semibold text-gray-900 pb-2 border-b border-gray-200 flex items-center gap-2 flex-1">
+                        <FaBook className="text-green-500" />
+                        Voucher Entries
+                      </h2>
+                      <Button
+                        size="sm"
+                        color="primary"
+                        variant="flat"
+                        startContent={<FaPlus />}
+                        onPress={addEntry}
+                      >
+                        Add Entry
+                      </Button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {formData.entries.map((entry, index) => (
+                        <Card
+                          key={index}
+                          className="border-2 border-gray-200 bg-gray-50"
+                        >
+                          <CardBody className="p-4">
+                            <div className="flex items-center justify-between mb-4">
+                              <h3 className="font-semibold text-gray-900">
+                                Entry {index + 1}
+                              </h3>
+                              {formData.entries.length > 2 && (
+                                <Button
+                                  isIconOnly
+                                  size="sm"
+                                  color="danger"
+                                  variant="light"
+                                  onPress={() => removeEntry(index)}
+                                >
+                                  <FaTrash />
+                                </Button>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <Select
+                                label="Account Model"
+                                selectedKeys={entry.accountModel ? [entry.accountModel] : []}
+                                onSelectionChange={(keys) => {
+                                  const selected = Array.from(keys)[0] || '';
+                                  handleEntryChange(index, 'accountModel', selected);
+                                }}
+                                labelPlacement="outside"
+                              >
+                                <SelectItem key="BankAccount" value="BankAccount" textValue="Bank Account">
+                                  Bank Account
+                                </SelectItem>
+                                <SelectItem key="Supplier" value="Supplier" textValue="Supplier">
+                                  Supplier
+                                </SelectItem>
+                                <SelectItem key="Customer" value="Customer" textValue="Customer">
+                                  Customer
+                                </SelectItem>
+                                <SelectItem key="Asset" value="Asset" textValue="Asset">
+                                  Asset
+                                </SelectItem>
+                                <SelectItem key="Income" value="Income" textValue="Income">
+                                  Income
+                                </SelectItem>
+                                <SelectItem key="Liability" value="Liability" textValue="Liability">
+                                  Liability
+                                </SelectItem>
+                                <SelectItem key="PartnershipAccount" value="PartnershipAccount" textValue="Partnership Account">
+                                  Partnership Account
+                                </SelectItem>
+                                <SelectItem key="CashBook" value="CashBook" textValue="Cash Book">
+                                  Cash Book
+                                </SelectItem>
+                                <SelectItem key="Capital" value="Capital" textValue="Capital">
+                                  Capital
+                                </SelectItem>
+                                <SelectItem key="Owner" value="Owner" textValue="Owner">
+                                  Owner
+                                </SelectItem>
+                                <SelectItem key="Employee" value="Employee" textValue="Employee">
+                                  Employee
+                                </SelectItem>
+                                <SelectItem key="PropertyAccount" value="PropertyAccount" textValue="Property Account">
+                                  Property Account
+                                </SelectItem>
+                              </Select>
+
+                              <Select
+                                label="Account"
+                                selectedKeys={entry.account ? [entry.account] : []}
+                                onSelectionChange={(keys) => {
+                                  const selected = Array.from(keys)[0] || '';
+                                  handleEntryChange(index, 'account', selected);
+                                }}
+                                labelPlacement="outside"
+                                placeholder="Select account"
+                                isDisabled={!entry.accountModel}
+                              >
+                                {getAccountOptions(entry.accountModel).map((account) => (
+                                  <SelectItem
+                                    key={account._id}
+                                    value={account._id}
+                                    textValue={
+                                      account.name ||
+                                      account.accountName ||
+                                      account.title ||
+                                      account.email ||
+                                      account._id
+                                    }
+                                  >
+                                    {account.name ||
+                                      account.accountName ||
+                                      account.title ||
+                                      account.email ||
+                                      account._id}
+                                  </SelectItem>
+                                ))}
+                              </Select>
+
+                              <Select
+                                label="Bank Account"
+                                selectedKeys={entry.bankAccount ? [entry.bankAccount] : []}
+                                onSelectionChange={(keys) => {
+                                  const selected = Array.from(keys)[0] || '';
+                                  handleEntryChange(index, 'bankAccount', selected);
+                                }}
+                                labelPlacement="outside"
+                                placeholder="Select bank account"
+                                isLoading={isLoadingBanks}
+                              >
+                                {bankAccounts.map((account) => (
+                                  <SelectItem
+                                    key={account._id}
+                                    value={account._id}
+                                    textValue={
+                                      account.accountName ||
+                                      account.name ||
+                                      account.accountNumber ||
+                                      account._id
+                                    }
+                                  >
+                                    {account.accountName ||
+                                      account.name ||
+                                      account.accountNumber ||
+                                      account._id}
+                                  </SelectItem>
+                                ))}
+                              </Select>
+
+                              <Input
+                                label="Account Name"
+                                value={entry.accountName}
+                                onChange={(e) =>
+                                  handleEntryChange(index, 'accountName', e.target.value)
+                                }
+                                labelPlacement="outside"
+                                placeholder="Account name"
+                              />
+
+                              {/* For first entry, only show Debit */}
+                              {index === 0 && (
+                                <Input
+                                  type="number"
+                                  label="Debit"
+                                  value={entry.debit}
+                                  onChange={(e) =>
+                                    handleEntryChange(index, 'debit', e.target.value)
+                                  }
+                                  labelPlacement="outside"
+                                  placeholder="0.00"
+                                  min="0"
+                                  step="0.01"
+                                  description={
+                                    entry.credit > 0
+                                      ? 'Cannot have both debit and credit'
+                                      : ''
+                                  }
+                                />
+                              )}
+
+                              {/* For second entry, only show Credit */}
+                              {index === 1 && (
+                                <Input
+                                  type="number"
+                                  label="Credit"
+                                  value={entry.credit}
+                                  onChange={(e) =>
+                                    handleEntryChange(index, 'credit', e.target.value)
+                                  }
+                                  labelPlacement="outside"
+                                  placeholder="0.00"
+                                  min="0"
+                                  step="0.01"
+                                  description={
+                                    entry.debit > 0
+                                      ? 'Cannot have both debit and credit'
+                                      : ''
+                                  }
+                                />
+                              )}
+
+                              {/* For additional entries, show both Debit and Credit */}
+                              {index > 1 && (
+                                <>
+                                  <Input
+                                    type="number"
+                                    label="Debit"
+                                    value={entry.debit}
+                                    onChange={(e) =>
+                                      handleEntryChange(index, 'debit', e.target.value)
+                                    }
+                                    labelPlacement="outside"
+                                    placeholder="0.00"
+                                    min="0"
+                                    step="0.01"
+                                    description={
+                                      entry.credit > 0
+                                        ? 'Cannot have both debit and credit'
+                                        : ''
+                                    }
+                                  />
+
+                                  <Input
+                                    type="number"
+                                    label="Credit"
+                                    value={entry.credit}
+                                    onChange={(e) =>
+                                      handleEntryChange(index, 'credit', e.target.value)
+                                    }
+                                    labelPlacement="outside"
+                                    placeholder="0.00"
+                                    min="0"
+                                    step="0.01"
+                                    description={
+                                      entry.debit > 0
+                                        ? 'Cannot have both debit and credit'
+                                        : ''
+                                    }
+                                  />
+                                </>
+                              )}
+
+                              <Textarea
+                                label="Description"
+                                value={entry.description}
+                                onChange={(e) =>
+                                  handleEntryChange(index, 'description', e.target.value)
+                                }
+                                labelPlacement="outside"
+                                placeholder="Entry description"
+                                minRows={2}
+                              />
+                            </div>
+                          </CardBody>
+                        </Card>
+                      ))}
+                    </div>
+
+                    {/* Balance Summary */}
+                    <Card className="mt-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200">
+                      <CardBody className="p-4">
+                        <div className="grid grid-cols-3 gap-4 text-center">
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">Total Debit</p>
+                            <p className="text-xl font-bold text-gray-900">
+                              {totalDebit.toFixed(2)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">Total Credit</p>
+                            <p className="text-xl font-bold text-gray-900">
+                              {totalCredit.toFixed(2)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">Balance</p>
+                            <p
+                              className={`text-xl font-bold ${
+                                isBalanced ? 'text-green-600' : 'text-red-600'
+                              }`}
+                            >
+                              {(totalDebit - totalCredit).toFixed(2)}
+                            </p>
+                            {isBalanced ? (
+                              <p className="text-xs text-green-600 mt-1">??? Balanced</p>
+                            ) : (
+                              <p className="text-xs text-red-600 mt-1">
+                                Debits must equal Credits
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </CardBody>
+                    </Card>
+                  </div>
+
+                  <Divider />
+
+                  {/* Currency */}
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
+                      <FaMoneyBillWave className="text-green-500" />
+                      Currency
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Select
+                        label="Currency"
+                        name="currency"
+                        selectedKeys={formData.currency ? [formData.currency] : []}
+                        onSelectionChange={(keys) => {
+                          const selected = Array.from(keys)[0] || '';
+                          setFormData((prev) => ({
+                            ...prev,
+                            currency: selected,
+                          }));
+                        }}
+                        labelPlacement="outside"
+                        placeholder="Select currency"
+                        isLoading={isLoadingCurrencies}
+                      >
+                        {currencies.map((currency) => (
+                          <SelectItem
+                            key={currency._id}
+                            value={currency._id}
+                            textValue={`${currency.code} - ${currency.name} (${currency.symbol})`}
+                          >
+                            {currency.code} - {currency.name} ({currency.symbol})
+                          </SelectItem>
+                        ))}
+                      </Select>
+
+                      <Input
+                        type="number"
+                        label="Currency Exchange Rate"
+                        name="currencyExchangeRate"
+                        value={formData.currencyExchangeRate}
+                        onChange={handleChange}
+                        labelPlacement="outside"
+                        placeholder="1.00"
+                        min="0"
+                        step="0.0001"
+                      />
+                    </div>
+                  </div>
+
+                  <Divider />
+
+                  {/* Description & Notes */}
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                      Additional Information
+                    </h2>
+                    <div className="space-y-4">
+                      <Textarea
+                        label="Description"
+                        name="description"
+                        value={formData.description}
+                        onChange={handleChange}
+                        labelPlacement="outside"
+                        placeholder="Enter description"
+                        minRows={2}
+                      />
+
+                      <Textarea
+                        label="Notes"
+                        name="notes"
+                        value={formData.notes}
+                        onChange={handleChange}
+                        labelPlacement="outside"
+                        placeholder="Enter additional notes"
+                        minRows={3}
+                      />
+                    </div>
+                  </div>
+
+                  <Divider />
+
+                  {/* Attachment */}
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                      Attachment
+                    </h2>
+                    <div className="space-y-4">
+                      {!attachment ? (
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors">
+                          <input
+                            type="file"
+                            id="attachment"
+                            onChange={handleAttachmentChange}
+                            className="hidden"
+                            accept="image/*,.pdf,.doc,.docx"
+                          />
+                          <label
+                            htmlFor="attachment"
+                            className="cursor-pointer flex flex-col items-center"
+                          >
+                            <FaFileUpload className="text-4xl text-gray-400 mb-2" />
+                            <span className="text-sm text-gray-600">
+                              Click to upload attachment
+                            </span>
+                            <span className="text-xs text-gray-400 mt-1">
+                              Supports: Images, PDF, DOC, DOCX
+                            </span>
+                          </label>
+                        </div>
+                      ) : (
+                        <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              {attachmentPreview ? (
+                                <img
+                                  src={attachmentPreview}
+                                  alt="Preview"
+                                  className="w-16 h-16 object-cover rounded"
+                                />
+                              ) : (
+                                <div className="w-16 h-16 bg-green-100 rounded flex items-center justify-center">
+                                  <FaFileUpload className="text-2xl text-green-600" />
+                                </div>
+                              )}
+                              <div>
+                                <p className="font-medium text-gray-900">
+                                  {attachment.name}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {(attachment.size / 1024).toFixed(2)} KB
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              isIconOnly
+                              variant="light"
+                              color="danger"
+                              onPress={removeAttachment}
+                            >
+                              <FaTimes />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <Divider />
+
+                  {/* Submit Button */}
+                  <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
+                    <Button
+                      variant="flat"
+                      size="lg"
+                      onPress={() => (onBack ? onBack() : navigate('/vouchers'))}
+                      disabled={isSubmitting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      color="primary"
+                      type="submit"
+                      size="lg"
+                      isLoading={isSubmitting}
+                      startContent={!isSubmitting && <FaSave />}
+                      className="bg-gradient-to-r from-green-500 to-emerald-600"
+                    >
+                      {isSubmitting ? 'Creating...' : 'Create Voucher'}
+                    </Button>
+                  </div>
+                </form>
+              </CardBody>
+            </Card>
           </div>
 
-          {/* Right Sidebar - Help & Information */}
+          {/* Right Sidebar */}
           <div className="xl:col-span-1 space-y-6">
-            {/* Information Card */}
             <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50 to-emerald-50">
               <CardBody className="p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <FaInfoCircle className="text-green-600 text-xl" />
-                  <h3 className="text-lg font-bold text-gray-900">
-                    Quick Guide
-                  </h3>
+                  <h3 className="text-lg font-bold text-gray-900">Quick Guide</h3>
                 </div>
                 <div className="space-y-4">
                   <div className="bg-white p-4 rounded-lg">
                     <p className="text-sm font-semibold text-gray-900 mb-2">
-                      Required Fields
+                      Flexible Entry
                     </p>
                     <ul className="text-xs text-gray-600 space-y-1">
-                      <li>• Voucher Date</li>
-                      <li>• Cash Account</li>
-                      <li>• Payee Type & Payee</li>
-                      <li>• Amount</li>
-                      <li>• Currency</li>
+                      <li>??? No fields are strictly required</li>
+                      <li>??? Use only fields needed for your flow</li>
+                      <li>??? Supports bank, supplier, customer, asset, etc.</li>
+                      <li>??? Debit/Credit can be used as needed</li>
                     </ul>
                   </div>
                   <div className="bg-white p-4 rounded-lg">
                     <p className="text-sm font-semibold text-gray-900 mb-2">
-                      Optional Fields
+                      Optional Guideline
                     </p>
-                    <ul className="text-xs text-gray-600 space-y-1">
-                      <li>• Shop</li>
-                      <li>• Reference Number</li>
-                      <li>• Related Transactions</li>
-                      <li>• Description & Notes</li>
-                      <li>• Attachments</li>
-                    </ul>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-
-            {/* Tips Card */}
-            <Card className="shadow-lg border-0">
-              <CardBody className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <FaFileInvoice className="text-green-500" />
-                  Tips
-                </h3>
-                <div className="space-y-3">
-                  <div className="p-3 bg-green-50 rounded-lg">
-                    <p className="text-sm text-gray-700">
-                      <strong>Double-check</strong> the cash account and amount before submitting.
-                    </p>
-                  </div>
-                  <div className="p-3 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-gray-700">
-                      <strong>Attach</strong> receipts or documents for better record keeping.
-                    </p>
-                  </div>
-                  <div className="p-3 bg-purple-50 rounded-lg">
-                    <p className="text-sm text-gray-700">
-                      <strong>Link</strong> related purchases or sales for better tracking.
-                    </p>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-
-            {/* Payment Methods Info */}
-            <Card className="shadow-lg border-0">
-              <CardBody className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <FaMoneyBillWave className="text-orange-500" />
-                  Payment Methods
-                </h3>
-                <div className="space-y-2">
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm font-semibold text-gray-900">Cash</p>
                     <p className="text-xs text-gray-600">
-                      Physical cash payment
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm font-semibold text-gray-900">Bank Transfer</p>
-                    <p className="text-xs text-gray-600">
-                      Direct bank-to-bank transfer
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm font-semibold text-gray-900">Other Methods</p>
-                    <p className="text-xs text-gray-600">
-                      Check, Online, Wire Transfer, DD
+                      For accounting consistency, avoid filling both debit and credit in the same line.
                     </p>
                   </div>
                 </div>
