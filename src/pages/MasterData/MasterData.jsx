@@ -16,6 +16,7 @@ import CapitalsTable from './components/CapitalsTable';
 import OwnersTable from './components/OwnersTable';
 import EmployeesTable from './components/EmployeesTable';
 import PropertyAccountsTable from './components/PropertyAccountsTable';
+import SarafsTable from './components/SarafsTable';
 import { 
   FaBoxes, 
   FaLayerGroup, 
@@ -29,7 +30,8 @@ import {
   FaUserTie,
   FaUsers,
   FaBuilding,
-  FaBook
+  FaBook,
+  FaMoneyBillWave
 } from 'react-icons/fa';
 
 const MasterData = () => {
@@ -294,6 +296,28 @@ const MasterData = () => {
     }
   );
 
+  const { data: sarafsData, refetch: refetchSarafs } = useQuery(
+    'sarafs',
+    async () => {
+      const { data } = await userRequest.get("/sarafs");
+      if (data?.data?.sarafs && Array.isArray(data.data.sarafs)) {
+        return data.data.sarafs;
+      }
+      if (Array.isArray(data.data)) {
+        return data.data;
+      }
+      if (Array.isArray(data)) {
+        return data;
+      }
+      return [];
+    },
+    {
+      onError: (error) => {
+        toast.error(error.response?.data?.message || 'Failed to fetch sarafs');
+      },
+    }
+  );
+
   const handleTabChange = (key) => {
     setSelectedTab(key);
   };
@@ -311,6 +335,7 @@ const MasterData = () => {
     refetchOwners();
     refetchEmployees();
     refetchPropertyAccounts();
+    refetchSarafs();
   };
 
   const sidebarItems = [
@@ -324,6 +349,14 @@ const MasterData = () => {
     { key: 'employee', label: 'Employee', icon: <FaUsers /> },
     { key: 'property-accounts', label: 'Property Accounts', icon: <FaBuilding /> },
   ];
+
+  const postFinancialSidebarItems = [
+    { key: 'sarafs', label: 'Sarafs', icon: <FaMoneyBillWave /> },
+  ];
+
+  const findSidebarItem = (key) =>
+    sidebarItems.find((i) => i.key === key) ||
+    postFinancialSidebarItems.find((i) => i.key === key);
 
   const renderSidebarContent = () => {
     if (!selectedSidebarItem) {
@@ -349,7 +382,7 @@ const MasterData = () => {
       );
     }
 
-    const item = sidebarItems.find(i => i.key === selectedSidebarItem);
+    const item = findSidebarItem(selectedSidebarItem);
     
     // Render Assets table when assets is selected
     if (selectedSidebarItem === 'assets') {
@@ -557,6 +590,28 @@ const MasterData = () => {
         </Card>
       );
     }
+
+    if (selectedSidebarItem === 'sarafs') {
+      return (
+        <Card className="shadow-lg border-0">
+          <CardBody className="p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-teal-500/30">
+                {item?.icon}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{item?.label}</h2>
+                <p className="text-sm text-gray-500">Manage saraf records (name, contact, code, notes)</p>
+              </div>
+            </div>
+            <SarafsTable
+              data={Array.isArray(sarafsData) ? sarafsData : []}
+              onRefresh={refetchAll}
+            />
+          </CardBody>
+        </Card>
+      );
+    }
     
     // For other items, show placeholder
     return (
@@ -688,6 +743,35 @@ const MasterData = () => {
                 ))}
               </div>
             </div>
+
+            <div className="border-t border-gray-200 my-2"></div>
+
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-3 py-2 mb-2">
+                Sarafs
+              </p>
+              <div className="space-y-1">
+                {postFinancialSidebarItems.map((item) => (
+                  <button
+                    key={item.key}
+                    onClick={() => {
+                      setSelectedSidebarItem(item.key);
+                      setSelectedTab(null);
+                    }}
+                    className={`w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-all duration-200 ${
+                      selectedSidebarItem === item.key
+                        ? "bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-lg shadow-teal-500/30 font-semibold transform scale-[1.02]"
+                        : "text-gray-700 hover:bg-gray-50 hover:shadow-sm"
+                    }`}
+                  >
+                    <div className={`${selectedSidebarItem === item.key ? "text-white" : "text-teal-600"}`}>
+                      {item.icon}
+                    </div>
+                    <span className="font-medium">{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -713,7 +797,7 @@ const MasterData = () => {
                 <h1 className="text-3xl font-bold text-gray-900 mb-1">Master Data Management</h1>
                 <p className="text-sm text-gray-500">
                   {selectedSidebarItem 
-                    ? `Manage ${sidebarItems.find(i => i.key === selectedSidebarItem)?.label || 'data'}`
+                    ? `Manage ${findSidebarItem(selectedSidebarItem)?.label || 'data'}`
                     : selectedTab 
                       ? `Manage ${selectedTab === 'quantity-units' ? 'Quantity Units' : selectedTab === 'packing-units' ? 'Packing Units' : 'Products'}`
                       : 'Select a category to get started'
