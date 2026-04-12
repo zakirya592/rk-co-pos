@@ -264,7 +264,7 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
     }
   };
 
-  const { data: bankAccounts = [], isLoading: isLoadingBanks } = useQuery(
+  const { data: bankAccounts = [] } = useQuery(
     ['bank-accounts'],
     fetchBankAccounts
   );
@@ -879,46 +879,6 @@ const UpdateJournalPaymentVoucher = ({ voucherId, onBack }) => {
                                   </SelectItem>
                                 ))}
                               </Select>
-
-                              <Select
-                                label="Bank Account"
-                                selectedKeys={entry.bankAccount ? [entry.bankAccount] : []}
-                                onSelectionChange={(keys) => {
-                                  const selected = Array.from(keys)[0] || '';
-                                  handleEntryChange(index, 'bankAccount', selected);
-                                }}
-                                labelPlacement="outside"
-                                placeholder="Select bank account"
-                                isLoading={isLoadingBanks}
-                              >
-                                {bankAccounts.map((account) => (
-                                  <SelectItem
-                                    key={account._id}
-                                    value={account._id}
-                                    textValue={
-                                      account.accountName ||
-                                      account.name ||
-                                      account.accountNumber ||
-                                      account._id
-                                    }
-                                  >
-                                    {account.accountName ||
-                                      account.name ||
-                                      account.accountNumber ||
-                                      account._id}
-                                  </SelectItem>
-                                ))}
-                              </Select>
-
-                              <Input
-                                label="Account Name"
-                                value={entry.accountName}
-                                onChange={(e) =>
-                                  handleEntryChange(index, 'accountName', e.target.value)
-                                }
-                                labelPlacement="outside"
-                                placeholder="Account name"
-                              />
 
                               {/* For first entry, only show Debit */}
                               {index === 0 && (
