@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -35,7 +35,6 @@ const emptyEntry = () => ({
   debit: '',
   credit: '',
   currency: '',
-  exchangeRate: '1',
   description: '',
 });
 
@@ -45,6 +44,8 @@ const SarafEntryVoucher = ({ onBack }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [attachment, setAttachment] = useState(null);
   const [attachmentPreview, setAttachmentPreview] = useState(null);
+  const [convertingCredit, setConvertingCredit] = useState(false);
+  const convertRequestId = useRef(0);
 
   const [formData, setFormData] = useState({
     voucherDate: new Date().toISOString().split('T')[0],
@@ -357,10 +358,73 @@ const SarafEntryVoucher = ({ onBack }) => {
       entries: prev.entries.map((e) => ({
         ...e,
         currency: e.currency || defaultId,
-        exchangeRate: e.exchangeRate === '' || e.exchangeRate == null ? '1' : e.exchangeRate,
       })),
     }));
   }, [currencies]);
+
+  const line0Debit = formData.entries[0]?.debit;
+  const line0Currency = formData.entries[0]?.currency;
+  const line1Currency = formData.entries[1]?.currency;
+
+  useEffect(() => {
+    if (formData.entries.length < 2) return;
+
+    const debitAmt = parseFloat(line0Debit);
+    const fromCur = line0Currency;
+    const toCur = line1Currency;
+
+    const clearCredit = () => {
+      setFormData((prev) => {
+        const next = [...prev.entries];
+        if (next[1]) next[1] = { ...next[1], credit: '' };
+        return { ...prev, entries: next };
+      });
+    };
+
+    if (!fromCur || !toCur || Number.isNaN(debitAmt) || debitAmt <= 0) {
+      clearCredit();
+      return;
+    }
+
+    if (fromCur === toCur) {
+      setFormData((prev) => {
+        const next = [...prev.entries];
+        if (next[1]) next[1] = { ...next[1], credit: debitAmt.toFixed(2) };
+        return { ...prev, entries: next };
+      });
+      return;
+    }
+
+    const reqId = ++convertRequestId.current;
+    setConvertingCredit(true);
+
+    userRequest
+      .get(
+        `/currencies/convert?fromCurrency=${encodeURIComponent(fromCur)}&toCurrency=${encodeURIComponent(toCur)}&amount=${encodeURIComponent(debitAmt)}`
+      )
+      .then((res) => {
+        if (reqId !== convertRequestId.current) return;
+        const raw =
+          res.data?.data?.to?.amount ??
+          res.data?.data?.toAmount ??
+          res.data?.data?.convertedAmount;
+        const num = typeof raw === 'number' ? raw : parseFloat(raw);
+        const creditStr = Number.isFinite(num) ? String(num) : '';
+        setFormData((prev) => {
+          const next = [...prev.entries];
+          if (next[1]) next[1] = { ...next[1], credit: creditStr };
+          return { ...prev, entries: next };
+        });
+      })
+      .catch(() => {
+        if (reqId !== convertRequestId.current) return;
+        toast.error('Could not load converted amount for credit. Check currency API.');
+        clearCredit();
+      })
+      .finally(() => {
+        if (reqId === convertRequestId.current) setConvertingCredit(false);
+      });
+  }, [line0Debit, line0Currency, line1Currency, formData.entries.length]);
 
   const validateEntries = () => {
     for (let i = 0; i < formData.entries.length; i++) {
@@ -377,11 +441,6 @@ const SarafEntryVoucher = ({ onBack }) => {
       }
       if (!entry.currency) {
         toast.error(`Entry ${i + 1}: Select currency`);
-        return false;
-      }
-      const er = parseFloat(entry.exchangeRate);
-      if (Number.isNaN(er) || er <= 0) {
-        toast.error(`Entry ${i + 1}: Enter a valid exchange rate (> 0)`);
         return false;
       }
       if (debit <= 0 && credit <= 0) {
@@ -414,10 +473,6 @@ const SarafEntryVoucher = ({ onBack }) => {
         formDataToSend.append(`entries[${index}][debit]`, entry.debit || '0');
         formDataToSend.append(`entries[${index}][credit]`, entry.credit || '0');
         formDataToSend.append(`entries[${index}][currency]`, entry.currency);
-        formDataToSend.append(
-          `entries[${index}][exchangeRate]`,
-          entry.exchangeRate != null && entry.exchangeRate !== '' ? String(entry.exchangeRate) : '1'
-        );
         if (entry.description) {
           formDataToSend.append(`entries[${index}][description]`, entry.description);
         }
@@ -445,8 +500,8 @@ const SarafEntryVoucher = ({ onBack }) => {
         voucherType: 'payment',
         exchangeType: 'buy',
         entries: [
-          { ...emptyEntry(), currency: defaultId, exchangeRate: '1' },
-          { ...emptyEntry(), currency: defaultId, exchangeRate: '1' },
+          { ...emptyEntry(), currency: defaultId },
+          { ...emptyEntry(), currency: defaultId },
         ],
         description: '',
         notes: '',
@@ -644,7 +699,7 @@ const SarafEntryVoucher = ({ onBack }) => {
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-lg font-semibold text-gray-900 pb-2 border-b border-gray-200 flex items-center gap-2 flex-1">
                         <FaBook className="text-amber-500" />
-                        Entries (debit / credit per line + currency)
+                        Entries — debit on line 1; credit on line 2 from currency API
                       </h2>
                       <Button
                         size="sm"
@@ -744,20 +799,6 @@ const SarafEntryVoucher = ({ onBack }) => {
                                 ))}
                               </Select>
 
-                              <Input
-                                type="number"
-                                label="Exchange rate (this line)"
-                                value={entry.exchangeRate}
-                                onChange={(e) =>
-                                  handleEntryChange(index, 'exchangeRate', e.target.value)
-                                }
-                                labelPlacement="outside"
-                                placeholder="1"
-                                min="0"
-                                step="0.0000001"
-                                description="Rate for this amount in base/reporting terms"
-                              />
-
                               {index === 0 && (
                                 <Input
                                   type="number"
@@ -776,15 +817,14 @@ const SarafEntryVoucher = ({ onBack }) => {
                               {index === 1 && (
                                 <Input
                                   type="number"
-                                  label={`Credit (${getCurrencySymbol(entry.currency) || '—'})`}
+                                  label={`Credit (${getCurrencySymbol(entry.currency) || '—'}) — auto`}
                                   value={entry.credit}
-                                  onChange={(e) =>
-                                    handleEntryChange(index, 'credit', e.target.value)
-                                  }
+                                  isReadOnly
+                                  readOnly
+                                  isLoading={convertingCredit}
                                   labelPlacement="outside"
-                                  placeholder="0.00"
-                                  min="0"
-                                  step="0.01"
+                                  placeholder={convertingCredit ? '' : '0.00'}
+                                  description="Converted from line 1 debit via GET /currencies/convert"
                                 />
                               )}
 
@@ -976,13 +1016,9 @@ const SarafEntryVoucher = ({ onBack }) => {
                   Tips
                 </h3>
                 <ul className="text-sm text-gray-600 space-y-2 list-disc pl-4">
-                  <li>Line 1 is debit-only; line 2 is credit-only (like the journal voucher).</li>
-                  <li>From line 3 onward you can enter both debit and credit on the same line.</li>
-                  <li>
-                    Pick a different currency on each line when you move value between currencies
-                    (e.g. bank in USD, customer in AFN).
-                  </li>
-                  <li>Exchange rate applies to that line, as required by your backend.</li>
+                  <li>Enter the amount on line 1 (debit). Line 2 credit is filled using the currency convert API.</li>
+                  <li>Choose each line&apos;s currency; if both match, credit equals debit.</li>
+                  <li>From line 3 onward you can enter both debit and credit manually on the same line.</li>
                 </ul>
               </CardBody>
             </Card>

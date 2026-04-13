@@ -250,7 +250,7 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
             const d = parseFloat(row.debit) > 0 ? formatCurrency(row.debit, cur) : '—';
             const c = parseFloat(row.credit) > 0 ? formatCurrency(row.credit, cur) : '—';
             const code = cur.code || '';
-            return `<tr><td>${i + 1}</td><td>${(row.accountName || '').replace(/</g, '&lt;')}</td><td>${row.accountModel || ''}</td><td>${d}</td><td>${c}</td><td>${code}</td><td>${row.exchangeRate ?? ''}</td><td>${(row.description || '').replace(/</g, '&lt;')}</td></tr>`;
+              return `<tr><td>${i + 1}</td><td>${(row.accountName || '').replace(/</g, '&lt;')}</td><td>${row.accountModel || ''}</td><td>${d}</td><td>${c}</td><td>${code}</td><td>${(row.description || '').replace(/</g, '&lt;')}</td></tr>`;
           })
           .join('')
       : '';
@@ -271,7 +271,7 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
       : `
           <div class="info"><h3>Journal entries</h3>
             <table border="1" cellpadding="6" cellspacing="0" width="100%">
-              <thead><tr><th>#</th><th>Account</th><th>Model</th><th>Debit</th><th>Credit</th><th>CCY</th><th>Rate</th><th>Note</th></tr></thead>
+              <thead><tr><th>#</th><th>Account</th><th>Model</th><th>Debit</th><th>Credit</th><th>CCY</th><th>Note</th></tr></thead>
               <tbody>${journalRows}</tbody>
             </table>
           </div>`;
@@ -664,7 +664,6 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
                         <TableColumn>Debit</TableColumn>
                         <TableColumn>Credit</TableColumn>
                         <TableColumn>Currency</TableColumn>
-                        <TableColumn>Rate</TableColumn>
                         <TableColumn>Note</TableColumn>
                       </TableHeader>
                       <TableBody>
@@ -689,7 +688,6 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
                                 ? `${row.currency.code || ''}`
                                 : '—'}
                             </TableCell>
-                            <TableCell>{row.exchangeRate ?? '—'}</TableCell>
                             <TableCell>
                               <span className="text-xs text-gray-600">{row.description || '—'}</span>
                             </TableCell>
