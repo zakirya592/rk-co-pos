@@ -58,7 +58,7 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
   const [selectedVoucher, setSelectedVoucher] = useState(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
-  // Fetch vouchers
+  // Fetch vouchers — supports { status, results, totalVouchers, data: { vouchers } } and older shapes
   const fetchVouchers = async () => {
     const response = await userRequest.get('/saraf-entry-vouchers');
     return response.data;
@@ -69,7 +69,16 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
     fetchVouchers
   );
 
-  const vouchers = data?.data?.vouchers || data?.data || [];
+  const listPayload = data && typeof data === 'object' ? data : {};
+  const vouchers = Array.isArray(listPayload.data?.vouchers)
+    ? listPayload.data.vouchers
+    : Array.isArray(listPayload.vouchers)
+      ? listPayload.vouchers
+      : Array.isArray(listPayload.data)
+        ? listPayload.data
+        : [];
+  const listTotalCount =
+    listPayload.totalVouchers ?? listPayload.results ?? vouchers.length;
 
   // Calculate totals
   const totalFromAmount = vouchers.reduce((sum, v) => sum + (parseFloat(v.fromAmount) || 0), 0);
@@ -94,6 +103,8 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
     const matchesSearch =
       voucher.voucherNumber?.toLowerCase().includes(searchLower) ||
       voucher.referCode?.toLowerCase().includes(searchLower) ||
+      voucher.transactionId?.toLowerCase().includes(searchLower) ||
+      voucher.status?.toLowerCase().includes(searchLower) ||
       voucher.fromCurrency?.name?.toLowerCase().includes(searchLower) ||
       voucher.toCurrency?.name?.toLowerCase().includes(searchLower) ||
       voucher.sarafName?.toLowerCase().includes(searchLower) ||
@@ -184,9 +195,27 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
 
   const voucherAmountSummary = (v) => {
     if (hasJournalEntries(v)) {
+      const debitLine = v.entries.find((e) => parseFloat(e.debit) > 0);
+      const creditLine = v.entries.find((e) => parseFloat(e.credit) > 0);
+      if (debitLine && creditLine) {
+        const c1 =
+          debitLine.currency && typeof debitLine.currency === 'object' ? debitLine.currency : {};
+        const c2 =
+          creditLine.currency && typeof creditLine.currency === 'object' ? creditLine.currency : {};
+        const d = formatCurrency(debitLine.debit, c1);
+        const c = formatCurrency(creditLine.credit, c2);
+        return `${d} → ${c}`;
+      }
       return `${v.entries.length} line(s)`;
     }
     return `${formatCurrency(v.fromAmount, v.fromCurrency)} · ${formatCurrency(v.toAmount, v.toCurrency)}`;
+  };
+
+  const commissionDisplayCurrency = (v) => {
+    if (hasJournalEntries(v) && v.entries[0]?.currency && typeof v.entries[0].currency === 'object') {
+      return v.entries[0].currency;
+    }
+    return v.fromCurrency;
   };
 
   // Handle delete
@@ -250,7 +279,11 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
             const d = parseFloat(row.debit) > 0 ? formatCurrency(row.debit, cur) : '—';
             const c = parseFloat(row.credit) > 0 ? formatCurrency(row.credit, cur) : '—';
             const code = cur.code || '';
-              return `<tr><td>${i + 1}</td><td>${(row.accountName || '').replace(/</g, '&lt;')}</td><td>${row.accountModel || ''}</td><td>${d}</td><td>${c}</td><td>${code}</td><td>${(row.description || '').replace(/</g, '&lt;')}</td></tr>`;
+              const xr =
+                row.exchangeRate != null && row.exchangeRate !== ''
+                  ? Number(row.exchangeRate).toLocaleString('en-US', { maximumFractionDigits: 8 })
+                  : '';
+              return `<tr><td>${i + 1}</td><td>${(row.accountName || '').replace(/</g, '&lt;')}</td><td>${row.accountModel || ''}</td><td>${d}</td><td>${c}</td><td>${code}</td><td>${xr}</td><td>${(row.description || '').replace(/</g, '&lt;')}</td></tr>`;
           })
           .join('')
       : '';
@@ -271,7 +304,7 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
       : `
           <div class="info"><h3>Journal entries</h3>
             <table border="1" cellpadding="6" cellspacing="0" width="100%">
-              <thead><tr><th>#</th><th>Account</th><th>Model</th><th>Debit</th><th>Credit</th><th>CCY</th><th>Note</th></tr></thead>
+              <thead><tr><th>#</th><th>Account</th><th>Model</th><th>Debit</th><th>Credit</th><th>CCY</th><th>Exch.</th><th>Note</th></tr></thead>
               <tbody>${journalRows}</tbody>
             </table>
           </div>`;
@@ -364,8 +397,8 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
             <CardBody className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-amber-100 text-sm">Total Entries</p>
-                  <p className="text-2xl font-bold">{vouchers.length}</p>
+                  <p className="text-amber-100 text-sm">Total vouchers</p>
+                  <p className="text-2xl font-bold">{listTotalCount}</p>
                 </div>
                 <FaCoins className="text-4xl opacity-50" />
               </div>
@@ -399,8 +432,11 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
                 <div>
                   <p className="text-purple-100 text-sm">Total Commission</p>
                   <p className="text-xl font-bold">
-                    {vouchers.length > 0 && vouchers[0].fromCurrency
-                      ? formatCurrency(totalCommission, vouchers[0].fromCurrency)
+                    {vouchers.length > 0
+                      ? formatCurrency(
+                          totalCommission,
+                          commissionDisplayCurrency(vouchers[0]) || { symbol: 'Rs' }
+                        )
                       : `Rs ${totalCommission.toLocaleString()}`}
                   </p>
                 </div>
@@ -480,12 +516,13 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
         <CardBody>
           <Table aria-label="Saraf Entry Vouchers">
             <TableHeader>
-              <TableColumn>VOUCHER #</TableColumn>
+              <TableColumn>VOUCHER</TableColumn>
               <TableColumn>DATE</TableColumn>
               <TableColumn>TYPE</TableColumn>
+              <TableColumn>STATUS</TableColumn>
               <TableColumn>LINES</TableColumn>
               <TableColumn>CURRENCIES</TableColumn>
-              <TableColumn>SUMMARY</TableColumn>
+              <TableColumn>DEBIT → CREDIT</TableColumn>
               <TableColumn>COMMISSION</TableColumn>
               <TableColumn>ACTIONS</TableColumn>
             </TableHeader>
@@ -493,8 +530,23 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
               {filteredVouchers.map((voucher) => (
                 <TableRow key={voucher._id}>
                   <TableCell>
-                    <div>
-                      <p className="font-semibold">{voucher.voucherNumber || voucher.referCode || 'N/A'}</p>
+                    <div className="min-w-0 max-w-[220px]">
+                      <p className="font-semibold truncate" title={voucher.voucherNumber || voucher.referCode}>
+                        {voucher.voucherNumber || voucher.referCode || 'N/A'}
+                      </p>
+                      {voucher.referCode &&
+                        voucher.voucherNumber &&
+                        voucher.referCode !== voucher.voucherNumber && (
+                          <p className="text-xs text-gray-600">{voucher.referCode}</p>
+                        )}
+                      {voucher.transactionId && (
+                        <p
+                          className="text-xs text-gray-400 truncate"
+                          title={voucher.transactionId}
+                        >
+                          {voucher.transactionId}
+                        </p>
+                      )}
                       {voucher.referenceNumber && (
                         <p className="text-xs text-gray-500">Ref: {voucher.referenceNumber}</p>
                       )}
@@ -508,6 +560,21 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
                       size="sm"
                     >
                       {voucher.exchangeType?.toUpperCase() || 'N/A'}
+                    </Chip>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      color={
+                        voucher.status === 'completed'
+                          ? 'success'
+                          : voucher.status === 'pending'
+                            ? 'warning'
+                            : 'default'
+                      }
+                      variant="flat"
+                      size="sm"
+                    >
+                      {(voucher.status || '—').toString()}
                     </Chip>
                   </TableCell>
                   <TableCell>
@@ -531,13 +598,16 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
                   </TableCell>
                   <TableCell>
                     <p className="text-sm">
-                      {formatCurrency(voucher.commission || 0, voucher.fromCurrency)}
+                      {formatCurrency(
+                        voucher.commission || 0,
+                        commissionDisplayCurrency(voucher) || { symbol: 'Rs' }
+                      )}
                     </p>
-                    {voucher.commissionPercentage && (
+                    {voucher.commissionPercentage ? (
                       <p className="text-xs text-gray-500">
                         ({voucher.commissionPercentage}%)
                       </p>
-                    )}
+                    ) : null}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -600,6 +670,11 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
                 <h2>Saraf Entry Voucher Details</h2>
                 <p className="text-sm text-gray-500 font-normal">
                   {selectedVoucher?.voucherNumber || selectedVoucher?.referCode || 'N/A'}
+                  {selectedVoucher?.referCode &&
+                    selectedVoucher?.voucherNumber &&
+                    selectedVoucher.referCode !== selectedVoucher.voucherNumber && (
+                      <span className="block text-xs mt-0.5">{selectedVoucher.referCode}</span>
+                    )}
                 </p>
               </div>
             </div>
@@ -637,10 +712,42 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
                       <p className="font-semibold">{selectedVoucher.referenceNumber || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Exchange Rate</p>
-                      <p className="font-semibold">{selectedVoucher.exchangeRate || '1.00'}</p>
+                      <p className="text-sm text-gray-600">Transaction ID</p>
+                      <p className="font-semibold text-xs break-all">
+                        {selectedVoucher.transactionId || 'N/A'}
+                      </p>
                     </div>
-                    {selectedVoucher.marketRate && (
+                    <div>
+                      <p className="text-sm text-gray-600">Status</p>
+                      <Chip
+                        color={
+                          selectedVoucher.status === 'completed'
+                            ? 'success'
+                            : selectedVoucher.status === 'pending'
+                              ? 'warning'
+                              : 'default'
+                        }
+                        variant="flat"
+                        size="sm"
+                      >
+                        {(selectedVoucher.status || 'N/A').toString()}
+                      </Chip>
+                    </div>
+                    {selectedVoucher.bankBalanceApplied !== undefined && (
+                      <div>
+                        <p className="text-sm text-gray-600">Bank balance applied</p>
+                        <p className="font-semibold">
+                          {selectedVoucher.bankBalanceApplied ? 'Yes' : 'No'}
+                        </p>
+                      </div>
+                    )}
+                    {!hasJournalEntries(selectedVoucher) && (
+                      <div>
+                        <p className="text-sm text-gray-600">Exchange Rate</p>
+                        <p className="font-semibold">{selectedVoucher.exchangeRate || '1.00'}</p>
+                      </div>
+                    )}
+                    {!hasJournalEntries(selectedVoucher) && selectedVoucher.marketRate && (
                       <div>
                         <p className="text-sm text-gray-600">Market Rate</p>
                         <p className="font-semibold">{selectedVoucher.marketRate}</p>
@@ -663,7 +770,8 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
                         <TableColumn>Model</TableColumn>
                         <TableColumn>Debit</TableColumn>
                         <TableColumn>Credit</TableColumn>
-                        <TableColumn>Currency</TableColumn>
+                        <TableColumn>CCY</TableColumn>
+                        <TableColumn>Exch. rate</TableColumn>
                         <TableColumn>Note</TableColumn>
                       </TableHeader>
                       <TableBody>
@@ -687,6 +795,15 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
                               {row.currency && typeof row.currency === 'object'
                                 ? `${row.currency.code || ''}`
                                 : '—'}
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-xs font-mono">
+                                {row.exchangeRate != null && row.exchangeRate !== ''
+                                  ? Number(row.exchangeRate).toLocaleString('en-US', {
+                                      maximumFractionDigits: 8,
+                                    })
+                                  : '—'}
+                              </span>
                             </TableCell>
                             <TableCell>
                               <span className="text-xs text-gray-600">{row.description || '—'}</span>
