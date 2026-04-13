@@ -81,13 +81,25 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
   // Filter vouchers by search term, exchange type, and date
   const filteredVouchers = vouchers.filter((voucher) => {
     const searchLower = searchTerm.toLowerCase();
+    const entrySearch =
+      Array.isArray(voucher.entries) &&
+      voucher.entries.some(
+        (e) =>
+          (e.accountName || '').toLowerCase().includes(searchLower) ||
+          (e.description || '').toLowerCase().includes(searchLower) ||
+          (e.currency &&
+            typeof e.currency === 'object' &&
+            (e.currency.code || '').toLowerCase().includes(searchLower))
+      );
     const matchesSearch =
       voucher.voucherNumber?.toLowerCase().includes(searchLower) ||
       voucher.referCode?.toLowerCase().includes(searchLower) ||
       voucher.fromCurrency?.name?.toLowerCase().includes(searchLower) ||
       voucher.toCurrency?.name?.toLowerCase().includes(searchLower) ||
       voucher.sarafName?.toLowerCase().includes(searchLower) ||
-      voucher.referenceNumber?.toLowerCase().includes(searchLower);
+      voucher.referenceNumber?.toLowerCase().includes(searchLower) ||
+      (voucher.description || '').toLowerCase().includes(searchLower) ||
+      entrySearch;
 
     const matchesExchangeType =
       exchangeTypeFilter === 'all' || voucher.exchangeType === exchangeTypeFilter;
@@ -147,6 +159,36 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
     })}`;
   };
 
+  const hasJournalEntries = (v) => Array.isArray(v.entries) && v.entries.length > 0;
+
+  const voucherCurrencySummary = (v) => {
+    if (hasJournalEntries(v)) {
+      const codes = [
+        ...new Set(
+          v.entries
+            .map((e) => {
+              const c = e.currency;
+              if (c && typeof c === 'object' && c.code) return c.code;
+              return '';
+            })
+            .filter(Boolean)
+        ),
+      ];
+      return codes.length ? codes.join(', ') : '—';
+    }
+    const a = v.fromCurrency?.code || '';
+    const b = v.toCurrency?.code || '';
+    if (a && b) return `${a} → ${b}`;
+    return a || b || '—';
+  };
+
+  const voucherAmountSummary = (v) => {
+    if (hasJournalEntries(v)) {
+      return `${v.entries.length} line(s)`;
+    }
+    return `${formatCurrency(v.fromAmount, v.fromCurrency)} · ${formatCurrency(v.toAmount, v.toCurrency)}`;
+  };
+
   // Handle delete
   const handleDelete = async (voucher) => {
     const result = await Swal.fire({
@@ -197,6 +239,43 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
   };
 
   const generatePrintContent = (voucher) => {
+    const hasPrintEntries = Array.isArray(voucher.entries) && voucher.entries.length > 0;
+    const journalRows = hasPrintEntries
+      ? voucher.entries
+          .map((row, i) => {
+            const cur =
+              row.currency && typeof row.currency === 'object'
+                ? row.currency
+                : { symbol: 'Rs', code: '' };
+            const d = parseFloat(row.debit) > 0 ? formatCurrency(row.debit, cur) : '—';
+            const c = parseFloat(row.credit) > 0 ? formatCurrency(row.credit, cur) : '—';
+            const code = cur.code || '';
+            return `<tr><td>${i + 1}</td><td>${(row.accountName || '').replace(/</g, '&lt;')}</td><td>${row.accountModel || ''}</td><td>${d}</td><td>${c}</td><td>${code}</td><td>${row.exchangeRate ?? ''}</td><td>${(row.description || '').replace(/</g, '&lt;')}</td></tr>`;
+          })
+          .join('')
+      : '';
+
+    const legacyBlock = !hasPrintEntries
+      ? `
+          <div class="info">
+            <div class="info-row"><strong>From Currency:</strong> ${voucher.fromCurrency?.name || 'N/A'} (${voucher.fromCurrency?.code || 'N/A'})</div>
+            <div class="info-row"><strong>To Currency:</strong> ${voucher.toCurrency?.name || 'N/A'} (${voucher.toCurrency?.code || 'N/A'})</div>
+            <div class="info-row"><strong>Exchange Rate:</strong> ${voucher.exchangeRate || '1.00'}</div>
+          </div>
+          <div class="info">
+            <h3>Exchange Details</h3>
+            <div class="info-row"><strong>From Amount:</strong> ${formatCurrency(voucher.fromAmount, voucher.fromCurrency)}</div>
+            <div class="info-row"><strong>To Amount:</strong> ${formatCurrency(voucher.toAmount, voucher.toCurrency)}</div>
+            <div class="info-row"><strong>Commission:</strong> ${formatCurrency(voucher.commission || 0, voucher.fromCurrency)}</div>
+          </div>`
+      : `
+          <div class="info"><h3>Journal entries</h3>
+            <table border="1" cellpadding="6" cellspacing="0" width="100%">
+              <thead><tr><th>#</th><th>Account</th><th>Model</th><th>Debit</th><th>Credit</th><th>CCY</th><th>Rate</th><th>Note</th></tr></thead>
+              <tbody>${journalRows}</tbody>
+            </table>
+          </div>`;
+
     return `
       <!DOCTYPE html>
       <html>
@@ -218,24 +297,14 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
           <div class="info">
             <div class="info-row"><strong>Voucher Date:</strong> ${formatDate(voucher.voucherDate)}</div>
             <div class="info-row"><strong>Exchange Type:</strong> ${voucher.exchangeType?.toUpperCase() || 'N/A'}</div>
-            <div class="info-row"><strong>From Currency:</strong> ${voucher.fromCurrency?.name || 'N/A'} (${voucher.fromCurrency?.code || 'N/A'})</div>
-            <div class="info-row"><strong>To Currency:</strong> ${voucher.toCurrency?.name || 'N/A'} (${voucher.toCurrency?.code || 'N/A'})</div>
-            <div class="info-row"><strong>Exchange Rate:</strong> ${voucher.exchangeRate || '1.00'}</div>
-            <div class="info-row"><strong>Market Rate:</strong> ${voucher.marketRate || 'N/A'}</div>
             <div class="info-row"><strong>Reference Number:</strong> ${voucher.referenceNumber || 'N/A'}</div>
             <div class="info-row"><strong>Saraf Name:</strong> ${voucher.sarafName || 'N/A'}</div>
             <div class="info-row"><strong>Saraf Contact:</strong> ${voucher.sarafContact || 'N/A'}</div>
             <div class="info-row"><strong>Purpose:</strong> ${voucher.purpose || 'N/A'}</div>
           </div>
-          <div class="info">
-            <h3>Exchange Details</h3>
-            <div class="info-row"><strong>From Amount:</strong> ${formatCurrency(voucher.fromAmount, voucher.fromCurrency)}</div>
-            <div class="info-row"><strong>To Amount:</strong> ${formatCurrency(voucher.toAmount, voucher.toCurrency)}</div>
-            <div class="info-row"><strong>Commission:</strong> ${formatCurrency(voucher.commission || 0, voucher.fromCurrency)}</div>
-            ${voucher.commissionPercentage ? `<div class="info-row"><strong>Commission Percentage:</strong> ${voucher.commissionPercentage}%</div>` : ''}
-          </div>
-          ${voucher.description ? `<div class="info"><strong>Description:</strong> ${voucher.description}</div>` : ''}
-          ${voucher.notes ? `<div class="info"><strong>Notes:</strong> ${voucher.notes}</div>` : ''}
+          ${legacyBlock}
+          ${voucher.description ? `<div class="info"><strong>Description:</strong> ${String(voucher.description).replace(/</g, '&lt;')}</div>` : ''}
+          ${voucher.notes ? `<div class="info"><strong>Notes:</strong> ${String(voucher.notes).replace(/</g, '&lt;')}</div>` : ''}
           <div class="footer">
             <p>Generated on ${new Date().toLocaleString()}</p>
           </div>
@@ -275,7 +344,7 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
               Saraf Entry Vouchers
             </h1>
             <p className="text-gray-600 mt-2">
-              Currency exchange entry management
+              Journal-style saraf entries with a currency and exchange rate on each line
             </p>
           </div>
           <Button
@@ -414,10 +483,9 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
               <TableColumn>VOUCHER #</TableColumn>
               <TableColumn>DATE</TableColumn>
               <TableColumn>TYPE</TableColumn>
-              <TableColumn>FROM CURRENCY</TableColumn>
-              <TableColumn>TO CURRENCY</TableColumn>
-              <TableColumn>FROM AMOUNT</TableColumn>
-              <TableColumn>TO AMOUNT</TableColumn>
+              <TableColumn>LINES</TableColumn>
+              <TableColumn>CURRENCIES</TableColumn>
+              <TableColumn>SUMMARY</TableColumn>
               <TableColumn>COMMISSION</TableColumn>
               <TableColumn>ACTIONS</TableColumn>
             </TableHeader>
@@ -443,33 +511,22 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
                     </Chip>
                   </TableCell>
                   <TableCell>
-                    <div>
-                      <p className="text-sm font-medium">
-                        {voucher.fromCurrency?.name || 'N/A'}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {voucher.fromCurrency?.code || ''}
-                      </p>
-                    </div>
+                    {hasJournalEntries(voucher) ? (
+                      <Chip size="sm" variant="flat" color="primary">
+                        {voucher.entries.length} lines
+                      </Chip>
+                    ) : (
+                      <span className="text-sm text-gray-500">Legacy</span>
+                    )}
                   </TableCell>
                   <TableCell>
-                    <div>
-                      <p className="text-sm font-medium">
-                        {voucher.toCurrency?.name || 'N/A'}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {voucher.toCurrency?.code || ''}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <p className="font-semibold text-red-600">
-                      {formatCurrency(voucher.fromAmount, voucher.fromCurrency)}
+                    <p className="text-sm font-medium max-w-[140px] truncate" title={voucherCurrencySummary(voucher)}>
+                      {voucherCurrencySummary(voucher)}
                     </p>
                   </TableCell>
                   <TableCell>
-                    <p className="font-semibold text-green-600">
-                      {formatCurrency(voucher.toAmount, voucher.toCurrency)}
+                    <p className="text-sm text-gray-800 max-w-[200px] truncate" title={voucherAmountSummary(voucher)}>
+                      {voucherAmountSummary(voucher)}
                     </p>
                   </TableCell>
                   <TableCell>
@@ -594,74 +651,125 @@ const SarafEntryVouchersList = ({ onAddNew, onView, onEdit }) => {
 
                 <Divider />
 
-                {/* Currency Exchange */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <FaExchangeAlt className="text-amber-500" />
-                    Currency Exchange
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Card className="bg-red-50">
-                      <CardBody className="p-4">
-                        <p className="text-sm text-gray-600 mb-2">From Currency</p>
-                        <p className="font-bold text-lg">
-                          {selectedVoucher.fromCurrency?.name || 'N/A'}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {selectedVoucher.fromCurrency?.code || ''}
-                        </p>
-                      </CardBody>
-                    </Card>
-                    <Card className="bg-green-50">
-                      <CardBody className="p-4">
-                        <p className="text-sm text-gray-600 mb-2">To Currency</p>
-                        <p className="font-bold text-lg">
-                          {selectedVoucher.toCurrency?.name || 'N/A'}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {selectedVoucher.toCurrency?.code || ''}
-                        </p>
-                      </CardBody>
-                    </Card>
+                {hasJournalEntries(selectedVoucher) ? (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <FaFileInvoice className="text-amber-500" />
+                      Journal entries (multi-currency)
+                    </h3>
+                    <Table aria-label="Saraf entries" removeWrapper>
+                      <TableHeader>
+                        <TableColumn>Account</TableColumn>
+                        <TableColumn>Model</TableColumn>
+                        <TableColumn>Debit</TableColumn>
+                        <TableColumn>Credit</TableColumn>
+                        <TableColumn>Currency</TableColumn>
+                        <TableColumn>Rate</TableColumn>
+                        <TableColumn>Note</TableColumn>
+                      </TableHeader>
+                      <TableBody>
+                        {selectedVoucher.entries.map((row, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell>
+                              <span className="text-sm font-medium">
+                                {row.accountName || row.account?.name || '—'}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-xs">{row.accountModel || '—'}</span>
+                            </TableCell>
+                            <TableCell className="text-red-700 font-medium">
+                              {parseFloat(row.debit) > 0 ? formatCurrency(row.debit, row.currency) : '—'}
+                            </TableCell>
+                            <TableCell className="text-green-700 font-medium">
+                              {parseFloat(row.credit) > 0 ? formatCurrency(row.credit, row.currency) : '—'}
+                            </TableCell>
+                            <TableCell>
+                              {row.currency && typeof row.currency === 'object'
+                                ? `${row.currency.code || ''}`
+                                : '—'}
+                            </TableCell>
+                            <TableCell>{row.exchangeRate ?? '—'}</TableCell>
+                            <TableCell>
+                              <span className="text-xs text-gray-600">{row.description || '—'}</span>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
-                </div>
-
-                <Divider />
-
-                {/* Exchange Details */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <FaMoneyBillWave className="text-amber-500" />
-                    Exchange Details
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                ) : (
+                  <>
+                    {/* Currency Exchange (legacy) */}
                     <div>
-                      <p className="text-sm text-gray-600">From Amount</p>
-                      <p className="font-bold text-xl text-red-600">
-                        {formatCurrency(selectedVoucher.fromAmount, selectedVoucher.fromCurrency)}
-                      </p>
+                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <FaExchangeAlt className="text-amber-500" />
+                        Currency Exchange
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Card className="bg-red-50">
+                          <CardBody className="p-4">
+                            <p className="text-sm text-gray-600 mb-2">From Currency</p>
+                            <p className="font-bold text-lg">
+                              {selectedVoucher.fromCurrency?.name || 'N/A'}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {selectedVoucher.fromCurrency?.code || ''}
+                            </p>
+                          </CardBody>
+                        </Card>
+                        <Card className="bg-green-50">
+                          <CardBody className="p-4">
+                            <p className="text-sm text-gray-600 mb-2">To Currency</p>
+                            <p className="font-bold text-lg">
+                              {selectedVoucher.toCurrency?.name || 'N/A'}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {selectedVoucher.toCurrency?.code || ''}
+                            </p>
+                          </CardBody>
+                        </Card>
+                      </div>
                     </div>
+
+                    <Divider />
+
+                    {/* Exchange Details (legacy) */}
                     <div>
-                      <p className="text-sm text-gray-600">To Amount</p>
-                      <p className="font-bold text-xl text-green-600">
-                        {formatCurrency(selectedVoucher.toAmount, selectedVoucher.toCurrency)}
-                      </p>
-                    </div>
-                    {selectedVoucher.commission && (
-                      <div>
-                        <p className="text-sm text-gray-600">Commission</p>
-                        <p className="font-semibold text-lg text-amber-600">
-                          {formatCurrency(selectedVoucher.commission, selectedVoucher.fromCurrency)}
-                        </p>
-                        {selectedVoucher.commissionPercentage && (
-                          <p className="text-xs text-gray-500">
-                            ({selectedVoucher.commissionPercentage}%)
+                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <FaMoneyBillWave className="text-amber-500" />
+                        Exchange Details
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-600">From Amount</p>
+                          <p className="font-bold text-xl text-red-600">
+                            {formatCurrency(selectedVoucher.fromAmount, selectedVoucher.fromCurrency)}
                           </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">To Amount</p>
+                          <p className="font-bold text-xl text-green-600">
+                            {formatCurrency(selectedVoucher.toAmount, selectedVoucher.toCurrency)}
+                          </p>
+                        </div>
+                        {selectedVoucher.commission && (
+                          <div>
+                            <p className="text-sm text-gray-600">Commission</p>
+                            <p className="font-semibold text-lg text-amber-600">
+                              {formatCurrency(selectedVoucher.commission, selectedVoucher.fromCurrency)}
+                            </p>
+                            {selectedVoucher.commissionPercentage && (
+                              <p className="text-xs text-gray-500">
+                                ({selectedVoucher.commissionPercentage}%)
+                              </p>
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                </div>
+                    </div>
+                  </>
+                )}
 
                 {/* Saraf Information */}
                 {(selectedVoucher.sarafName || selectedVoucher.sarafContact || selectedVoucher.purpose) && (
