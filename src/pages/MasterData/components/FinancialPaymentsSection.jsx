@@ -124,6 +124,14 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId }) => {
     return found ? found.label : String(method).charAt(0).toUpperCase() + String(method).slice(1);
   };
 
+  /** API uses subtract/add; show Debit/Credit in the table only */
+  const formatEffect = (effect) => {
+    if (effect === "subtract") return "Debit";
+    if (effect === "add") return "Credit";
+    if (!effect) return "—";
+    return String(effect);
+  };
+
   const resetCreateForm = () => {
     setCreateForm({ name: "", amount: "", method: "cash" });
     setIsCreateOpen(false);
@@ -284,6 +292,7 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId }) => {
               <TableHeader>
                 <TableColumn key="referCode">REF. CODE</TableColumn>
                 <TableColumn key="amount">AMOUNT</TableColumn>
+                <TableColumn key="effect">EFFECT</TableColumn>
                 <TableColumn key="method">METHOD</TableColumn>
                 <TableColumn key="paymentDate">DATE</TableColumn>
                 <TableColumn key="description">DESCRIPTION</TableColumn>
@@ -296,6 +305,7 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId }) => {
                     <TableCell className="font-medium">
                       {formatCurrency(payment.amount)}
                     </TableCell>
+                    <TableCell>{formatEffect(payment.effect)}</TableCell>
                     <TableCell>{formatMethod(payment.method)}</TableCell>
                     <TableCell>{formatDate(payment.paymentDate)}</TableCell>
                     <TableCell className="max-w-[200px] truncate">
