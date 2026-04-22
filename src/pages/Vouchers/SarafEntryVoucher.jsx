@@ -643,7 +643,7 @@ const SarafEntryVoucher = ({ onBack }) => {
                       <FaCalendarAlt className="text-amber-500" />
                       Basic Information
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 gap-4">
                       <Input
                         isRequired
                         type="date"
@@ -653,43 +653,6 @@ const SarafEntryVoucher = ({ onBack }) => {
                         onChange={handleChange}
                         labelPlacement="outside"
                       />
-                      <Select
-                        isRequired
-                        label="Voucher Type"
-                        selectedKeys={formData.voucherType ? [formData.voucherType] : []}
-                        onSelectionChange={(keys) => {
-                          const selected = Array.from(keys)[0] || '';
-                          setFormData((prev) => ({ ...prev, voucherType: selected }));
-                        }}
-                        labelPlacement="outside"
-                      >
-                        <SelectItem key="payment" value="payment">
-                          Payment
-                        </SelectItem>
-                        <SelectItem key="receipt" value="receipt">
-                          Receipt
-                        </SelectItem>
-                        <SelectItem key="transfer" value="transfer">
-                          Transfer
-                        </SelectItem>
-                      </Select>
-                      <Select
-                        isRequired
-                        label="Exchange Type"
-                        selectedKeys={formData.exchangeType ? [formData.exchangeType] : []}
-                        onSelectionChange={(keys) => {
-                          const selected = Array.from(keys)[0] || '';
-                          setFormData((prev) => ({ ...prev, exchangeType: selected }));
-                        }}
-                        labelPlacement="outside"
-                      >
-                        <SelectItem key="buy" value="buy">
-                          Buy
-                        </SelectItem>
-                        <SelectItem key="sell" value="sell">
-                          Sell
-                        </SelectItem>
-                      </Select>
                     </div>
                   </div>
 
