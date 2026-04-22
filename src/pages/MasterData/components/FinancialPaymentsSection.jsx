@@ -39,7 +39,7 @@ const PAYMENT_METHODS = [
  * Fetches and displays financial payments related to a specific model (Asset, Income, etc.)
  * Supports Create (POST), Update (PUT), Delete (DELETE)
  */
-const FinancialPaymentsSection = ({ relatedModel, relatedId }) => {
+const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
   const [payments, setPayments] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [results, setResults] = useState(0);
@@ -73,8 +73,16 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId }) => {
     setIsLoading(true);
     setError(null);
     try {
+      const requestConfig = currencyId
+        ? {
+            headers: {
+              currency: currencyId,
+            },
+          }
+        : undefined;
       const { data } = await userRequest.get(
-        `/financial-payments/related/${relatedModel}/${relatedId}`
+        `/financial-payments/related/${relatedModel}/${relatedId}`,
+        requestConfig
       );
       const paymentsList =
         data?.data?.financialPayments ||
@@ -92,7 +100,7 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [relatedModel, relatedId]);
+  }, [relatedModel, relatedId, currencyId]);
 
   useEffect(() => {
     fetchPayments();
