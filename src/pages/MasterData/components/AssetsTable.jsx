@@ -492,7 +492,11 @@ const AssetsTable = ({ data, onRefresh }) => {
                     <FinancialPaymentsSection
                       relatedModel="Asset"
                       relatedId={viewingAsset._id}
-                      currencyId={viewingAsset?.currency?._id || viewingAsset?.currency}
+                      currencyId={
+                        typeof viewingAsset?.currency === "string"
+                          ? viewingAsset.currency
+                          : viewingAsset?.currency?._id
+                      }
                     />
                   </div>
                 )}

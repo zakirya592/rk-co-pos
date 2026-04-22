@@ -39,12 +39,24 @@ const PAYMENT_METHODS = [
  * Fetches and displays financial payments related to a specific model (Asset, Income, etc.)
  * Supports Create (POST), Update (PUT), Delete (DELETE)
  */
+const getCurrencyIdValue = (value) => {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && value._id) return String(value._id);
+  return "";
+};
+
 const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
   const [payments, setPayments] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [results, setResults] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [currencies, setCurrencies] = useState([]);
+  const [isCurrenciesLoading, setIsCurrenciesLoading] = useState(false);
+  const [selectedCurrencyId, setSelectedCurrencyId] = useState(
+    getCurrencyIdValue(currencyId)
+  );
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -67,16 +79,45 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
     isActive: true,
   });
 
+  const fetchCurrencies = useCallback(async () => {
+    setIsCurrenciesLoading(true);
+    try {
+      const { data } = await userRequest.get("/currencies");
+      const currencyList =
+        data?.data?.currencies || data?.data || data?.currencies || [];
+      const normalizedList = Array.isArray(currencyList) ? currencyList : [];
+      setCurrencies(normalizedList);
+
+      const pkrCurrency = normalizedList.find((item) => item?.code === "PKR");
+      const incomingCurrencyId = getCurrencyIdValue(currencyId);
+      const fallbackCurrencyId =
+        incomingCurrencyId || pkrCurrency?._id || normalizedList?.[0]?._id || "";
+
+      setSelectedCurrencyId((prev) => {
+        const normalizedPrev = getCurrencyIdValue(prev);
+        const hasPrevInList = normalizedList.some(
+          (item) => String(item?._id) === normalizedPrev
+        );
+        if (hasPrevInList) return normalizedPrev;
+        return String(fallbackCurrencyId);
+      });
+    } catch (err) {
+      setCurrencies([]);
+    } finally {
+      setIsCurrenciesLoading(false);
+    }
+  }, [currencyId]);
+
   const fetchPayments = useCallback(async () => {
     if (!relatedModel || !relatedId) return;
 
     setIsLoading(true);
     setError(null);
     try {
-      const requestConfig = currencyId
+      const requestConfig = selectedCurrencyId
         ? {
-            headers: {
-              currency: currencyId,
+            params: {
+              currency: selectedCurrencyId,
             },
           }
         : undefined;
@@ -100,7 +141,18 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [relatedModel, relatedId, currencyId]);
+  }, [relatedModel, relatedId, selectedCurrencyId]);
+
+  useEffect(() => {
+    fetchCurrencies();
+  }, [fetchCurrencies]);
+
+  useEffect(() => {
+    const normalizedIncomingCurrencyId = getCurrencyIdValue(currencyId);
+    if (normalizedIncomingCurrencyId) {
+      setSelectedCurrencyId((prev) => prev || normalizedIncomingCurrencyId);
+    }
+  }, [currencyId]);
 
   useEffect(() => {
     fetchPayments();
@@ -261,14 +313,44 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
         <h4 className="text-sm font-semibold text-gray-700">
           Related Financial Payments
         </h4>
-        <Button
-          size="sm"
-          color="primary"
-          startContent={<Plus className="h-4 w-4" />}
-          onPress={() => setIsCreateOpen(true)}
-        >
-          Add Payment
-        </Button>
+        <div className="flex items-center gap-2">
+          <Select
+            size="sm"
+            aria-label="Currency"
+            placeholder="Select currency"
+            selectedKeys={
+              selectedCurrencyId ? new Set([selectedCurrencyId]) : new Set()
+            }
+            isLoading={isCurrenciesLoading}
+            className="min-w-[220px]"
+            onSelectionChange={(keys) => {
+              if (keys === "all") return;
+              const selected = Array.from(keys)[0];
+              setSelectedCurrencyId(selected ? String(selected) : "");
+            }}
+            renderValue={(items) => {
+              const selectedItem = items?.[0];
+              return selectedItem?.textValue || "Select currency";
+            }}
+          >
+            {currencies.map((currency) => (
+              <SelectItem
+                key={currency._id}
+                textValue={`${currency.code || ""} - ${currency.name || ""}`}
+              >
+                {currency.code} - {currency.name}
+              </SelectItem>
+            ))}
+          </Select>
+          <Button
+            size="sm"
+            color="primary"
+            startContent={<Plus className="h-4 w-4" />}
+            onPress={() => setIsCreateOpen(true)}
+          >
+            Add Payment
+          </Button>
+        </div>
       </div>
       {isLoading ? (
         <div className="flex justify-center py-6">
