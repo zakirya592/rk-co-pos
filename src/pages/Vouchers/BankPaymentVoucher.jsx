@@ -639,6 +639,7 @@ const BankPaymentVoucher = ({ onBack }) => {
                   </Select>
 
                   <Input
+                    className="hidden"
                     label="Payee Name"
                     name="payeeName"
                     value={formData.payeeName}
@@ -741,6 +742,7 @@ const BankPaymentVoucher = ({ onBack }) => {
                 </h2>
                 <div className="space-y-4">
                   <Textarea
+                    className="hidden"
                     label="Description"
                     name="description"
                     value={formData.description}

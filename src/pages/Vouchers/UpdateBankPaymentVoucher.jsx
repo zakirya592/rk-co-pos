@@ -729,6 +729,7 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
                   </Select>
 
                   <Input
+                    className="hidden"
                     label="Payee Name"
                     name="payeeName"
                     value={formData.payeeName}
@@ -852,6 +853,7 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
                 </h2>
                 <div className="space-y-4">
                   <Textarea
+                    className="hidden"
                     label="Description"
                     name="description"
                     value={formData.description}

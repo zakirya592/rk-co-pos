@@ -482,15 +482,9 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
             </p>
           </div>
 
-          ${voucher.description || voucher.notes ? `
+          ${voucher.notes ? `
           <div class="info-section" style="margin: 20px 0;">
             <h3>Additional Information</h3>
-            ${voucher.description ? `
-            <div style="margin-bottom: 10px;">
-              <strong>Description:</strong><br>
-              ${voucher.description}
-            </div>
-            ` : ''}
             ${voucher.notes ? `
             <div>
               <strong>Notes:</strong><br>
@@ -980,10 +974,7 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
               <TableColumn>PAYEE</TableColumn>
               <TableColumn>AMOUNT</TableColumn>
               <TableColumn>PAYMENT METHOD</TableColumn>
-              <TableColumn>REFERENCE</TableColumn>
-              <TableColumn>STATUS</TableColumn>
               <TableColumn>VOUCHER DATE</TableColumn>
-              <TableColumn>CREATED DATE</TableColumn>
               <TableColumn>ACTIONS</TableColumn>
             </TableHeader>
             <TableBody emptyContent="No vouchers found">
@@ -1052,50 +1043,10 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                     )}
                   </TableCell>
                   <TableCell>
-                    <div className="space-y-1">
-                      {voucher.referenceNumber && (
-                        <div className="text-sm font-medium text-gray-900">
-                          {voucher.referenceNumber}
-                        </div>
-                      )}
-                      {voucher.relatedPurchase && (
-                        <div className="text-xs text-blue-600">
-                          Purchase: {voucher.relatedPurchase.invoiceNumber || 'N/A'}
-                        </div>
-                      )}
-                      {!voucher.referenceNumber && !voucher.relatedPurchase && (
-                        <span className="text-xs text-gray-400">-</span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      color={getStatusColor(voucher.status)}
-                      variant="flat"
-                      size="sm"
-                      className="font-semibold"
-                    >
-                      {voucher.status?.toUpperCase() || 'DRAFT'}
-                    </Chip>
-                    {voucher.user && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        by {voucher.user.name}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
                     <div className="text-sm font-medium">{formatDate(voucher.voucherDate)}</div>
                     {voucher.currencyExchangeRate && voucher.currencyExchangeRate !== 1 && (
                       <div className="text-xs text-gray-500">
                         Rate: {voucher.currencyExchangeRate}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">{formatDate(voucher.createdAt)}</div>
-                    {voucher.updatedAt && voucher.updatedAt !== voucher.createdAt && (
-                      <div className="text-xs text-gray-400">
-                        Updated: {formatDate(voucher.updatedAt)}
                       </div>
                     )}
                   </TableCell>
@@ -1607,17 +1558,9 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                   </div>
                 )}
 
-                {/* Description & Notes - Enhanced */}
-                {(selectedVoucher.description || selectedVoucher.notes) && (
+                {/* Notes */}
+                {selectedVoucher.notes && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedVoucher.description && (
-                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <p className="text-sm font-semibold text-gray-700 mb-2">Description</p>
-                        <p className="text-sm text-gray-700 leading-relaxed">
-                          {selectedVoucher.description}
-                        </p>
-                      </div>
-                    )}
                     {selectedVoucher.notes && (
                       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                         <p className="text-sm font-semibold text-gray-700 mb-2">Notes</p>
