@@ -15,7 +15,7 @@ import {
   Pagination,
 } from '@nextui-org/react';
 import { Plus, RefreshCw } from 'lucide-react';
-import { FaSearch, FaToggleOn, FaToggleOff, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaSearch, FaToggleOn, FaToggleOff, FaEdit, FaTrash, FaEye } from 'react-icons/fa';
 import { useQuery } from 'react-query';
 import userRequest from '../../../utils/userRequest';
 import Swal from 'sweetalert2';
@@ -177,6 +177,14 @@ const BankAccountsTable = ({ onRefresh }) => {
       case 'actions':
         return (
           <div className="flex items-center space-x-2">
+            <Tooltip content="View Details">
+              <span
+                className="text-lg text-default-400 cursor-pointer active:opacity-50"
+                onClick={() => navigate(`/bank-accounts/${acc._id}/details`)}
+              >
+                <FaEye className="text-teal-600" />
+              </span>
+            </Tooltip>
             <Tooltip content="Edit">
               <span
                 className="text-lg text-default-400 cursor-pointer active:opacity-50"

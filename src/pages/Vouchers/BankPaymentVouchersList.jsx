@@ -84,6 +84,31 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
     .filter((v) => v.status === 'pending')
     .reduce((sum, v) => sum + (parseFloat(v.amount) || 0), 0);
 
+  // Format voucher type name
+  const formatVoucherType = (type) => {
+    if (!type) return 'N/A';
+    const typeMap = {
+      payment: 'Payment',
+      receipt: 'Receipt',
+      transfer: 'Transfer',
+    };
+    return typeMap[type] || type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+  };
+
+  // Get voucher type chip color
+  const getVoucherTypeColor = (type) => {
+    switch (type?.toLowerCase()) {
+      case 'payment':
+        return 'primary';
+      case 'receipt':
+        return 'success';
+      case 'transfer':
+        return 'secondary';
+      default:
+        return 'default';
+    }
+  };
+
   // Filter vouchers by search term, status, and date
   const filteredVouchers = vouchers.filter((voucher) => {
     const searchLower = searchTerm.toLowerCase();
@@ -93,7 +118,9 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
       voucher.payeeName?.toLowerCase().includes(searchLower) ||
       voucher.bankAccount?.accountName?.toLowerCase().includes(searchLower) ||
       voucher.referenceNumber?.toLowerCase().includes(searchLower) ||
-      voucher.transactionId?.toLowerCase().includes(searchLower);
+      voucher.transactionId?.toLowerCase().includes(searchLower) ||
+      voucher.voucherType?.toLowerCase().includes(searchLower) ||
+      formatVoucherType(voucher.voucherType).toLowerCase().includes(searchLower);
 
     const matchesStatus =
       statusFilter === 'all' || voucher.status === statusFilter;
@@ -595,7 +622,7 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
     <>
       <div className="space-y-6 w-full">
         {/* Enhanced Stats Cards - Extended to 6 cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        <div className="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg">
             <CardBody className="p-6">
               <div className="flex items-center justify-between">
@@ -714,8 +741,8 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
         </div>
 
         {/* Total Amount and Additional Info - Expanded */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <Card className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-xl lg:col-span-2">
+        <div className="grid grid-cols-1 gap-4">
+          <Card className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-xl">
             <CardBody className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -757,7 +784,7 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
           </Card>
 
           {/* Quick Insights Card */}
-          <Card className="bg-white shadow-xl">
+          <Card className="bg-white shadow-xl hidden">
             <CardBody className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Quick Insights
@@ -802,8 +829,8 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
 
         {/* Main Content Area - Two Column Layout */}
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-          {/* Main Table - Takes 3 columns */}
-          <div className="xl:col-span-3">
+          {/* Main Table */}
+          <div className="xl:col-span-4">
             <Card className="shadow-lg border-0">
               <CardBody className="p-6">
             {/* Header with Search, Filters and Add Button */}
@@ -970,6 +997,7 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
             <TableHeader>
               <TableColumn>VOUCHER NUMBER</TableColumn>
               <TableColumn>REFER CODE</TableColumn>
+              <TableColumn>VOUCHER TYPE</TableColumn>
               <TableColumn>BANK ACCOUNT</TableColumn>
               <TableColumn>PAYEE</TableColumn>
               <TableColumn>AMOUNT</TableColumn>
@@ -995,6 +1023,16 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                     <div className="font-semibold text-blue-600">
                       {voucher.referCode || 'N/A'}
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      size="sm"
+                      variant="flat"
+                      color={getVoucherTypeColor(voucher.voucherType)}
+                      className="capitalize"
+                    >
+                      {formatVoucherType(voucher.voucherType)}
+                    </Chip>
                   </TableCell>
                   <TableCell>
                     <div>
@@ -1196,9 +1234,9 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
           </div>
 
           {/* Right Sidebar - Additional Information */}
-          <div className="xl:col-span-1 space-y-6">
+          <div className="xl:col-span-1 space-y-6 hidden">
             {/* Recent Vouchers */}
-            <Card className="shadow-lg border-0">
+            <Card className="shadow-lg border-0 hidden">
               <CardBody className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <FaClock className="text-blue-500" />
@@ -1242,7 +1280,7 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
             </Card>
 
             {/* Top Payees */}
-            <Card className="shadow-lg border-0">
+            <Card className="shadow-lg border-0 hidden">
               <CardBody className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <FaMoneyBillWave className="text-green-500" />
@@ -1291,7 +1329,7 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
             </Card>
 
             {/* Payment Methods Breakdown */}
-            <Card className="shadow-lg border-0">
+            <Card className="shadow-lg border-0 hidden">
               <CardBody className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <FaChartLine className="text-purple-500" />

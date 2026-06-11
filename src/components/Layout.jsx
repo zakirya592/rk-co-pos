@@ -90,6 +90,7 @@ import {
 
 import AddBankAccount from "../pages/BankAccounts/AddBankAccount";
 import UpdateBankAccount from "../pages/BankAccounts/UpdateBankAccount";
+import BankAccountDetails from "../pages/BankAccounts/BankAccountDetails";
 import Purchases from "../pages/Purchase/Purchases";
 import PurchaseDetails from "../pages/Purchase/PurchaseDetails";
 import MasterData from "../pages/MasterData/MasterData";
@@ -446,6 +447,10 @@ const Layout = () => {
                   <Route
                     path="bank-accounts/update/:id"
                     element={<UpdateBankAccount />}
+                  />
+                  <Route
+                    path="bank-accounts/:id/details"
+                    element={<BankAccountDetails />}
                   />
 
                   {/* Vouchers */}
