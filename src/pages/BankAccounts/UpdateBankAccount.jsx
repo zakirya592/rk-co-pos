@@ -126,7 +126,7 @@ const UpdateBankAccount = () => {
 
             await userRequest.put(`/bank-accounts/${id}`, payload);
             toast.success("Bank account updated successfully");
-            navigate("/bank-accounts");
+            navigate("/master-data?section=bank-accounts");
         } catch (error) {
             console.error("Error updating bank account:", error);
             toast.error(
@@ -338,7 +338,7 @@ const UpdateBankAccount = () => {
                             <Button
                                 type="button"
                                 variant="flat"
-                                onPress={() => navigate("/bank-accounts")}
+                                onPress={() => navigate("/master-data?section=bank-accounts")}
                                 isDisabled={isSubmitting}
                             >
                                 Cancel

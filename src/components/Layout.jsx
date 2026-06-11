@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import Navigation from "./Navigation/Navigation";
 import ExpenseNavigation from "./Navigation/ExpenseNavigation";
 import ProtectedRoute from "./ProtectedRoute";
@@ -88,7 +88,6 @@ import {
   FinancialExpenseDetails,
 } from "../pages/FinancialExpenses";
 
-import BankAccounts from "../pages/BankAccounts/BankAccounts";
 import AddBankAccount from "../pages/BankAccounts/AddBankAccount";
 import UpdateBankAccount from "../pages/BankAccounts/UpdateBankAccount";
 import Purchases from "../pages/Purchase/Purchases";
@@ -436,7 +435,10 @@ const Layout = () => {
                   />
 
                   {/* Bank Accounts */}
-                  <Route path="bank-accounts" element={<BankAccounts />} />
+                  <Route
+                    path="bank-accounts"
+                    element={<Navigate to="/master-data?section=bank-accounts" replace />}
+                  />
                   <Route
                     path="bank-accounts/add"
                     element={<AddBankAccount />}

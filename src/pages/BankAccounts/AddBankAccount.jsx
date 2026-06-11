@@ -87,7 +87,7 @@ const AddBankAccount = () => {
       
       await userRequest.post('/bank-accounts', payload);
       toast.success('Bank account added successfully');
-      navigate('/bank-accounts');
+      navigate('/master-data?section=bank-accounts');
     } catch (error) {
       console.error('Error adding bank account:', error);
       toast.error(error.response?.data?.message || 'Failed to add bank account');
@@ -280,7 +280,7 @@ const AddBankAccount = () => {
               <Button
                 type="button"
                 variant="flat"
-                onPress={() => navigate("/bank-accounts")}
+                onPress={() => navigate("/master-data?section=bank-accounts")}
                 isDisabled={isSubmitting}
               >
                 Cancel

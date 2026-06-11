@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, Tab, Card, CardBody, Button } from '@nextui-org/react';
-import { useQuery } from 'react-query';
-import { useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from 'react-query';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import QuantityUnitsTable from './components/QuantityUnitsTable';
 import PackingUnitsTable from './components/PackingUnitsTable';
@@ -17,6 +17,7 @@ import OwnersTable from './components/OwnersTable';
 import EmployeesTable from './components/EmployeesTable';
 import PropertyAccountsTable from './components/PropertyAccountsTable';
 import SarafsTable from './components/SarafsTable';
+import BankAccountsTable from './components/BankAccountsTable';
 import { 
   FaBoxes, 
   FaLayerGroup, 
@@ -31,14 +32,25 @@ import {
   FaUsers,
   FaBuilding,
   FaBook,
-  FaMoneyBillWave
+  FaMoneyBillWave,
+  FaUniversity
 } from 'react-icons/fa';
 
 const MasterData = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState("quantity-units");
   const [selectedSidebarItem, setSelectedSidebarItem] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const section = searchParams.get('section');
+    if (section) {
+      setSelectedSidebarItem(section);
+      setSelectedTab(null);
+    }
+  }, [searchParams]);
 
   // Fetch data for all tables
   const { data: quantityUnitsData, refetch: refetchQuantityUnits } = useQuery(
@@ -336,6 +348,7 @@ const MasterData = () => {
     refetchEmployees();
     refetchPropertyAccounts();
     refetchSarafs();
+    queryClient.invalidateQueries(['bank-accounts']);
   };
 
   const sidebarItems = [
@@ -352,6 +365,7 @@ const MasterData = () => {
 
   const postFinancialSidebarItems = [
     { key: 'sarafs', label: 'Sarafs', icon: <FaMoneyBillWave /> },
+    { key: 'bank-accounts', label: 'Bank Accounts', icon: <FaUniversity /> },
   ];
 
   const findSidebarItem = (key) =>
@@ -612,6 +626,25 @@ const MasterData = () => {
         </Card>
       );
     }
+
+    if (selectedSidebarItem === 'bank-accounts') {
+      return (
+        <Card className="shadow-lg border-0">
+          <CardBody className="p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-teal-500/30">
+                {item?.icon}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{item?.label}</h2>
+                <p className="text-sm text-gray-500">Manage bank accounts, balances, and account details</p>
+              </div>
+            </div>
+            <BankAccountsTable onRefresh={refetchAll} />
+          </CardBody>
+        </Card>
+      );
+    }
     
     // For other items, show placeholder
     return (
@@ -748,7 +781,7 @@ const MasterData = () => {
 
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-3 py-2 mb-2">
-                Sarafs
+                Sarafs & Banking
               </p>
               <div className="space-y-1">
                 {postFinancialSidebarItems.map((item) => (

@@ -13,7 +13,6 @@ import {
   FaUserCircle,
   FaTruck,
   FaHistory,
-  FaUniversity,
   FaDatabase,
   FaFileInvoice,
 } from "react-icons/fa";
@@ -133,13 +132,6 @@ const cardData = [
     title: "Expenses",
     desc: "Manage expenses",
     color: "rose",
-  },
-  {
-    to: "/bank-accounts",
-    icon: <FaUniversity />,
-    title: "Bank Accounts",
-    desc: "Manage bank accounts",
-    color: "emerald",
   },
   {
     to: "/vouchers",
