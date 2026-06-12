@@ -51,7 +51,7 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
     amount: '',
     currency: '',
     currencyExchangeRate: '1',
-    paymentMethod: 'bank_transfer',
+    paymentMethod: 'bank',
     description: '',
     notes: '',
     status: 'draft',
@@ -81,7 +81,7 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
           amount: voucher.amount || '',
           currency: voucher.currency?._id || '',
           currencyExchangeRate: voucher.currencyExchangeRate?.toString() || '1',
-          paymentMethod: voucher.paymentMethod || 'bank_transfer',
+          paymentMethod: voucher.paymentMethod || 'bank',
           description: voucher.description || '',
           notes: voucher.notes || '',
           status: voucher.status || 'draft',
@@ -263,6 +263,17 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
   const { data: employees = [] } = useQuery(['employees'], fetchEmployees);
   const { data: propertyAccounts = [] } = useQuery(['property-accounts'], fetchPropertyAccounts);
 
+  const getPayeeDisplayName = (payee) => {
+    if (!payee) return '';
+    return (
+      payee.name ||
+      payee.accountName ||
+      payee.email ||
+      [payee.bankName, payee.accountNumber].filter(Boolean).join(' - ') ||
+      payee._id
+    );
+  };
+
   // Get payee options based on payeeType (includes financial models)
   const getPayeeOptions = () => {
     switch (formData.payeeType) {
@@ -272,6 +283,8 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
         return Array.isArray(customers) ? customers : [];
       case 'user':
         return Array.isArray(users) ? users : [];
+      case 'BankAccount':
+        return Array.isArray(bankAccounts) ? bankAccounts : [];
       case 'Asset':
         return Array.isArray(assets) ? assets : [];
       case 'Income':
@@ -311,7 +324,7 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
         if (selectedPayee) {
           setFormData((prev) => ({
             ...prev,
-            payeeName: selectedPayee.name || selectedPayee.email || '',
+            payeeName: getPayeeDisplayName(selectedPayee),
           }));
         }
       }
@@ -660,6 +673,9 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
                     <SelectItem key="user" value="user">
                       User
                     </SelectItem>
+                    <SelectItem key="BankAccount" value="BankAccount">
+                      Bank Account
+                    </SelectItem>
                     <SelectItem key="Asset" value="Asset">
                       Asset
                     </SelectItem>
@@ -701,7 +717,7 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
                       setFormData((prev) => ({
                         ...prev,
                         payee: selected,
-                        payeeName: selectedPayee?.name || selectedPayee?.email || '',
+                        payeeName: getPayeeDisplayName(selectedPayee),
                       }));
                     }}
                     labelPlacement="outside"
@@ -715,9 +731,9 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
                             <SelectItem 
                               key={payee._id} 
                               value={payee._id}
-                              textValue={payee.name || payee.email || payee._id}
+                              textValue={getPayeeDisplayName(payee)}
                             >
-                              {payee.name || payee.email || payee._id}
+                              {getPayeeDisplayName(payee)}
                             </SelectItem>
                           ))
                         : (
@@ -812,35 +828,14 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
                   Payment Method
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Select
+                  <Input
                     label="Payment Method"
                     name="paymentMethod"
-                    selectedKeys={formData.paymentMethod ? [formData.paymentMethod] : []}
-                    onSelectionChange={(keys) => {
-                      const [selected] = Array.from(keys);
-                      handleChange({ target: { name: 'paymentMethod', value: selected || '' } });
-                    }}
+                    value="Bank"
+                    disabled
                     labelPlacement="outside"
-                  >
-                    <SelectItem key="bank_transfer" value="bank_transfer">
-                      Bank Transfer
-                    </SelectItem>
-                    <SelectItem key="check" value="check">
-                      Check
-                    </SelectItem>
-                    <SelectItem key="online_payment" value="online_payment">
-                      Online Payment
-                    </SelectItem>
-                    <SelectItem key="wire_transfer" value="wire_transfer">
-                      Wire Transfer
-                    </SelectItem>
-                    <SelectItem key="dd" value="dd">
-                      Demand Draft (DD)
-                    </SelectItem>
-                    <SelectItem key="other" value="other">
-                      Other
-                    </SelectItem>
-                  </Select>
+                    description="Fixed payment method for bank payment vouchers"
+                  />
                 </div>
               </div>
 
@@ -853,7 +848,6 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
                 </h2>
                 <div className="space-y-4">
                   <Textarea
-                    className="hidden"
                     label="Description"
                     name="description"
                     value={formData.description}
@@ -1165,12 +1159,14 @@ const UpdateBankPaymentVoucher = ({ voucherId, onBack }) => {
                         <span className="font-medium text-gray-900">
                           {(() => {
                             const methodMap = {
-                              'bank_transfer': 'Bank Transfer',
-                              'check': 'Check',
-                              'online_payment': 'Online Payment',
-                              'wire_transfer': 'Wire Transfer',
-                              'dd': 'Demand Draft (DD)',
-                              'other': 'Other',
+                              cash: 'Cash',
+                              bank: 'Bank',
+                              bank_transfer: 'Bank Transfer',
+                              check: 'Check',
+                              online_payment: 'Online Payment',
+                              wire_transfer: 'Wire Transfer',
+                              dd: 'Demand Draft (DD)',
+                              other: 'Other',
                             };
                             return methodMap[voucherInfo.paymentMethod] || voucherInfo.paymentMethod.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                           })()}

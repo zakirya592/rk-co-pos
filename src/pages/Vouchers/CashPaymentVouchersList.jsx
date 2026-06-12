@@ -127,10 +127,21 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
   const getVoucherEntriesSummary = (voucher) => {
     const entries = Array.isArray(voucher?.entries) ? voucher.entries : [];
     if (entries.length === 0) {
-      const fallback =
-        voucher.payee?.name || voucher.payeeName || '';
+      const payeeLabel =
+        voucher.payee?.name ||
+        voucher.payee?.email ||
+        voucher.payeeName ||
+        '';
+      const cashAccount = voucher.cashAccount;
+      const cashLabel =
+        typeof cashAccount === 'object'
+          ? cashAccount?.name || cashAccount?.accountName || cashAccount?.code
+          : cashAccount || '';
+      const oneLiner = payeeLabel
+        ? `${payeeLabel}${voucher.payeeType ? ` (${voucher.payeeType})` : ''}`
+        : cashLabel || '—';
       return {
-        oneLiner: fallback || '—',
+        oneLiner,
         debitPart: '',
         creditPart: '',
       };
@@ -156,6 +167,9 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
       v.payeeName,
       v.payee?.name,
       v.payee?.email,
+      typeof v.cashAccount === 'object'
+        ? v.cashAccount?.name || v.cashAccount?.accountName
+        : v.cashAccount,
       v.cashAccountType,
       v.paymentMethod,
       v.status,
@@ -180,6 +194,14 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
   };
 
   const getCashAccountDisplay = (voucher) => {
+    if (voucher.cashAccount && typeof voucher.cashAccount === 'object') {
+      return (
+        voucher.cashAccount.name ||
+        voucher.cashAccount.accountName ||
+        voucher.cashAccount.code ||
+        'N/A'
+      );
+    }
     if (voucher.cashAccount && typeof voucher.cashAccount === 'string') {
       return voucher.cashAccount;
     }
@@ -1142,7 +1164,7 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
             <TableHeader>
               <TableColumn>VOUCHER NUMBER</TableColumn>
               <TableColumn>REFER CODE</TableColumn>
-              <TableColumn>ENTRIES (DR → CR)</TableColumn>
+              <TableColumn>PAYEE / DETAILS</TableColumn>
               <TableColumn>AMOUNT</TableColumn>
               <TableColumn>PAYMENT METHOD</TableColumn>
               <TableColumn>STATUS</TableColumn>

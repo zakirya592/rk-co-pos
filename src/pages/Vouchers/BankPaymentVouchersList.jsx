@@ -185,12 +185,14 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
   const formatPaymentMethod = (method) => {
     if (!method) return 'N/A';
     const methodMap = {
-      'bank_transfer': 'Bank Transfer',
-      'check': 'Check',
-      'online_payment': 'Online Payment',
-      'wire_transfer': 'Wire Transfer',
-      'dd': 'Demand Draft (DD)',
-      'other': 'Other',
+      bank: 'Bank',
+      cash: 'Cash',
+      bank_transfer: 'Bank Transfer',
+      check: 'Check',
+      online_payment: 'Online Payment',
+      wire_transfer: 'Wire Transfer',
+      dd: 'Demand Draft (DD)',
+      other: 'Other',
     };
     return methodMap[method] || method.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };

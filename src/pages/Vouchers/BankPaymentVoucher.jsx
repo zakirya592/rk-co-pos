@@ -45,7 +45,7 @@ const BankPaymentVoucher = ({ onBack }) => {
     amount: '',
     currency: '',
     currencyExchangeRate: '1',
-    paymentMethod: 'bank_transfer',
+    paymentMethod: 'bank',
     description: '',
     notes: '',
   });
@@ -210,6 +210,17 @@ const BankPaymentVoucher = ({ onBack }) => {
   const { data: employees = [] } = useQuery(['employees'], fetchEmployees);
   const { data: propertyAccounts = [] } = useQuery(['property-accounts'], fetchPropertyAccounts);
 
+  const getPayeeDisplayName = (payee) => {
+    if (!payee) return '';
+    return (
+      payee.name ||
+      payee.accountName ||
+      payee.email ||
+      [payee.bankName, payee.accountNumber].filter(Boolean).join(' - ') ||
+      payee._id
+    );
+  };
+
   // Get payee options based on payeeType (includes financial models)
   const getPayeeOptions = () => {
     switch (formData.payeeType) {
@@ -219,6 +230,8 @@ const BankPaymentVoucher = ({ onBack }) => {
         return Array.isArray(customers) ? customers : [];
       case 'user':
         return Array.isArray(users) ? users : [];
+      case 'BankAccount':
+        return Array.isArray(bankAccounts) ? bankAccounts : [];
       case 'Asset':
         return Array.isArray(assets) ? assets : [];
       case 'Income':
@@ -257,7 +270,7 @@ const BankPaymentVoucher = ({ onBack }) => {
       if (selectedPayee) {
         setFormData((prev) => ({
           ...prev,
-          payeeName: selectedPayee.name || selectedPayee.email || '',
+          payeeName: getPayeeDisplayName(selectedPayee),
         }));
       }
     }
@@ -365,7 +378,7 @@ const BankPaymentVoucher = ({ onBack }) => {
         amount: '',
         currency: '',
         currencyExchangeRate: '1',
-        paymentMethod: 'bank_transfer',
+        paymentMethod: 'bank',
         description: '',
         notes: '',
       });
@@ -570,6 +583,9 @@ const BankPaymentVoucher = ({ onBack }) => {
                     <SelectItem key="user" value="user">
                       User
                     </SelectItem>
+                    <SelectItem key="BankAccount" value="BankAccount">
+                      Bank Account
+                    </SelectItem>
                     <SelectItem key="Asset" value="Asset">
                       Asset
                     </SelectItem>
@@ -611,7 +627,7 @@ const BankPaymentVoucher = ({ onBack }) => {
                       setFormData((prev) => ({
                         ...prev,
                         payee: selected,
-                        payeeName: selectedPayee?.name || selectedPayee?.email || '',
+                        payeeName: getPayeeDisplayName(selectedPayee),
                       }));
                     }}
                     labelPlacement="outside"
@@ -625,9 +641,9 @@ const BankPaymentVoucher = ({ onBack }) => {
                             <SelectItem 
                               key={payee._id} 
                               value={payee._id}
-                              textValue={payee.name || payee.email || payee._id}
+                              textValue={getPayeeDisplayName(payee)}
                             >
-                              {payee.name || payee.email || payee._id}
+                              {getPayeeDisplayName(payee)}
                             </SelectItem>
                           ))
                         : (
@@ -725,10 +741,10 @@ const BankPaymentVoucher = ({ onBack }) => {
                   <Input
                     label="Payment Method"
                     name="paymentMethod"
-                    value="Bank Transfer"
+                    value="Bank"
                     disabled
                     labelPlacement="outside"
-                    description="Fixed payment method for bank transfer vouchers"
+                    description="Fixed payment method for bank payment vouchers"
                   />
                 </div>
               </div>
@@ -742,7 +758,6 @@ const BankPaymentVoucher = ({ onBack }) => {
                 </h2>
                 <div className="space-y-4">
                   <Textarea
-                    className="hidden"
                     label="Description"
                     name="description"
                     value={formData.description}
@@ -937,7 +952,7 @@ const BankPaymentVoucher = ({ onBack }) => {
                 <div className="space-y-2">
                   <div className="p-3 bg-blue-50 rounded-lg border-2 border-blue-200">
                     <p className="text-sm font-semibold text-gray-900">
-                      Bank Payment
+                      Bank
                     </p>
                     <p className="text-xs text-gray-600">
                       This voucher uses bank payment method only. All transactions are processed through bank accounts.
