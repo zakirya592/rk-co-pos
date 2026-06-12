@@ -35,10 +35,6 @@ import {
   FaFilter,
   FaDownload,
   FaMoneyBillWave,
-  FaChartLine,
-  FaClock,
-  FaCheckCircle,
-  FaTimesCircle,
   FaUser,
   FaStore,
   FaFileInvoice,
@@ -159,11 +155,32 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
     };
   };
 
+  const formatVoucherType = (type) => {
+    if (!type) return 'Payment';
+    const typeMap = {
+      payment: 'Payment',
+      receipt: 'Receipt',
+    };
+    return typeMap[type] || type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+  };
+
+  const getVoucherTypeColor = (type) => {
+    switch (type?.toLowerCase()) {
+      case 'payment':
+        return 'primary';
+      case 'receipt':
+        return 'success';
+      default:
+        return 'default';
+    }
+  };
+
   const buildVoucherSearchText = (v) => {
     const parts = [
       v.voucherNumber,
       v.referCode,
       v.transactionId,
+      v.voucherType,
       v.payeeName,
       v.payee?.name,
       v.payee?.email,
@@ -213,12 +230,6 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
 
   // Calculate totals
   const totalAmount = vouchers.reduce((sum, v) => sum + getVoucherAmount(v), 0);
-  const approvedAmount = vouchers
-    .filter((v) => v.status === 'approved' || v.status === 'completed')
-    .reduce((sum, v) => sum + getVoucherAmount(v), 0);
-  const pendingAmount = vouchers
-    .filter((v) => v.status === 'pending')
-    .reduce((sum, v) => sum + getVoucherAmount(v), 0);
 
   // Filter vouchers by search term, status, and date
   const filteredVouchers = vouchers.filter((voucher) => {
@@ -742,170 +753,12 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
     );
   }
 
-  // Calculate additional stats
   const avgAmount = vouchers.length > 0 ? totalAmount / vouchers.length : 0;
-  const rejectedCount = vouchers.filter((v) => v.status === 'rejected').length;
-  const rejectedAmount = vouchers
-    .filter((v) => v.status === 'rejected')
-    .reduce((sum, v) => sum + getVoucherAmount(v), 0);
-  
-  // Get recent vouchers (last 5)
-  const recentVouchers = [...vouchers]
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .slice(0, 5);
-
-  // Top parties: primary debit-side label per voucher (fallback payee)
-  const payeeStats = vouchers.reduce((acc, v) => {
-    const amt = getVoucherAmount(v);
-    const entries = Array.isArray(v.entries) ? v.entries : [];
-    const debitEntry = entries.find((e) => (parseFloat(e.debit) || 0) > 0);
-    const label = debitEntry
-      ? getEntryLineLabel(debitEntry)
-      : v.payee?.name || v.payeeName || 'Other';
-    const key = label || 'Other';
-    if (!acc[key]) {
-      acc[key] = { count: 0, total: 0 };
-    }
-    acc[key].count++;
-    acc[key].total += amt;
-    return acc;
-  }, {});
-  const topPayees = Object.entries(payeeStats)
-    .sort((a, b) => b[1].total - a[1].total)
-    .slice(0, 5);
 
   return (
     <>
       <div className="space-y-6 w-full">
-        {/* Enhanced Stats Cards - Extended to 6 cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-          <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg">
-            <CardBody className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-100 text-sm font-medium mb-1">
-                    Total Vouchers
-                  </p>
-                  <p className="text-3xl font-bold">
-                    {data?.totalVouchers ?? vouchers.length}
-                  </p>
-                  <p className="text-green-100 text-xs mt-1">
-                    {filteredVouchers.length} shown
-                  </p>
-                </div>
-                <div className="bg-white/20 rounded-full p-4">
-                  <FaFileUpload className="text-3xl" />
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg">
-            <CardBody className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-100 text-sm font-medium mb-1">
-                    Approved / Done
-                  </p>
-                  <p className="text-3xl font-bold">
-                    {
-                      vouchers.filter(
-                        (v) =>
-                          v.status === 'approved' || v.status === 'completed'
-                      ).length
-                    }
-                  </p>
-                  <p className="text-green-100 text-xs mt-1">
-                    {formatCurrency(approvedAmount, vouchers[0]?.currency)}
-                  </p>
-                </div>
-                <div className="bg-white/20 rounded-full p-4">
-                  <FaCheckCircle className="text-3xl" />
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-yellow-500 to-orange-500 text-white shadow-lg">
-            <CardBody className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-yellow-100 text-sm font-medium mb-1">
-                    Pending
-                  </p>
-                  <p className="text-3xl font-bold">
-                    {vouchers.filter((v) => v.status === 'pending').length}
-                  </p>
-                  <p className="text-yellow-100 text-xs mt-1">
-                    {formatCurrency(pendingAmount, vouchers[0]?.currency)}
-                  </p>
-                </div>
-                <div className="bg-white/20 rounded-full p-4">
-                  <FaClock className="text-3xl" />
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-gray-600 to-gray-700 text-white shadow-lg">
-            <CardBody className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-200 text-sm font-medium mb-1">Draft</p>
-                  <p className="text-3xl font-bold">
-                    {vouchers.filter((v) => v.status === 'draft').length}
-                  </p>
-                  <p className="text-gray-200 text-xs mt-1">In progress</p>
-                </div>
-                <div className="bg-white/20 rounded-full p-4">
-                  <FaEdit className="text-3xl" />
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg">
-            <CardBody className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-red-100 text-sm font-medium mb-1">
-                    Rejected
-                  </p>
-                  <p className="text-3xl font-bold">{rejectedCount}</p>
-                  <p className="text-red-100 text-xs mt-1">
-                    {formatCurrency(rejectedAmount, vouchers[0]?.currency)}
-                  </p>
-                </div>
-                <div className="bg-white/20 rounded-full p-4">
-                  <FaTimesCircle className="text-3xl" />
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg">
-            <CardBody className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-indigo-100 text-sm font-medium mb-1">
-                    Avg Amount
-                  </p>
-                  <p className="text-3xl font-bold">
-                    {formatCurrency(avgAmount, vouchers[0]?.currency)}
-                  </p>
-                  <p className="text-indigo-100 text-xs mt-1">Per voucher</p>
-                </div>
-                <div className="bg-white/20 rounded-full p-4">
-                  <FaChartLine className="text-3xl" />
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-        </div>
-
-        {/* Total Amount and Additional Info - Expanded */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <Card className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-xl lg:col-span-2">
+        <Card className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-xl">
             <CardBody className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -946,59 +799,7 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
             </CardBody>
           </Card>
 
-          {/* Quick Insights Card */}
-          <Card className="bg-white shadow-xl">
-            <CardBody className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Quick Insights
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <div>
-                    <p className="text-sm text-gray-600">Approval Rate</p>
-                    <p className="text-2xl font-bold text-green-600">
-                      {vouchers.length > 0
-                        ? Math.round(
-                            (vouchers.filter(
-                              (v) =>
-                                v.status === 'approved' ||
-                                v.status === 'completed'
-                            ).length /
-                              vouchers.length) *
-                              100
-                          )
-                        : 0}
-                      %
-                    </p>
-                  </div>
-                  <FaCheckCircle className="text-3xl text-green-500" />
-                </div>
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <div>
-                    <p className="text-sm text-gray-600">Completion</p>
-                    <p className="text-2xl font-bold text-green-600">
-                      {vouchers.length > 0
-                        ? Math.round(
-                            ((vouchers.filter((v) => v.status !== 'draft').length /
-                              vouchers.length) *
-                              100)
-                          )
-                        : 0}
-                      %
-                    </p>
-                  </div>
-                  <FaChartLine className="text-3xl text-green-500" />
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-        </div>
-
-        {/* Main Content Area - Two Column Layout */}
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-          {/* Main Table - Takes 3 columns */}
-          <div className="xl:col-span-3">
-            <Card className="shadow-lg border-0">
+        <Card className="shadow-lg border-0">
               <CardBody className="p-6">
             {/* Header with Search, Filters and Add Button */}
             <div className="mb-6">
@@ -1162,14 +963,11 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                 isStriped
               >
             <TableHeader>
-              <TableColumn>VOUCHER NUMBER</TableColumn>
               <TableColumn>REFER CODE</TableColumn>
               <TableColumn>PAYEE / DETAILS</TableColumn>
               <TableColumn>AMOUNT</TableColumn>
-              <TableColumn>PAYMENT METHOD</TableColumn>
-              <TableColumn>STATUS</TableColumn>
+              <TableColumn>VOUCHER TYPE</TableColumn>
               <TableColumn>VOUCHER DATE</TableColumn>
-              <TableColumn>CREATED DATE</TableColumn>
               <TableColumn>ACTIONS</TableColumn>
             </TableHeader>
             <TableBody emptyContent="No vouchers found">
@@ -1181,14 +979,6 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                   key={voucher._id}
                   className="hover:bg-gray-50 transition-colors"
                 >
-                  <TableCell>
-                    <div className="font-medium">{voucher.voucherNumber || 'N/A'}</div>
-                    {voucher.transactionId && (
-                      <div className="text-xs text-gray-500">
-                        {voucher.transactionId}
-                      </div>
-                    )}
-                  </TableCell>
                   <TableCell>
                     <div className="font-semibold text-green-600">
                       {voucher.referCode || 'N/A'}
@@ -1218,48 +1008,20 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm font-medium">
-                      {formatPaymentMethod(voucher.paymentMethod)}
-                    </div>
-                    {voucher.checkNumber && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        Check: {voucher.checkNumber}
-                      </div>
-                    )}
-                    {voucher.transactionId && (
-                      <div className="text-xs text-green-600 mt-1 truncate max-w-[150px]">
-                        {voucher.transactionId}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
                     <Chip
-                      color={getStatusColor(voucher.status)}
+                      color={getVoucherTypeColor(voucher.voucherType)}
                       variant="flat"
                       size="sm"
-                      className="font-semibold"
+                      className="font-semibold capitalize"
                     >
-                      {voucher.status?.toUpperCase() || 'DRAFT'}
+                      {formatVoucherType(voucher.voucherType)}
                     </Chip>
-                    {voucher.user && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        by {voucher.user.name}
-                      </div>
-                    )}
                   </TableCell>
                   <TableCell>
                     <div className="text-sm font-medium">{formatDate(voucher.voucherDate)}</div>
                     {voucher.currencyExchangeRate && voucher.currencyExchangeRate !== 1 && (
                       <div className="text-xs text-gray-500">
                         Rate: {voucher.currencyExchangeRate}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">{formatDate(voucher.createdAt)}</div>
-                    {voucher.updatedAt && voucher.updatedAt !== voucher.createdAt && (
-                      <div className="text-xs text-gray-400">
-                        Updated: {formatDate(voucher.updatedAt)}
                       </div>
                     )}
                   </TableCell>
@@ -1415,153 +1177,6 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
             )}
           </CardBody>
         </Card>
-          </div>
-
-          {/* Right Sidebar - Additional Information */}
-          <div className="xl:col-span-1 space-y-6">
-            {/* Recent Vouchers */}
-            <Card className="shadow-lg border-0">
-              <CardBody className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <FaClock className="text-green-500" />
-                  Recent Vouchers
-                </h3>
-                <div className="space-y-3">
-                  {recentVouchers.length > 0 ? (
-                    recentVouchers.map((voucher) => (
-                      <div
-                        key={voucher._id}
-                        className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                        onClick={() => handleView(voucher)}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="font-semibold text-sm text-gray-900">
-                            {voucher.voucherNumber || voucher.referCode}
-                          </p>
-                          <Chip
-                            color={getStatusColor(voucher.status)}
-                            variant="flat"
-                            size="sm"
-                          >
-                            {voucher.status?.toUpperCase() || 'DRAFT'}
-                          </Chip>
-                        </div>
-                        <p className="text-xs text-gray-600 mb-1">
-                          {formatCurrency(getVoucherAmount(voucher), voucher.currency)}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {formatDate(voucher.createdAt)}
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500 text-center py-4">
-                      No recent vouchers
-                    </p>
-                  )}
-                </div>
-              </CardBody>
-            </Card>
-
-            {/* Top Payees */}
-            <Card className="shadow-lg border-0">
-              <CardBody className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <FaMoneyBillWave className="text-green-500" />
-                  Top debit parties
-                </h3>
-                <div className="space-y-3">
-                  {topPayees.length > 0 ? (
-                    topPayees.map(([payeeName, stats], index) => (
-                      <div
-                        key={index}
-                        className="p-3 bg-gray-50 rounded-lg"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="font-semibold text-sm text-gray-900 truncate flex-1">
-                            {payeeName}
-                          </p>
-                          <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded">
-                            #{index + 1}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs text-gray-600">
-                            {stats.count} voucher{stats.count !== 1 ? 's' : ''}
-                          </p>
-                          <p className="text-sm font-bold text-green-600">
-                            {formatCurrency(stats.total, vouchers[0]?.currency)}
-                          </p>
-                        </div>
-                        <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
-                          <div
-                            className="bg-green-500 h-1.5 rounded-full"
-                            style={{
-                              width: `${totalAmount > 0 ? (stats.total / totalAmount) * 100 : 0}%`,
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500 text-center py-4">
-                      No entry party data yet
-                    </p>
-                  )}
-                </div>
-              </CardBody>
-            </Card>
-
-            {/* Payment Methods Breakdown */}
-            <Card className="shadow-lg border-0">
-              <CardBody className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <FaChartLine className="text-purple-500" />
-                  Payment Methods
-                </h3>
-                <div className="space-y-3">
-                  {(() => {
-                    const methodStats = vouchers.reduce((acc, v) => {
-                      const method = v.paymentMethod || 'unknown';
-                      if (!acc[method]) {
-                        acc[method] = { count: 0, total: 0 };
-                      }
-                      acc[method].count++;
-                      acc[method].total += getVoucherAmount(v);
-                      return acc;
-                    }, {});
-                    return Object.entries(methodStats).length > 0 ? (
-                      Object.entries(methodStats)
-                        .sort((a, b) => b[1].total - a[1].total)
-                        .map(([method, stats]) => (
-                          <div
-                            key={method}
-                            className="p-3 bg-gray-50 rounded-lg"
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <p className="font-semibold text-sm text-gray-900 capitalize">
-                                {method.replace('_', ' ')}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {stats.count}x
-                              </p>
-                            </div>
-                            <p className="text-sm font-bold text-purple-600">
-                              {formatCurrency(stats.total, vouchers[0]?.currency)}
-                            </p>
-                          </div>
-                        ))
-                    ) : (
-                      <p className="text-sm text-gray-500 text-center py-4">
-                        No payment method data
-                      </p>
-                    );
-                  })()}
-                </div>
-              </CardBody>
-            </Card>
-          </div>
-        </div>
       </div>
 
       {/* View Details Modal */}
