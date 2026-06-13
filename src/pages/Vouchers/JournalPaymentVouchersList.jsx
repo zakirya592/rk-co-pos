@@ -33,8 +33,6 @@ import {
   FaSearch,
   FaFilter,
   FaMoneyBillWave,
-  FaChartLine,
-  FaCheckCircle,
   FaFileInvoice,
   FaPrint,
   FaCoins,
@@ -77,15 +75,6 @@ const JournalPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
       : Array.isArray(listPayload.data)
         ? listPayload.data
         : [];
-  const listTotalCount =
-    listPayload.totalVouchers ?? listPayload.results ?? vouchers.length;
-
-  // Calculate totals
-  const totalFromAmount = vouchers.reduce((sum, v) => sum + (parseFloat(v.fromAmount) || 0), 0);
-  const totalToAmount = vouchers.reduce((sum, v) => sum + (parseFloat(v.toAmount) || 0), 0);
-  const totalCommission = vouchers.reduce((sum, v) => sum + (parseFloat(v.commission) || 0), 0);
-  const buyCount = vouchers.filter((v) => v.exchangeType === 'buy').length;
-  const sellCount = vouchers.filter((v) => v.exchangeType === 'sell').length;
 
   // Filter vouchers by search term, exchange type, and date
   const filteredVouchers = vouchers.filter((voucher) => {
@@ -209,13 +198,6 @@ const JournalPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
       return `${v.entries.length} line(s)`;
     }
     return `${formatCurrency(v.fromAmount, v.fromCurrency)} · ${formatCurrency(v.toAmount, v.toCurrency)}`;
-  };
-
-  const commissionDisplayCurrency = (v) => {
-    if (hasJournalEntries(v) && v.entries[0]?.currency && typeof v.entries[0].currency === 'object') {
-      return v.entries[0].currency;
-    }
-    return v.fromCurrency;
   };
 
   // Handle delete
@@ -391,61 +373,6 @@ const JournalPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
           </Button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card className="bg-gradient-to-r from-amber-500 to-orange-600 text-white">
-            <CardBody className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-amber-100 text-sm">Total vouchers</p>
-                  <p className="text-2xl font-bold">{listTotalCount}</p>
-                </div>
-                <FaCoins className="text-4xl opacity-50" />
-              </div>
-            </CardBody>
-          </Card>
-          <Card className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
-            <CardBody className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-100 text-sm">Buy Transactions</p>
-                  <p className="text-2xl font-bold">{buyCount}</p>
-                </div>
-                <FaExchangeAlt className="text-4xl opacity-50" />
-              </div>
-            </CardBody>
-          </Card>
-          <Card className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
-            <CardBody className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100 text-sm">Sell Transactions</p>
-                  <p className="text-2xl font-bold">{sellCount}</p>
-                </div>
-                <FaChartLine className="text-4xl opacity-50" />
-              </div>
-            </CardBody>
-          </Card>
-          <Card className="bg-gradient-to-r from-purple-500 to-pink-600 text-white">
-            <CardBody className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100 text-sm">Total Commission</p>
-                  <p className="text-xl font-bold">
-                    {vouchers.length > 0
-                      ? formatCurrency(
-                          totalCommission,
-                          commissionDisplayCurrency(vouchers[0]) || { symbol: 'Rs' }
-                        )
-                      : `Rs ${totalCommission.toLocaleString()}`}
-                  </p>
-                </div>
-                <FaMoneyBillWave className="text-4xl opacity-50" />
-              </div>
-            </CardBody>
-          </Card>
-        </div>
-
         {/* Search and Filters */}
         <Card className="mb-6">
           <CardBody className="p-4">
@@ -516,76 +443,15 @@ const JournalPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
         <CardBody>
           <Table aria-label="Journal Payment Vouchers">
             <TableHeader>
-              <TableColumn>VOUCHER</TableColumn>
               <TableColumn>DATE</TableColumn>
-              <TableColumn>TYPE</TableColumn>
-              <TableColumn>STATUS</TableColumn>
-              <TableColumn>LINES</TableColumn>
               <TableColumn>CURRENCIES</TableColumn>
               <TableColumn>DEBIT → CREDIT</TableColumn>
-              <TableColumn>COMMISSION</TableColumn>
               <TableColumn>ACTIONS</TableColumn>
             </TableHeader>
             <TableBody emptyContent="No vouchers found">
               {filteredVouchers.map((voucher) => (
                 <TableRow key={voucher._id}>
-                  <TableCell>
-                    <div className="min-w-0 max-w-[220px]">
-                      <p className="font-semibold truncate" title={voucher.voucherNumber || voucher.referCode}>
-                        {voucher.voucherNumber || voucher.referCode || 'N/A'}
-                      </p>
-                      {voucher.referCode &&
-                        voucher.voucherNumber &&
-                        voucher.referCode !== voucher.voucherNumber && (
-                          <p className="text-xs text-gray-600">{voucher.referCode}</p>
-                        )}
-                      {voucher.transactionId && (
-                        <p
-                          className="text-xs text-gray-400 truncate"
-                          title={voucher.transactionId}
-                        >
-                          {voucher.transactionId}
-                        </p>
-                      )}
-                      {voucher.referenceNumber && (
-                        <p className="text-xs text-gray-500">Ref: {voucher.referenceNumber}</p>
-                      )}
-                    </div>
-                  </TableCell>
                   <TableCell>{formatDate(voucher.voucherDate)}</TableCell>
-                  <TableCell>
-                    <Chip
-                      color={voucher.exchangeType === 'buy' ? 'success' : 'warning'}
-                      variant="flat"
-                      size="sm"
-                    >
-                      {voucher.exchangeType?.toUpperCase() || 'N/A'}
-                    </Chip>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      color={
-                        voucher.status === 'completed'
-                          ? 'success'
-                          : voucher.status === 'pending'
-                            ? 'warning'
-                            : 'default'
-                      }
-                      variant="flat"
-                      size="sm"
-                    >
-                      {(voucher.status || '—').toString()}
-                    </Chip>
-                  </TableCell>
-                  <TableCell>
-                    {hasJournalEntries(voucher) ? (
-                      <Chip size="sm" variant="flat" color="primary">
-                        {voucher.entries.length} lines
-                      </Chip>
-                    ) : (
-                      <span className="text-sm text-gray-500">Legacy</span>
-                    )}
-                  </TableCell>
                   <TableCell>
                     <p className="text-sm font-medium max-w-[140px] truncate" title={voucherCurrencySummary(voucher)}>
                       {voucherCurrencySummary(voucher)}
@@ -595,19 +461,6 @@ const JournalPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                     <p className="text-sm text-gray-800 max-w-[200px] truncate" title={voucherAmountSummary(voucher)}>
                       {voucherAmountSummary(voucher)}
                     </p>
-                  </TableCell>
-                  <TableCell>
-                    <p className="text-sm">
-                      {formatCurrency(
-                        voucher.commission || 0,
-                        commissionDisplayCurrency(voucher) || { symbol: 'Rs' }
-                      )}
-                    </p>
-                    {voucher.commissionPercentage ? (
-                      <p className="text-xs text-gray-500">
-                        ({voucher.commissionPercentage}%)
-                      </p>
-                    ) : null}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
