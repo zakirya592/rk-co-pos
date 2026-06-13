@@ -120,38 +120,134 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
     return 0;
   };
 
+  const formatAccountModel = (model) => {
+    if (!model || model === 'CashBook') return '';
+    return String(model)
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/_/g, ' ');
+  };
+
+  const getCashAccountId = (voucher) => {
+    const cashAccount = voucher?.cashAccount;
+    if (!cashAccount) return '';
+    if (typeof cashAccount === 'object') {
+      return String(cashAccount._id || cashAccount.id || '');
+    }
+    return String(cashAccount);
+  };
+
+  const getCashAccountNames = (voucher) => {
+    const cashAccount = voucher?.cashAccount;
+    const names = new Set();
+    if (!cashAccount) return names;
+
+    if (typeof cashAccount === 'object') {
+      [cashAccount.name, cashAccount.accountName, cashAccount.code]
+        .filter(Boolean)
+        .forEach((name) => names.add(String(name).trim().toLowerCase()));
+    } else {
+      names.add(String(cashAccount).trim().toLowerCase());
+    }
+
+    return names;
+  };
+
+  const getEntryAccountId = (entry) => {
+    if (!entry) return '';
+    if (entry.account && typeof entry.account === 'object') {
+      return String(entry.account._id || entry.account.id || '');
+    }
+    return String(entry.account || entry.accountId || '');
+  };
+
+  const isCashBookEntry = (entry, voucher) => {
+    const model = String(entry?.accountModel || '')
+      .toLowerCase()
+      .replace(/[\s_]/g, '');
+    if (model === 'cashbook') return true;
+
+    const cashAccountId = getCashAccountId(voucher);
+    const entryAccountId = getEntryAccountId(entry);
+    if (cashAccountId && entryAccountId && cashAccountId === entryAccountId) {
+      return true;
+    }
+
+    const entryName = (
+      entry?.accountName ||
+      entry?.account?.name ||
+      entry?.account?.accountName ||
+      ''
+    )
+      .trim()
+      .toLowerCase();
+
+    if (entryName && getCashAccountNames(voucher).has(entryName)) {
+      return true;
+    }
+
+    return false;
+  };
+
+  const getEntryPartyLabel = (entry) => {
+    if (!entry) return '';
+    const name =
+      (entry.accountName && String(entry.accountName).trim()) ||
+      (typeof entry.account === 'object' &&
+        (entry.account?.name || entry.account?.accountName)) ||
+      getBankAccountLabel(entry.bankAccount) ||
+      '';
+    const formattedModel = formatAccountModel(entry.accountModel);
+
+    if (name) {
+      if (
+        formattedModel &&
+        !name.toLowerCase().includes(formattedModel.toLowerCase())
+      ) {
+        return `${name} (${formattedModel})`;
+      }
+      return name;
+    }
+    return formattedModel || '';
+  };
+
   const getVoucherEntriesSummary = (voucher) => {
     const entries = Array.isArray(voucher?.entries) ? voucher.entries : [];
-    if (entries.length === 0) {
+    const partyEntries = entries.filter((e) => !isCashBookEntry(e, voucher));
+
+    if (partyEntries.length === 0) {
       const payeeLabel =
         voucher.payee?.name ||
         voucher.payee?.email ||
         voucher.payeeName ||
         '';
-      const cashAccount = voucher.cashAccount;
-      const cashLabel =
-        typeof cashAccount === 'object'
-          ? cashAccount?.name || cashAccount?.accountName || cashAccount?.code
-          : cashAccount || '';
       const oneLiner = payeeLabel
         ? `${payeeLabel}${voucher.payeeType ? ` (${voucher.payeeType})` : ''}`
-        : cashLabel || '—';
+        : '—';
       return {
         oneLiner,
         debitPart: '',
         creditPart: '',
       };
     }
-    const debits = entries.filter((e) => (parseFloat(e.debit) || 0) > 0);
-    const credits = entries.filter((e) => (parseFloat(e.credit) || 0) > 0);
-    const debitPart =
-      debits.map(getEntryLineLabel).filter(Boolean).join(', ') || '—';
-    const creditPart =
-      credits.map(getEntryLineLabel).filter(Boolean).join(', ') || '—';
+
+    const voucherType = (voucher.voucherType || 'payment').toLowerCase();
+    let counterpartyEntries =
+      voucherType === 'receipt'
+        ? partyEntries.filter((e) => (parseFloat(e.credit) || 0) > 0)
+        : partyEntries.filter((e) => (parseFloat(e.debit) || 0) > 0);
+
+    if (counterpartyEntries.length === 0) {
+      counterpartyEntries = partyEntries;
+    }
+
+    const partyLabels = counterpartyEntries
+      .map(getEntryPartyLabel)
+      .filter(Boolean);
+
     return {
-      debitPart,
-      creditPart,
-      oneLiner: `Dr: ${debitPart} → Cr: ${creditPart}`,
+      oneLiner: partyLabels.join(', ') || '—',
+      debitPart: '',
+      creditPart: '',
     };
   };
 
@@ -991,11 +1087,6 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                         title={entrySummary.oneLiner}
                       >
                         {entrySummary.oneLiner}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {[formatCashAccountType(voucher.cashAccountType), voucher.payeeType]
-                          .filter(Boolean)
-                          .join(' · ')}
                       </div>
                     </div>
                   </TableCell>
