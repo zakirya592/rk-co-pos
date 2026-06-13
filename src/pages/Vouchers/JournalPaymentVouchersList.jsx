@@ -161,6 +161,52 @@ const JournalPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
 
   const hasJournalEntries = (v) => Array.isArray(v.entries) && v.entries.length > 0;
 
+  const formatAccountModel = (model) => {
+    if (!model) return '';
+    return String(model)
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/_/g, ' ');
+  };
+
+  const getEntryAccountLabel = (entry) => {
+    if (!entry) return '';
+    const name =
+      (entry.accountName && String(entry.accountName).trim()) ||
+      (typeof entry.account === 'object' &&
+        (entry.account?.name || entry.account?.accountName)) ||
+      '';
+    const model = formatAccountModel(entry.accountModel);
+
+    if (name && model && !name.toLowerCase().includes(model.toLowerCase())) {
+      return `${name} (${model})`;
+    }
+    return name || model || '';
+  };
+
+  const voucherPartiesSummary = (v) => {
+    if (!hasJournalEntries(v)) {
+      return {
+        debitPart: v.sarafName || v.fromCurrency?.name || '—',
+        creditPart: v.toCurrency?.name || '—',
+        oneLiner: `${v.sarafName || v.fromCurrency?.name || '—'} → ${v.toCurrency?.name || '—'}`,
+      };
+    }
+
+    const debitEntries = v.entries.filter((e) => parseFloat(e.debit) > 0);
+    const creditEntries = v.entries.filter((e) => parseFloat(e.credit) > 0);
+
+    const debitPart =
+      debitEntries.map(getEntryAccountLabel).filter(Boolean).join(', ') || '—';
+    const creditPart =
+      creditEntries.map(getEntryAccountLabel).filter(Boolean).join(', ') || '—';
+
+    return {
+      debitPart,
+      creditPart,
+      oneLiner: `${debitPart} → ${creditPart}`,
+    };
+  };
+
   const voucherCurrencySummary = (v) => {
     if (hasJournalEntries(v)) {
       const codes = [
@@ -444,14 +490,33 @@ const JournalPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
           <Table aria-label="Journal Payment Vouchers">
             <TableHeader>
               <TableColumn>DATE</TableColumn>
+              <TableColumn>PARTIES</TableColumn>
               <TableColumn>CURRENCIES</TableColumn>
               <TableColumn>DEBIT → CREDIT</TableColumn>
               <TableColumn>ACTIONS</TableColumn>
             </TableHeader>
             <TableBody emptyContent="No vouchers found">
-              {filteredVouchers.map((voucher) => (
+              {filteredVouchers.map((voucher) => {
+                const parties = voucherPartiesSummary(voucher);
+                return (
                 <TableRow key={voucher._id}>
                   <TableCell>{formatDate(voucher.voucherDate)}</TableCell>
+                  <TableCell>
+                    <div className="max-w-[280px]">
+                      <p
+                        className="text-sm font-medium text-red-700 leading-snug truncate"
+                        title={`Dr: ${parties.debitPart}`}
+                      >
+                        Dr: {parties.debitPart}
+                      </p>
+                      <p
+                        className="text-sm font-medium text-green-700 leading-snug truncate mt-1"
+                        title={`Cr: ${parties.creditPart}`}
+                      >
+                        Cr: {parties.creditPart}
+                      </p>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <p className="text-sm font-medium max-w-[140px] truncate" title={voucherCurrencySummary(voucher)}>
                       {voucherCurrencySummary(voucher)}
@@ -507,7 +572,8 @@ const JournalPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              );
+              })}
             </TableBody>
           </Table>
         </CardBody>
