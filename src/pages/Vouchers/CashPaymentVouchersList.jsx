@@ -127,26 +127,29 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
       .replace(/_/g, ' ');
   };
 
+  const getVoucherCashBook = (voucher) =>
+    voucher?.cashBook || voucher?.cashAccount || null;
+
   const getCashAccountId = (voucher) => {
-    const cashAccount = voucher?.cashAccount;
-    if (!cashAccount) return '';
-    if (typeof cashAccount === 'object') {
-      return String(cashAccount._id || cashAccount.id || '');
+    const cashBook = getVoucherCashBook(voucher);
+    if (!cashBook) return '';
+    if (typeof cashBook === 'object') {
+      return String(cashBook._id || cashBook.id || '');
     }
-    return String(cashAccount);
+    return String(cashBook);
   };
 
   const getCashAccountNames = (voucher) => {
-    const cashAccount = voucher?.cashAccount;
+    const cashBook = getVoucherCashBook(voucher);
     const names = new Set();
-    if (!cashAccount) return names;
+    if (!cashBook) return names;
 
-    if (typeof cashAccount === 'object') {
-      [cashAccount.name, cashAccount.accountName, cashAccount.code]
+    if (typeof cashBook === 'object') {
+      [cashBook.name, cashBook.accountName, cashBook.code]
         .filter(Boolean)
         .forEach((name) => names.add(String(name).trim().toLowerCase()));
     } else {
-      names.add(String(cashAccount).trim().toLowerCase());
+      names.add(String(cashBook).trim().toLowerCase());
     }
 
     return names;
@@ -220,8 +223,9 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
         voucher.payee?.email ||
         voucher.payeeName ||
         '';
+      const payeeType = voucher.payeeModel || voucher.payeeType;
       const oneLiner = payeeLabel
-        ? `${payeeLabel}${voucher.payeeType ? ` (${voucher.payeeType})` : ''}`
+        ? `${payeeLabel}${payeeType ? ` (${payeeType})` : ''}`
         : '—';
       return {
         oneLiner,
@@ -280,9 +284,11 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
       v.payeeName,
       v.payee?.name,
       v.payee?.email,
-      typeof v.cashAccount === 'object'
-        ? v.cashAccount?.name || v.cashAccount?.accountName
-        : v.cashAccount,
+      v.payeeModel,
+      v.payeeType,
+      typeof getVoucherCashBook(v) === 'object'
+        ? getVoucherCashBook(v)?.name || getVoucherCashBook(v)?.accountName
+        : getVoucherCashBook(v),
       v.cashAccountType,
       v.paymentMethod,
       v.status,
@@ -307,21 +313,42 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
   };
 
   const getCashAccountDisplay = (voucher) => {
-    if (voucher.cashAccount && typeof voucher.cashAccount === 'object') {
+    const cashBook = getVoucherCashBook(voucher);
+    if (cashBook && typeof cashBook === 'object') {
       return (
-        voucher.cashAccount.name ||
-        voucher.cashAccount.accountName ||
-        voucher.cashAccount.code ||
+        cashBook.name ||
+        cashBook.accountName ||
+        cashBook.code ||
+        cashBook.referCode ||
         'N/A'
       );
     }
-    if (voucher.cashAccount && typeof voucher.cashAccount === 'string') {
-      return voucher.cashAccount;
+    if (cashBook && typeof cashBook === 'string') {
+      return cashBook;
     }
     if (voucher.cashAccountType) {
       return formatCashAccountType(voucher.cashAccountType);
     }
     return 'N/A';
+  };
+
+  const getCashBookDisplay = (voucher) => {
+    const fromCashBook = getCashAccountDisplay(voucher);
+    if (fromCashBook && fromCashBook !== 'N/A') {
+      return fromCashBook;
+    }
+
+    const entries = Array.isArray(voucher?.entries) ? voucher.entries : [];
+    const cashEntry = entries.find((e) => isCashBookEntry(e, voucher));
+    if (!cashEntry) return 'N/A';
+
+    return (
+      cashEntry.accountName ||
+      cashEntry.account?.name ||
+      cashEntry.account?.accountName ||
+      cashEntry.account?.code ||
+      'N/A'
+    );
   };
 
   // Calculate totals
@@ -1061,6 +1088,7 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
             <TableHeader>
               <TableColumn>REFER CODE</TableColumn>
               <TableColumn>PAYEE / DETAILS</TableColumn>
+              <TableColumn>CASH BOOK</TableColumn>
               <TableColumn>AMOUNT</TableColumn>
               <TableColumn>VOUCHER TYPE</TableColumn>
               <TableColumn>VOUCHER DATE</TableColumn>
@@ -1088,6 +1116,11 @@ const CashPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                       >
                         {entrySummary.oneLiner}
                       </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-medium text-sm text-gray-900">
+                      {getCashBookDisplay(voucher)}
                     </div>
                   </TableCell>
                   <TableCell>
