@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableHeader,
@@ -20,12 +21,14 @@ import {
   ModalBody,
   ModalFooter,
 } from "@nextui-org/react";
-import { Plus, MoreVertical, Edit, Trash2, RefreshCw, Eye } from "lucide-react";
+import { Plus, MoreVertical, Edit, Trash2, RefreshCw, Eye, Wallet } from "lucide-react";
 import { toast } from "react-hot-toast";
 import userRequest from "../../../utils/userRequest";
 import FinancialPaymentsSection from "./FinancialPaymentsSection";
+import { getFinancialPaymentsDetailsPath } from "../utils/financialPaymentsRoutes";
 
 const AssetsTable = ({ data, onRefresh }) => {
+  const navigate = useNavigate();
   const [editingId, setEditingId] = useState(null);
   const [viewingAsset, setViewingAsset] = useState(null);
   const [editedData, setEditedData] = useState({
@@ -221,6 +224,17 @@ const AssetsTable = ({ data, onRefresh }) => {
                   onPress={() => handleView(asset._id)}
                 >
                   View Details
+                </DropdownItem>
+                <DropdownItem
+                  key="ledger"
+                  startContent={<Wallet className="h-4 w-4" />}
+                  onPress={() =>
+                    navigate(
+                      getFinancialPaymentsDetailsPath("Asset", asset._id)
+                    )
+                  }
+                >
+                  View Ledger
                 </DropdownItem>
                 <DropdownItem
                   key="edit"

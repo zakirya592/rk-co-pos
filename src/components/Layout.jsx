@@ -91,6 +91,7 @@ import {
 import AddBankAccount from "../pages/BankAccounts/AddBankAccount";
 import UpdateBankAccount from "../pages/BankAccounts/UpdateBankAccount";
 import BankAccountDetails from "../pages/BankAccounts/BankAccountDetails";
+import RelatedFinancialPaymentsDetails from "../pages/FinancialPayments/RelatedFinancialPaymentsDetails";
 import Purchases from "../pages/Purchase/Purchases";
 import PurchaseDetails from "../pages/Purchase/PurchaseDetails";
 import MasterData from "../pages/MasterData/MasterData";
@@ -451,6 +452,12 @@ const Layout = () => {
                   <Route
                     path="bank-accounts/:id/details"
                     element={<BankAccountDetails />}
+                  />
+
+                  {/* Related Financial Payments Ledger */}
+                  <Route
+                    path="financial-payments/related/:relatedModel/:relatedId/details"
+                    element={<RelatedFinancialPaymentsDetails />}
                   />
 
                   {/* Vouchers */}

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableHeader,
@@ -21,10 +22,14 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
+  Card,
+  CardBody,
 } from "@nextui-org/react";
-import { Plus, MoreVertical, Edit, Trash2 } from "lucide-react";
+import { Plus, MoreVertical, Edit, Trash2, ExternalLink } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { format } from "date-fns";
 import userRequest from "../../../utils/userRequest";
+import { getFinancialPaymentsDetailsPath } from "../utils/financialPaymentsRoutes";
 
 const PAYMENT_METHODS = [
   { key: "cash", label: "Cash" },
@@ -35,10 +40,6 @@ const PAYMENT_METHODS = [
   { key: "mobile_payment", label: "Mobile Payment" },
 ];
 
-/**
- * Fetches and displays financial payments related to a specific model (Asset, Income, etc.)
- * Supports Create (POST), Update (PUT), Delete (DELETE)
- */
 const getCurrencyIdValue = (value) => {
   if (!value) return "";
   if (typeof value === "string") return value;
@@ -46,8 +47,42 @@ const getCurrencyIdValue = (value) => {
   return "";
 };
 
+const formatMoney = (value, currency) => {
+  const symbol = currency?.symbol || currency?.code || "";
+  if (value === null || value === undefined) return `${symbol} 0.00`;
+  return `${symbol} ${Number(value).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+};
+
+const normalizePaymentRow = (row) => {
+  if (!row) return row;
+  if (row._id) return row;
+  return {
+    ...row,
+    _id: row.sourceId,
+    referCode: row.referCode || row.reference,
+    paymentDate: row.paymentDate || row.date || row.metadata?.paymentDate,
+    amount: row.amount ?? row.credit ?? row.debit,
+  };
+};
+
+const isLedgerResponse = (payload) =>
+  Boolean(
+    payload?.summary &&
+      (Array.isArray(payload?.transactions) ||
+        Array.isArray(payload?.recentTransactions))
+  );
+
+/**
+ * Fetches and displays financial payments related to a specific model (Asset, Employee, etc.)
+ * Supports Create (POST), Update (PUT), Delete (DELETE)
+ */
 const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
+  const navigate = useNavigate();
   const [payments, setPayments] = useState([]);
+  const [ledgerData, setLedgerData] = useState(null);
   const [totalAmount, setTotalAmount] = useState(0);
   const [results, setResults] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -78,6 +113,9 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
     method: "cash",
     isActive: true,
   });
+
+  const summary = ledgerData?.summary;
+  const currency = ledgerData?.currency;
 
   const fetchCurrencies = useCallback(async () => {
     setIsCurrenciesLoading(true);
@@ -125,16 +163,28 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
         `/financial-payments/related/${relatedModel}/${relatedId}`,
         requestConfig
       );
-      const paymentsList =
-        data?.data?.financialPayments ||
-        data?.financialPayments ||
-        data?.data ||
-        [];
-      setPayments(Array.isArray(paymentsList) ? paymentsList : []);
-      setTotalAmount(data?.totalAmount ?? 0);
-      setResults(data?.results ?? paymentsList?.length ?? 0);
+      const payload = data?.data || data;
+
+      if (isLedgerResponse(payload)) {
+        setLedgerData(payload);
+        const txList =
+          payload.recentTransactions?.length > 0
+            ? payload.recentTransactions
+            : payload.transactions || [];
+        setPayments(txList.map(normalizePaymentRow));
+        setTotalAmount(payload.summary?.currentBalance ?? 0);
+        setResults(payload.summary?.transactionCount ?? txList.length ?? 0);
+      } else {
+        setLedgerData(null);
+        const paymentsList =
+          payload?.financialPayments || (Array.isArray(payload) ? payload : []);
+        setPayments(Array.isArray(paymentsList) ? paymentsList : []);
+        setTotalAmount(data?.totalAmount ?? 0);
+        setResults(data?.results ?? paymentsList?.length ?? 0);
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Failed to fetch payments");
+      setLedgerData(null);
       setPayments([]);
       setTotalAmount(0);
       setResults(0);
@@ -161,7 +211,9 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
   const formatDate = (dateString) => {
     if (!dateString) return "—";
     const date = new Date(dateString);
-    return date.toLocaleString();
+    return Number.isNaN(date.getTime())
+      ? "—"
+      : format(date, "dd MMM yyyy HH:mm");
   };
 
   const formatDateForInput = (dateString) => {
@@ -170,7 +222,10 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
     return date.toISOString().slice(0, 16);
   };
 
-  const formatCurrency = (value) => {
+  const formatCurrency = (value, rowCurrency) => {
+    if (ledgerData) {
+      return formatMoney(value, rowCurrency || currency);
+    }
     if (value == null) return "0.00";
     return parseFloat(value).toLocaleString("en-US", {
       minimumFractionDigits: 2,
@@ -181,15 +236,20 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
   const formatMethod = (method) => {
     if (!method) return "—";
     const found = PAYMENT_METHODS.find((m) => m.key === method);
-    return found ? found.label : String(method).charAt(0).toUpperCase() + String(method).slice(1);
+    return found
+      ? found.label
+      : String(method).charAt(0).toUpperCase() + String(method).slice(1);
   };
 
-  /** API uses subtract/add; show Debit/Credit in the table only */
   const formatEffect = (effect) => {
     if (effect === "subtract") return "Debit";
     if (effect === "add") return "Credit";
     if (!effect) return "—";
     return String(effect);
+  };
+
+  const openLedgerDetails = () => {
+    navigate(getFinancialPaymentsDetailsPath(relatedModel, relatedId));
   };
 
   const resetCreateForm = () => {
@@ -198,13 +258,14 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
   };
 
   const openEditModal = (payment) => {
-    setEditingPayment(payment);
+    const normalized = normalizePaymentRow(payment);
+    setEditingPayment(normalized);
     setEditForm({
-      description: payment.description || "",
-      amount: payment.amount?.toString() || "",
-      paymentDate: formatDateForInput(payment.paymentDate),
-      method: payment.method || "cash",
-      isActive: payment.isActive !== false,
+      description: normalized.description || "",
+      amount: normalized.amount?.toString() || "",
+      paymentDate: formatDateForInput(normalized.paymentDate),
+      method: normalized.method || "cash",
+      isActive: normalized.isActive !== false,
     });
     setIsEditOpen(true);
   };
@@ -244,9 +305,7 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
       fetchPayments();
       resetCreateForm();
     } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to create payment"
-      );
+      toast.error(err.response?.data?.message || "Failed to create payment");
     } finally {
       setIsSubmitting(false);
     }
@@ -255,7 +314,10 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
   const handleUpdate = async () => {
     if (!editingPayment) return;
     const amountNum = parseFloat(editForm.amount);
-    if (editForm.amount === "" || (typeof amountNum === "number" && amountNum <= 0)) {
+    if (
+      editForm.amount === "" ||
+      (typeof amountNum === "number" && amountNum <= 0)
+    ) {
       toast.error("Please enter a valid amount");
       return;
     }
@@ -267,8 +329,10 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
         method: editForm.method,
         isActive: editForm.isActive,
       };
-      if (editForm.description !== undefined) payload.description = editForm.description;
-      if (editForm.paymentDate) payload.paymentDate = new Date(editForm.paymentDate).toISOString();
+      if (editForm.description !== undefined)
+        payload.description = editForm.description;
+      if (editForm.paymentDate)
+        payload.paymentDate = new Date(editForm.paymentDate).toISOString();
 
       await userRequest.put(
         `/financial-payments/${editingPayment._id}`,
@@ -278,9 +342,7 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
       fetchPayments();
       closeEditModal();
     } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to update payment"
-      );
+      toast.error(err.response?.data?.message || "Failed to update payment");
     } finally {
       setIsSubmitting(false);
     }
@@ -297,9 +359,7 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
       setIsDeleteOpen(false);
       setDeletingPayment(null);
     } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to delete payment"
-      );
+      toast.error(err.response?.data?.message || "Failed to delete payment");
     } finally {
       setIsSubmitting(false);
     }
@@ -309,11 +369,11 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
 
   return (
     <div className="mt-6 pt-4 border-t border-gray-200">
-      <div className="flex justify-between items-center mb-3">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-3">
         <h4 className="text-sm font-semibold text-gray-700">
           Related Financial Payments
         </h4>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Select
             size="sm"
             aria-label="Currency"
@@ -333,15 +393,23 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
               return selectedItem?.textValue || "Select currency";
             }}
           >
-            {currencies.map((currency) => (
+            {currencies.map((item) => (
               <SelectItem
-                key={currency._id}
-                textValue={`${currency.code || ""} - ${currency.name || ""}`}
+                key={item._id}
+                textValue={`${item.code || ""} - ${item.name || ""}`}
               >
-                {currency.code} - {currency.name}
+                {item.code} - {item.name}
               </SelectItem>
             ))}
           </Select>
+          <Button
+            size="sm"
+            variant="flat"
+            startContent={<ExternalLink className="h-4 w-4" />}
+            onPress={openLedgerDetails}
+          >
+            View Full Ledger
+          </Button>
           <Button
             size="sm"
             color="primary"
@@ -352,6 +420,42 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
           </Button>
         </div>
       </div>
+
+      {ledgerData && summary && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+          <Card className="border border-gray-100">
+            <CardBody className="p-3">
+              <p className="text-xs text-gray-500">Current Balance</p>
+              <p className="text-lg font-bold text-teal-700">
+                {formatMoney(summary.currentBalance, currency)}
+              </p>
+            </CardBody>
+          </Card>
+          <Card className="border border-gray-100">
+            <CardBody className="p-3">
+              <p className="text-xs text-gray-500">Total Debit</p>
+              <p className="text-lg font-bold text-red-600">
+                {formatMoney(summary.totalDebit, currency)}
+              </p>
+            </CardBody>
+          </Card>
+          <Card className="border border-gray-100">
+            <CardBody className="p-3">
+              <p className="text-xs text-gray-500">Total Credit</p>
+              <p className="text-lg font-bold text-green-600">
+                {formatMoney(summary.totalCredit, currency)}
+              </p>
+            </CardBody>
+          </Card>
+          <Card className="border border-gray-100">
+            <CardBody className="p-3">
+              <p className="text-xs text-gray-500">Transactions</p>
+              <p className="text-lg font-bold">{summary.transactionCount ?? 0}</p>
+            </CardBody>
+          </Card>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="flex justify-center py-6">
           <Spinner size="md" />
@@ -367,7 +471,8 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
               <strong>{results}</strong> payment(s)
             </span>
             <span className="text-gray-600">
-              Total: <strong>{formatCurrency(totalAmount)}</strong>
+              {ledgerData ? "Balance" : "Total"}:{" "}
+              <strong>{formatCurrency(totalAmount, currency)}</strong>
             </span>
           </div>
           <div className="overflow-x-auto rounded-lg border border-gray-200">
@@ -381,23 +486,77 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
             >
               <TableHeader>
                 <TableColumn key="referCode">REF. CODE</TableColumn>
+                {ledgerData && (
+                  <TableColumn key="voucher">VOUCHER</TableColumn>
+                )}
                 <TableColumn key="amount">AMOUNT</TableColumn>
-                <TableColumn key="effect">EFFECT</TableColumn>
+                {ledgerData ? (
+                  <>
+                    <TableColumn key="debit">DEBIT</TableColumn>
+                    <TableColumn key="credit">CREDIT</TableColumn>
+                    <TableColumn key="runningBalance">BALANCE</TableColumn>
+                  </>
+                ) : (
+                  <TableColumn key="effect">EFFECT</TableColumn>
+                )}
                 <TableColumn key="method">METHOD</TableColumn>
                 <TableColumn key="paymentDate">DATE</TableColumn>
                 <TableColumn key="description">DESCRIPTION</TableColumn>
-                <TableColumn key="actions" className="w-16">ACTIONS</TableColumn>
+                <TableColumn key="actions" className="w-16">
+                  ACTIONS
+                </TableColumn>
               </TableHeader>
               <TableBody items={payments} emptyContent="No payments">
                 {(payment) => (
-                  <TableRow key={payment._id}>
-                    <TableCell>{payment.referCode || "—"}</TableCell>
-                    <TableCell className="font-medium">
-                      {formatCurrency(payment.amount)}
+                  <TableRow key={payment._id || payment.sourceId}>
+                    <TableCell>
+                      {payment.referCode || payment.reference || "—"}
                     </TableCell>
-                    <TableCell>{formatEffect(payment.effect)}</TableCell>
+                    {ledgerData && (
+                      <TableCell>{payment.code || "—"}</TableCell>
+                    )}
+                    <TableCell className="font-medium">
+                      {formatCurrency(
+                        payment.amount,
+                        payment.currency || currency
+                      )}
+                    </TableCell>
+                    {ledgerData ? (
+                      <>
+                        <TableCell className="text-red-600">
+                          {payment.debit
+                            ? formatCurrency(
+                                payment.debit,
+                                payment.currency || currency
+                              )
+                            : "—"}
+                        </TableCell>
+                        <TableCell className="text-green-600">
+                          {payment.credit
+                            ? formatCurrency(
+                                payment.credit,
+                                payment.currency || currency
+                              )
+                            : "—"}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {formatCurrency(
+                            payment.runningBalance,
+                            payment.currency || currency
+                          )}
+                        </TableCell>
+                      </>
+                    ) : (
+                      <TableCell>{formatEffect(payment.effect)}</TableCell>
+                    )}
                     <TableCell>{formatMethod(payment.method)}</TableCell>
-                    <TableCell>{formatDate(payment.paymentDate)}</TableCell>
+                    <TableCell>
+                      {formatDate(
+                        payment.paymentDate ||
+                          payment.date ||
+                          payment.metadata?.paymentDate
+                      )}
+                    </TableCell>
                     <TableCell className="max-w-[200px] truncate">
                       {payment.description || "—"}
                     </TableCell>
@@ -422,7 +581,7 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
                             className="text-danger"
                             startContent={<Trash2 className="h-4 w-4" />}
                             onPress={() => {
-                              setDeletingPayment(payment);
+                              setDeletingPayment(normalizePaymentRow(payment));
                               setIsDeleteOpen(true);
                             }}
                           >
@@ -436,11 +595,26 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
               </TableBody>
             </Table>
           </div>
+          {ledgerData && (summary?.transactionCount ?? 0) > payments.length && (
+            <div className="mt-3 flex justify-end">
+              <Button
+                size="sm"
+                variant="light"
+                color="primary"
+                onPress={openLedgerDetails}
+              >
+                View all {summary.transactionCount} transactions
+              </Button>
+            </div>
+          )}
         </>
       )}
 
-      {/* Create Modal */}
-      <Modal isOpen={isCreateOpen} onOpenChange={setIsCreateOpen} onClose={resetCreateForm}>
+      <Modal
+        isOpen={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+        onClose={resetCreateForm}
+      >
         <ModalContent>
           <ModalHeader>Add Payment</ModalHeader>
           <ModalBody>
@@ -503,8 +677,11 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
         </ModalContent>
       </Modal>
 
-      {/* Edit Modal */}
-      <Modal isOpen={isEditOpen} onOpenChange={setIsEditOpen} onClose={closeEditModal}>
+      <Modal
+        isOpen={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        onClose={closeEditModal}
+      >
         <ModalContent>
           <ModalHeader>Edit Payment</ModalHeader>
           <ModalBody>
@@ -514,7 +691,10 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
                 placeholder="e.g. Updated description for this payment"
                 value={editForm.description}
                 onChange={(e) =>
-                  setEditForm((prev) => ({ ...prev, description: e.target.value }))
+                  setEditForm((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
                 }
                 minRows={2}
                 fullWidth
@@ -596,7 +776,6 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
         </ModalContent>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
       <Modal
         isOpen={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
@@ -609,7 +788,8 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
               Are you sure you want to delete this payment?
               {deletingPayment?.referCode && (
                 <span className="block mt-2 font-medium">
-                  Ref: {deletingPayment.referCode} – {formatCurrency(deletingPayment?.amount)}
+                  Ref: {deletingPayment.referCode} –{" "}
+                  {formatCurrency(deletingPayment?.amount, currency)}
                 </span>
               )}
             </p>
