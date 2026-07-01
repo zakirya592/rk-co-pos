@@ -25,6 +25,7 @@ import { RiFileList3Line } from 'react-icons/ri';
 import userRequest from '../../utils/userRequest';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
+import ViewExpenseTransactionsButton from '../Expenses/components/ViewExpenseTransactionsButton';
 
 const ProcurementExpenseDetails = () => {
   const { id } = useParams();
@@ -145,6 +146,7 @@ const ProcurementExpenseDetails = () => {
           >
             Dashboard
           </Button>
+          <ViewExpenseTransactionsButton expenseType="procurement" expenseId={id} />
           <Button
             color="primary"
             variant="flat"

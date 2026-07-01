@@ -20,6 +20,7 @@ import { FaWarehouse } from 'react-icons/fa';
 import userRequest from '../../utils/userRequest';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
+import ViewExpenseTransactionsButton from '../Expenses/components/ViewExpenseTransactionsButton';
 
 const WarehouseExpenseDetails = () => {
   const { id } = useParams();
@@ -96,6 +97,7 @@ const WarehouseExpenseDetails = () => {
           >
             Dashboard
           </Button>
+          <ViewExpenseTransactionsButton expenseType="warehouse" expenseId={id} />
           <Button color="primary" variant="flat" startContent={<FaEdit />} onPress={() => navigate(`/expenses/warehouse/edit/${id}`)}>
             Edit
           </Button>

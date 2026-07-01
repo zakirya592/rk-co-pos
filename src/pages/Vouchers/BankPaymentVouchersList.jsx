@@ -48,6 +48,8 @@ import { useQuery, useQueryClient } from 'react-query';
 import userRequest from '../../utils/userRequest';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
+import { isExpensePayeeType } from './utils/expensePayeeTypes';
+import { getExpenseTransactionDetailsPath } from '../Expenses/utils/expenseRoutes';
 
 const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
   const navigate = useNavigate();
@@ -1486,6 +1488,28 @@ const BankPaymentVouchersList = ({ onAddNew, onView, onEdit }) => {
                           {selectedVoucher.payee.phoneNumber}
                         </p>
                       )}
+                      {isExpensePayeeType(selectedVoucher.payeeType) &&
+                        (selectedVoucher.payee?._id || selectedVoucher.payee) && (
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            color="secondary"
+                            className="mt-3"
+                            onPress={() => {
+                              const payeeId =
+                                selectedVoucher.payee?._id || selectedVoucher.payee;
+                              navigate(
+                                getExpenseTransactionDetailsPath(
+                                  selectedVoucher.payeeType,
+                                  payeeId
+                                )
+                              );
+                              onClose();
+                            }}
+                          >
+                            View Expense Transactions
+                          </Button>
+                        )}
                     </div>
                   </div>
                 </div>

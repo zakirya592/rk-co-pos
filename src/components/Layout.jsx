@@ -92,6 +92,7 @@ import AddBankAccount from "../pages/BankAccounts/AddBankAccount";
 import UpdateBankAccount from "../pages/BankAccounts/UpdateBankAccount";
 import BankAccountDetails from "../pages/BankAccounts/BankAccountDetails";
 import RelatedFinancialPaymentsDetails from "../pages/FinancialPayments/RelatedFinancialPaymentsDetails";
+import { ExpenseTransactionDetails } from "../pages/Expenses";
 import Purchases from "../pages/Purchase/Purchases";
 import PurchaseDetails from "../pages/Purchase/PurchaseDetails";
 import MasterData from "../pages/MasterData/MasterData";
@@ -294,6 +295,10 @@ const Layout = () => {
 
                   {/* Expenses */}
                   <Route path="expenses" element={<ExpenseNavigation />} />
+                  <Route
+                    path="expenses/:expenseTypeSlug/:id/transaction-details"
+                    element={<ExpenseTransactionDetails />}
+                  />
 
                   {/* Transporters */}
                   <Route path="transporters" element={<Transporters />} />

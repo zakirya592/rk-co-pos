@@ -19,6 +19,7 @@ import { FaArrowLeft, FaEdit, FaBuilding } from 'react-icons/fa';
 import userRequest from '../../utils/userRequest';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+import ViewExpenseTransactionsButton from '../Expenses/components/ViewExpenseTransactionsButton';
 
 const OperationalExpenseDetails = () => {
   const { id } = useParams();
@@ -85,6 +86,7 @@ const OperationalExpenseDetails = () => {
           >
             Dashboard
           </Button>
+          <ViewExpenseTransactionsButton expenseType="operational" expenseId={id} />
           <Button color="primary" variant="flat" startContent={<FaEdit />} onPress={() => navigate(`/expenses/operational/edit/${id}`)}>
             Edit
           </Button>

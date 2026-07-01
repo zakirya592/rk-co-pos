@@ -4,6 +4,7 @@ import { Card, CardBody, Button, Chip, Divider, Spinner } from '@nextui-org/reac
 import { FaArrowLeft, FaEdit } from 'react-icons/fa';
 import userRequest from '../../utils/userRequest';
 import toast from 'react-hot-toast';
+import ViewExpenseTransactionsButton from '../Expenses/components/ViewExpenseTransactionsButton';
 
 const Row = ({ label, value }) => (
   <div className="flex justify-between py-2">
@@ -67,6 +68,7 @@ const LogisticsExpenseDetails = () => {
           >
             Dashboard
           </Button>
+          <ViewExpenseTransactionsButton expenseType="logistics" expenseId={expense._id} />
           <Button color="primary" startContent={<FaEdit />} as={Link} to={`/expenses/logistics/edit/${expense._id}`}>
             Edit
           </Button>
