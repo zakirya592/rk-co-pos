@@ -10,7 +10,6 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Chip,
   Tooltip,
   Spinner,
   Pagination,
@@ -21,6 +20,13 @@ import userRequest from '../../utils/userRequest';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import { Link, useNavigate } from "react-router-dom";
+import {
+  renderTotalAmountCell,
+  renderPaidAmountCell,
+  renderRemainingAmountCell,
+  PAID_AMOUNT_COLUMN,
+  REMAINING_AMOUNT_COLUMN,
+} from '../Expenses/utils/expensePaymentUtils';
 
 const fetchProcurementExpenses = async ({ queryKey }) => {
   const [_, page] = queryKey;
@@ -103,28 +109,11 @@ const ProcurementExpenses = () => {
           </div>
         );
       case 'totalCost':
-        return (
-          <div className="flex flex-col">
-            <p className="text-bold text-sm">PKR {expense.totalCost?.toLocaleString() || '0'}</p>
-          </div>
-        );
-      case 'paymentStatus':
-        return (
-          <Chip
-            className="capitalize"
-            color={
-              expense.paymentStatus === 'paid' 
-                ? 'success' 
-                : expense.paymentStatus === 'pending' 
-                ? 'warning' 
-                : 'danger'
-            }
-            size="sm"
-            variant="flat"
-          >
-            {expense.paymentStatus || 'N/A'}
-          </Chip>
-        );
+        return renderTotalAmountCell(expense);
+      case 'paidAmount':
+        return renderPaidAmountCell(expense);
+      case 'remainingAmount':
+        return renderRemainingAmountCell(expense);
       case 'dueDate':
         return (
           <div className="flex flex-col">
@@ -170,7 +159,8 @@ const ProcurementExpenses = () => {
     { name: 'INVOICE NO', uid: 'invoiceNo' },
     { name: 'SUPPLIER', uid: 'supplier' },
     { name: 'TOTAL COST', uid: 'totalCost' },
-    { name: 'PAYMENT STATUS', uid: 'paymentStatus' },
+    PAID_AMOUNT_COLUMN,
+    REMAINING_AMOUNT_COLUMN,
     { name: 'DUE DATE', uid: 'dueDate' },
     { name: 'ACTIONS', uid: 'actions' },
   ];

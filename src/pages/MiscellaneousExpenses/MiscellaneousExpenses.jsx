@@ -21,6 +21,13 @@ import userRequest from '../../utils/userRequest';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import { Link, useNavigate } from 'react-router-dom';
+import {
+  renderAmountCell,
+  renderPaidAmountCell,
+  renderRemainingAmountCell,
+  PAID_AMOUNT_COLUMN,
+  REMAINING_AMOUNT_COLUMN,
+} from '../Expenses/utils/expensePaymentUtils';
 
 const fetchMiscExpenses = async ({ queryKey }) => {
   const [_, page] = queryKey;
@@ -79,6 +86,8 @@ const MiscellaneousExpenses = () => {
     { name: 'TYPE', uid: 'type' },
     { name: 'DESCRIPTION', uid: 'description' },
     { name: 'AMOUNT', uid: 'amount' },
+    PAID_AMOUNT_COLUMN,
+    REMAINING_AMOUNT_COLUMN,
     { name: 'PAYMENT', uid: 'payment' },
     { name: 'ACTIONS', uid: 'actions' },
   ];
@@ -101,14 +110,11 @@ const MiscellaneousExpenses = () => {
           </div>
         );
       case 'amount':
-        return (
-          <div className="flex flex-col">
-            <p className="text-sm font-semibold">
-              {(expense.currency?.symbol || '')} {(expense.totalCost ?? 0).toLocaleString()}
-            </p>
-            <p className="text-xs text-gray-500">PKR {(expense.amountInPKR ?? 0).toLocaleString()}</p>
-          </div>
-        );
+        return renderAmountCell(expense);
+      case 'paidAmount':
+        return renderPaidAmountCell(expense);
+      case 'remainingAmount':
+        return renderRemainingAmountCell(expense);
       case 'payment':
         return (
           <Chip className="capitalize" color="primary" size="sm" variant="flat">
