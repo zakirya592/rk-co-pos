@@ -109,12 +109,21 @@ const mapLedgerRow = (tx) => {
 const buildBalanceDueRows = (rows) => {
   let balanceDue = 0;
 
-  return [...rows]
-    .sort((a, b) => new Date(a.date) - new Date(b.date))
-    .map((row) => {
-      balanceDue += row.debit - row.credit;
-      return { ...row, balanceDue: Math.max(0, balanceDue) };
-    });
+  const chronological = [...rows].sort((a, b) => {
+    const aIsExpense = a.debit > 0;
+    const bIsExpense = b.debit > 0;
+    if (aIsExpense !== bIsExpense) {
+      return aIsExpense ? -1 : 1;
+    }
+    return new Date(a.date) - new Date(b.date);
+  });
+
+  const withBalance = chronological.map((row) => {
+    balanceDue += row.debit - row.credit;
+    return { ...row, balanceDue: Math.max(0, balanceDue) };
+  });
+
+  return withBalance.reverse();
 };
 
 const CategoryInfoFields = ({ expenseType, categoryDetails, currency }) => {
