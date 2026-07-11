@@ -63,6 +63,68 @@ const formatDate = (value) => {
   return Number.isNaN(date.getTime()) ? "—" : format(date, "dd MMM yyyy");
 };
 
+const getTransactionDetails = (tx) => {
+  const parts = [];
+  if (tx.code) parts.push(tx.code);
+  const method = METHOD_LABELS[tx.method] || tx.method;
+  if (method) parts.push(method);
+  if (parts.length) return parts.join(" · ");
+  return tx.description || SOURCE_LABELS[tx.source] || tx.source || "—";
+};
+
+const getTransactionSortKey = (tx) => {
+  const date = new Date(tx.date).getTime() || 0;
+  const ref = String(tx.reference || tx.referCode || "");
+  const refNum = Number(ref.match(/(\d+)$/)?.[1]) || 0;
+  return { date, refNum, ref };
+};
+
+const buildRunningBalanceRows = (
+  transactions,
+  { openingBalance = 0, currentBalance, page = 1 } = {}
+) => {
+  if (!transactions.length) return [];
+
+  const sortNewestFirst = (items) =>
+    [...items].sort((a, b) => {
+      const aKey = getTransactionSortKey(a);
+      const bKey = getTransactionSortKey(b);
+      if (aKey.date !== bKey.date) return bKey.date - aKey.date;
+      if (aKey.refNum !== bKey.refNum) return bKey.refNum - aKey.refNum;
+      return bKey.ref.localeCompare(aKey.ref);
+    });
+
+  const sortOldestFirst = (items) =>
+    [...items].sort((a, b) => {
+      const aKey = getTransactionSortKey(a);
+      const bKey = getTransactionSortKey(b);
+      if (aKey.date !== bKey.date) return aKey.date - bKey.date;
+      if (aKey.refNum !== bKey.refNum) return aKey.refNum - bKey.refNum;
+      return aKey.ref.localeCompare(bKey.ref);
+    });
+
+  if (page === 1 && currentBalance != null) {
+    let balance = Number(currentBalance);
+    return sortNewestFirst(transactions).map((tx) => {
+      const row = { ...tx, runningBalance: balance };
+      const credit = Number(tx.credit) || 0;
+      const debit = Number(tx.debit) || 0;
+      balance = balance - credit + debit;
+      return row;
+    });
+  }
+
+  let balance = Number(openingBalance) || 0;
+  const withBalance = sortOldestFirst(transactions).map((tx) => {
+    const credit = Number(tx.credit) || 0;
+    const debit = Number(tx.debit) || 0;
+    balance += credit - debit;
+    return { ...tx, runningBalance: balance };
+  });
+
+  return withBalance.reverse();
+};
+
 const fetchRelatedFinancialPayments = async ({ queryKey }) => {
   const [_, relatedModel, relatedId, page, currencyId] = queryKey;
   const params = { page: page || 1 };
@@ -160,6 +222,11 @@ const RelatedFinancialPaymentsDetails = () => {
 
   const totalPages = pagination?.totalPages || 1;
   const modelLabel = RELATED_MODEL_LABELS[relatedModel] || relatedModel;
+  const ledgerTransactions = buildRunningBalanceRows(transactions, {
+    openingBalance: summary?.openingBalance ?? 0,
+    currentBalance: summary?.currentBalance,
+    page,
+  });
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto">
@@ -261,108 +328,60 @@ const RelatedFinancialPaymentsDetails = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <Card className="lg:col-span-2 border border-gray-100">
-          <CardHeader className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold">Account Information</h2>
-            <Chip
-              color={account.isActive ? "success" : "danger"}
-              variant="flat"
-              size="sm"
-            >
-              {account.isActive ? "Active" : "Inactive"}
-            </Chip>
-          </CardHeader>
-          <Divider />
-          <CardBody>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-500">Name</p>
-                <p className="font-medium">{account.name || "—"}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Refer Code</p>
-                <p className="font-medium">{account.referCode || "—"}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Code</p>
-                <p className="font-medium">{account.code || "—"}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Mobile No</p>
-                <p className="font-medium">{account.mobileNo || "—"}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Related Model</p>
-                <p className="font-medium">{modelLabel}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Currency</p>
-                <p className="font-medium">
-                  {currency?.name || "—"}
-                  {currency?.code ? ` (${currency.code})` : ""}
-                </p>
-              </div>
-              <div className="md:col-span-2">
+      <Card className="mb-6 border border-gray-100">
+        <CardHeader className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold">Account Information</h2>
+          <Chip
+            color={account.isActive ? "success" : "danger"}
+            variant="flat"
+            size="sm"
+          >
+            {account.isActive ? "Active" : "Inactive"}
+          </Chip>
+        </CardHeader>
+        <Divider />
+        <CardBody>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <p className="text-sm text-gray-500">Name</p>
+              <p className="font-medium">{account.name || "—"}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Refer Code</p>
+              <p className="font-medium">{account.referCode || "—"}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Code</p>
+              <p className="font-medium">{account.code || "—"}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Currency</p>
+              <p className="font-medium">
+                {currency?.name || "—"}
+                {currency?.code ? ` (${currency.code})` : ""}
+              </p>
+            </div>
+            {account.description && (
+              <div className="sm:col-span-2 lg:col-span-4">
                 <p className="text-sm text-gray-500">Description</p>
-                <p className="font-medium">{account.description || "—"}</p>
+                <p className="font-medium">{account.description}</p>
               </div>
-              <div>
-                <p className="text-sm text-gray-500">Created</p>
-                <p className="font-medium">{formatDate(account.createdAt)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Last Updated</p>
-                <p className="font-medium">{formatDate(account.updatedAt)}</p>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-
-        <Card className="border border-gray-100">
-          <CardHeader>
-            <h2 className="text-lg font-semibold">Balance Summary</h2>
-          </CardHeader>
-          <Divider />
-          <CardBody className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Calculated Balance</span>
-              <span className="font-medium">
-                {formatMoney(summary?.calculatedBalance, currency)}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Balance Difference</span>
-              <span
-                className={`font-medium ${
-                  summary?.balanceDifference ? "text-amber-600" : ""
-                }`}
-              >
-                {formatMoney(summary?.balanceDifference, currency)}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Net Movement</span>
-              <span className="font-medium">
-                {formatMoney(summary?.netMovement, currency)}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Transactions</span>
-              <span className="font-medium">
-                {summary?.transactionCount ?? 0}
-              </span>
-            </div>
-          </CardBody>
-        </Card>
-      </div>
+            )}
+          </div>
+        </CardBody>
+      </Card>
 
       <Card className="border border-gray-100">
         <CardHeader className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Transactions</h2>
+          <div>
+            <h2 className="text-lg font-semibold">Transactions</h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Debit = money out · Credit = money in
+            </p>
+          </div>
           {pagination?.total != null && (
             <span className="text-sm text-gray-500">
-              {pagination.total} total
+              {pagination.total} entries
             </span>
           )}
         </CardHeader>
@@ -389,18 +408,13 @@ const RelatedFinancialPaymentsDetails = () => {
             <TableHeader>
               <TableColumn>DATE</TableColumn>
               <TableColumn>REFERENCE</TableColumn>
-              <TableColumn>VOUCHER</TableColumn>
-              <TableColumn>SOURCE</TableColumn>
-              <TableColumn>METHOD</TableColumn>
-              <TableColumn>DESCRIPTION</TableColumn>
+              <TableColumn>DETAILS</TableColumn>
               <TableColumn>DEBIT</TableColumn>
               <TableColumn>CREDIT</TableColumn>
-              <TableColumn>RUNNING BALANCE</TableColumn>
-              <TableColumn>USER</TableColumn>
-              <TableColumn>STATUS</TableColumn>
+              <TableColumn>BALANCE</TableColumn>
             </TableHeader>
             <TableBody emptyContent="No transactions found">
-              {transactions.map((tx, index) => (
+              {ledgerTransactions.map((tx, index) => (
                 <TableRow key={`${tx.sourceId}-${tx.reference}-${index}`}>
                   <TableCell>{formatDate(tx.date)}</TableCell>
                   <TableCell>
@@ -409,42 +423,18 @@ const RelatedFinancialPaymentsDetails = () => {
                     </span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm">{tx.code || "—"}</span>
+                    <span className="text-sm">{getTransactionDetails(tx)}</span>
                   </TableCell>
-                  <TableCell>
-                    <Chip size="sm" variant="flat" className="capitalize">
-                      {SOURCE_LABELS[tx.source] || tx.source}
-                    </Chip>
-                  </TableCell>
-                  <TableCell>
-                    {METHOD_LABELS[tx.method] || tx.method || "—"}
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm">{tx.description || "—"}</span>
-                  </TableCell>
-                  <TableCell className="text-red-600">
+                  <TableCell className="text-red-600 font-medium">
                     {tx.debit ? formatMoney(tx.debit, tx.currency || currency) : "—"}
                   </TableCell>
-                  <TableCell className="text-green-600">
+                  <TableCell className="text-green-600 font-medium">
                     {tx.credit
                       ? formatMoney(tx.credit, tx.currency || currency)
                       : "—"}
                   </TableCell>
-                  <TableCell className="font-medium">
+                  <TableCell className="font-semibold">
                     {formatMoney(tx.runningBalance, tx.currency || currency)}
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm">{tx.user?.name || "—"}</span>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      size="sm"
-                      color={tx.status === "active" ? "success" : "warning"}
-                      variant="flat"
-                      className="capitalize"
-                    >
-                      {tx.status || "—"}
-                    </Chip>
                   </TableCell>
                 </TableRow>
               ))}
