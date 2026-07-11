@@ -357,41 +357,6 @@ const RelatedFinancialPaymentsDetails = () => {
         </Card>
       </div>
 
-      {summary?.bySource && (
-        <Card className="mb-6 border border-gray-100">
-          <CardHeader>
-            <h2 className="text-lg font-semibold">Activity by Source</h2>
-          </CardHeader>
-          <Divider />
-          <CardBody className="overflow-x-auto">
-            <Table aria-label="Activity by source" removeWrapper>
-              <TableHeader>
-                <TableColumn>SOURCE</TableColumn>
-                <TableColumn>DEBIT</TableColumn>
-                <TableColumn>CREDIT</TableColumn>
-                <TableColumn>COUNT</TableColumn>
-              </TableHeader>
-              <TableBody>
-                {Object.entries(summary.bySource).map(([source, stats]) => (
-                  <TableRow key={source}>
-                    <TableCell>
-                      {SOURCE_LABELS[source] || source}
-                    </TableCell>
-                    <TableCell className="text-red-600">
-                      {formatMoney(stats.debit, currency)}
-                    </TableCell>
-                    <TableCell className="text-green-600">
-                      {formatMoney(stats.credit, currency)}
-                    </TableCell>
-                    <TableCell>{stats.count}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardBody>
-        </Card>
-      )}
-
       <Card className="border border-gray-100">
         <CardHeader className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">Transactions</h2>
