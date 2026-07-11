@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -14,14 +14,9 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  Pagination,
 } from '@nextui-org/react';
-import {
-  FaArrowLeft,
-  FaEdit,
-  FaReceipt,
-  FaUniversity,
-  FaWallet,
-} from 'react-icons/fa';
+import { FaArrowLeft, FaEdit, FaReceipt } from 'react-icons/fa';
 import { useQuery } from 'react-query';
 import { format } from 'date-fns';
 import userRequest from '../../utils/userRequest';
@@ -40,26 +35,12 @@ const PAYMENT_STATUS_COLORS = {
   overdue: 'danger',
 };
 
-const VOUCHER_STATUS_COLORS = {
-  completed: 'success',
-  posted: 'success',
-  approved: 'success',
-  draft: 'default',
-  pending: 'warning',
-  cancelled: 'danger',
-};
-
-const METHOD_LABELS = {
-  cash: 'Cash',
-  online: 'Online',
-  credit_card: 'Credit Card',
-  debit_card: 'Debit Card',
-  bank: 'Bank',
-  bank_transfer: 'Bank Transfer',
-  mobile_payment: 'Mobile Payment',
-  check: 'Check',
-  other: 'Other',
-};
+const PAYMENT_SOURCES = new Set([
+  'bankPaymentVoucher',
+  'financialPayment',
+  'cashPaymentVoucher',
+  'journalPaymentVoucher',
+]);
 
 const formatMoney = (value, currency) => {
   const symbol = currency?.symbol || currency?.code || '';
@@ -76,22 +57,20 @@ const formatDate = (value) => {
   return Number.isNaN(date.getTime()) ? '—' : format(date, 'dd MMM yyyy');
 };
 
-const formatDateTime = (value) => {
-  if (!value) return '—';
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '—' : format(date, 'dd MMM yyyy, hh:mm a');
+const renderField = (label, value) => {
+  if (value === null || value === undefined || value === '' || value === '—') return null;
+  return (
+    <div key={label}>
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="font-medium">{value}</p>
+    </div>
+  );
 };
 
-const renderField = (label, value) => (
-  <div key={label}>
-    <p className="text-sm text-gray-500">{label}</p>
-    <p className="font-medium">{value ?? '—'}</p>
-  </div>
-);
-
 const renderEntityLink = (entity, basePath, labelKey = 'name') => {
-  if (!entity) return '—';
-  const label = entity[labelKey] || entity.referCode || entity.code || '—';
+  if (!entity) return null;
+  const label = entity[labelKey] || entity.referCode || entity.code;
+  if (!label) return null;
   if (entity._id && basePath) {
     return (
       <Link to={`${basePath}/${entity._id}`} className="text-primary hover:underline">
@@ -102,196 +81,131 @@ const renderEntityLink = (entity, basePath, labelKey = 'name') => {
   return label;
 };
 
-const ProcurementCategoryDetails = ({ details, currency }) => (
-  <>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-      {renderField('Invoice Number', details.invoiceNo)}
-      {renderField('Purchase Order', details.purchaseOrderNo)}
-      <div>
-        <p className="text-sm text-gray-500">Supplier</p>
-        <p className="font-medium">
-          {renderEntityLink(details.supplier, '/suppliers/details')}
-        </p>
-      </div>
-      {renderField('Due Date', formatDate(details.dueDate))}
-      {renderField('Payment Method', details.paymentMethod)}
-    </div>
-    {details.products?.length > 0 && (
-      <Table aria-label="Procurement products" removeWrapper>
-        <TableHeader>
-          <TableColumn>PRODUCT</TableColumn>
-          <TableColumn>QTY</TableColumn>
-          <TableColumn>UNIT PRICE</TableColumn>
-          <TableColumn>TOTAL</TableColumn>
-        </TableHeader>
-        <TableBody>
-          {details.products.map((item, index) => (
-            <TableRow key={item._id || index}>
-              <TableCell>{item.product?.name || item.name || '—'}</TableCell>
-              <TableCell>{item.quantity ?? '—'}</TableCell>
-              <TableCell>{formatMoney(item.unitPrice, currency)}</TableCell>
-              <TableCell>
-                {formatMoney(
-                  item.totalPrice ?? item.total ?? (item.quantity || 0) * (item.unitPrice || 0),
-                  currency
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    )}
-  </>
-);
-
-const WarehouseCategoryDetails = ({ details }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div>
-      <p className="text-sm text-gray-500">Warehouse</p>
-      <p className="font-medium">{details.warehouse?.name || '—'}</p>
-    </div>
-    {renderField('Expense Sub Type', details.expenseSubType)}
-    {renderField('Period', details.period)}
-    {renderField('Description', details.description)}
-  </div>
-);
-
-const LogisticsCategoryDetails = ({ details }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div>
-      <p className="text-sm text-gray-500">Transporter</p>
-      <p className="font-medium">
-        {renderEntityLink(details.transporter, '/transporter-details')}
-      </p>
-    </div>
-    {renderField('Route', details.route)}
-    {renderField('Shipment Reference', details.shipmentReference || details.referCode)}
-    {renderField('Delivery Date', formatDate(details.deliveryDate))}
-  </div>
-);
-
-const SalesDistributionCategoryDetails = ({ details }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    {renderField('Expense Type', details.expenseType)}
-    {renderField('Expense Sub Type', details.expenseSubType)}
-    {renderField('Description', details.description)}
-    <div>
-      <p className="text-sm text-gray-500">Customer</p>
-      <p className="font-medium">
-        {renderEntityLink(details.customer, '/customers')}
-      </p>
-    </div>
-  </div>
-);
-
-const OperationalCategoryDetails = ({ details }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    {renderField('Department', details.department)}
-    {renderField('Expense Sub Type', details.expenseSubType)}
-    {renderField('Description', details.description)}
-    {renderField('Notes', details.notes)}
-  </div>
-);
-
-const MiscellaneousCategoryDetails = ({ details }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    {renderField('Expense Sub Type', details.expenseSubType)}
-    {renderField('Description', details.description)}
-    {renderField('Notes', details.notes)}
-  </div>
-);
-
-const FinancialCategoryDetails = ({ details, currency }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    {renderField('Expense Sub Type', details.expenseSubType?.replace(/_/g, ' '))}
-    {renderField('Transaction Date', formatDate(details.transactionDate))}
-    {renderField('Payment Method', details.paymentMethod)}
-    <div>
-      <p className="text-sm text-gray-500">Linked Bank Account</p>
-      <p className="font-medium">{details.linkedBankAccount?.accountName || '—'}</p>
-    </div>
-    {renderField('Bank Charges', formatMoney(details.bankCharges, currency))}
-    {renderField('Transaction Fees', formatMoney(details.transactionFees, currency))}
-  </div>
-);
-
-const CategoryDetailsSection = ({ expenseType, categoryDetails, currency }) => {
-  if (!categoryDetails || Object.keys(categoryDetails).length === 0) {
-    return <p className="text-sm text-gray-500">No category details available.</p>;
-  }
-
-  switch (expenseType) {
-    case 'procurement':
-      return <ProcurementCategoryDetails details={categoryDetails} currency={currency} />;
-    case 'warehouse':
-      return <WarehouseCategoryDetails details={categoryDetails} />;
-    case 'logistics':
-      return <LogisticsCategoryDetails details={categoryDetails} />;
-    case 'sales_distribution':
-      return <SalesDistributionCategoryDetails details={categoryDetails} />;
-    case 'operational':
-      return <OperationalCategoryDetails details={categoryDetails} />;
-    case 'miscellaneous':
-      return <MiscellaneousCategoryDetails details={categoryDetails} />;
-    case 'financial':
-      return <FinancialCategoryDetails details={categoryDetails} currency={currency} />;
-    default:
-      return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.entries(categoryDetails)
-            .filter(([, value]) => value !== null && typeof value !== 'object')
-            .map(([key, value]) =>
-              renderField(
-                key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()),
-                String(value)
-              )
-            )}
-        </div>
-      );
-  }
-};
-
-const getExpenseDisplayTitle = (record, typeLabel) => {
-  if (!record) return `${typeLabel} Expense`;
-  if (record.referCode) return record.referCode;
-  if (record.invoiceNo && record.purchaseOrderNo) {
-    return `PO ${record.purchaseOrderNo} / Inv ${record.invoiceNo}`;
-  }
-  if (record.invoiceNo) return `Invoice ${record.invoiceNo}`;
-  if (record.purchaseOrderNo) return `PO ${record.purchaseOrderNo}`;
+const getExpenseDisplayTitle = (expense, categoryDetails, typeLabel) => {
+  if (expense?.referCode) return expense.referCode;
+  if (categoryDetails?.invoiceNo) return categoryDetails.invoiceNo;
+  if (categoryDetails?.purchaseOrderNo) return categoryDetails.purchaseOrderNo;
   return `${typeLabel} Expense`;
 };
 
-const resolveExpenseAmount = (summary, record) => {
-  const fromRecord = record?.totalAmount ?? record?.totalCost;
-  if (summary?.expenseAmount) return summary.expenseAmount;
-  return fromRecord || 0;
+const getExpenseSubtitle = (categoryDetails, typeLabel) => {
+  const parts = [typeLabel];
+  if (categoryDetails?.supplier?.name) parts.push(categoryDetails.supplier.name);
+  return parts.join(' · ');
 };
 
-const resolvePaymentSummary = (summary, record) => {
-  const expenseAmount = resolveExpenseAmount(summary, record);
-  const paidViaVouchers = summary?.paidViaVouchers ?? 0;
-  const paidViaFinancial =
-    summary?.paidViaFinancialPayments ?? summary?.paidViaFinancial ?? 0;
-  const totalPaid = summary?.totalPaid ?? paidViaVouchers + paidViaFinancial;
-  const remainingBalance =
-    summary?.remainingBalance != null && summary.expenseAmount
-      ? summary.remainingBalance
-      : Math.max(0, expenseAmount - totalPaid);
+const mapLedgerRow = (tx) => {
+  const amount = tx.amount ?? tx.debit ?? tx.credit ?? 0;
+  const isPayment = PAYMENT_SOURCES.has(tx.source);
 
   return {
-    expenseAmount,
-    paidViaVouchers,
-    paidViaFinancial,
-    totalPaid,
-    remainingBalance,
+    ...tx,
+    debit: isPayment ? 0 : amount,
+    credit: isPayment ? amount : 0,
+    typeLabel: isPayment ? 'Payment' : 'Expense',
   };
 };
 
+const buildBalanceDueRows = (rows) => {
+  let balanceDue = 0;
+
+  return [...rows]
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .map((row) => {
+      balanceDue += row.debit - row.credit;
+      return { ...row, balanceDue: Math.max(0, balanceDue) };
+    });
+};
+
+const CategoryInfoFields = ({ expenseType, categoryDetails, currency }) => {
+  if (!categoryDetails) return null;
+
+  switch (expenseType) {
+    case 'procurement':
+      return (
+        <>
+          {renderField('Purchase Order', categoryDetails.purchaseOrderNo)}
+          <div>
+            <p className="text-sm text-gray-500">Supplier</p>
+            <p className="font-medium">
+              {renderEntityLink(categoryDetails.supplier, '/suppliers/details') || '—'}
+            </p>
+          </div>
+          {renderField('Due Date', formatDate(categoryDetails.dueDate))}
+          {categoryDetails.products?.length > 0 && (
+            <div className="md:col-span-2">
+              <p className="text-sm text-gray-500 mb-1">Products</p>
+              <div className="space-y-1">
+                {categoryDetails.products.map((item, index) => (
+                  <p key={item._id || index} className="text-sm">
+                    {item.product?.name || '—'} × {item.quantity ?? 1}
+                    {' — '}
+                    {formatMoney(item.totalPrice ?? item.quantity * item.unitPrice, currency)}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      );
+    case 'warehouse':
+      return (
+        <>
+          {renderField('Warehouse', categoryDetails.warehouse?.name)}
+          {renderField('Sub Type', categoryDetails.expenseSubType)}
+          {renderField('Period', categoryDetails.period)}
+        </>
+      );
+    case 'logistics':
+      return (
+        <>
+          <div>
+            <p className="text-sm text-gray-500">Transporter</p>
+            <p className="font-medium">
+              {renderEntityLink(categoryDetails.transporter, '/transporter-details') || '—'}
+            </p>
+          </div>
+          {renderField('Route', categoryDetails.route)}
+          {renderField('Delivery Date', formatDate(categoryDetails.deliveryDate))}
+        </>
+      );
+    case 'sales_distribution':
+      return (
+        <>
+          {renderField('Sub Type', categoryDetails.expenseSubType)}
+          <div>
+            <p className="text-sm text-gray-500">Customer</p>
+            <p className="font-medium">
+              {renderEntityLink(categoryDetails.customer, '/customers') || '—'}
+            </p>
+          </div>
+        </>
+      );
+    case 'operational':
+      return (
+        <>
+          {renderField('Department', categoryDetails.department)}
+          {renderField('Sub Type', categoryDetails.expenseSubType)}
+        </>
+      );
+    case 'miscellaneous':
+      return <>{renderField('Sub Type', categoryDetails.expenseSubType)}</>;
+    case 'financial':
+      return (
+        <>
+          {renderField('Sub Type', categoryDetails.expenseSubType?.replace(/_/g, ' '))}
+          {renderField('Bank Account', categoryDetails.linkedBankAccount?.accountName)}
+        </>
+      );
+    default:
+      return null;
+  }
+};
+
 const fetchExpenseTransactionDetails = async ({ queryKey }) => {
-  const [_, id, expenseType] = queryKey;
+  const [_, id, expenseType, page] = queryKey;
   const res = await userRequest.get(`/expenses/${id}/details`, {
-    params: { expenseType },
+    params: { expenseType, page: page || 1 },
   });
   return res.data?.data || res.data;
 };
@@ -299,11 +213,12 @@ const fetchExpenseTransactionDetails = async ({ queryKey }) => {
 const ExpenseTransactionDetails = () => {
   const { expenseTypeSlug, id } = useParams();
   const navigate = useNavigate();
+  const [page, setPage] = useState(1);
   const expenseType = slugToExpenseType(expenseTypeSlug);
   const typeLabel = getExpenseTypeLabel(expenseType);
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['expense-transaction-details', id, expenseType],
+    queryKey: ['expense-transaction-details', id, expenseType, page],
     queryFn: fetchExpenseTransactionDetails,
     enabled: Boolean(id && expenseType),
     onError: (error) => {
@@ -313,15 +228,13 @@ const ExpenseTransactionDetails = () => {
     },
   });
 
-  const rawExpense = data?.expense;
+  const expense = data?.expense;
   const categoryDetails = data?.categoryDetails;
-  const expenseRecord = rawExpense || categoryDetails;
-  const transactions = data?.transactions || {};
   const summary = data?.summary || {};
-  const bankPaymentVouchers = transactions.bankPaymentVouchers || [];
-  const financialPayments = transactions.financialPayments || [];
-  const currency = expenseRecord?.currency;
-  const paymentSummary = resolvePaymentSummary(summary, expenseRecord);
+  const ledger = data?.ledger || {};
+  const rawTransactions = ledger.transactions || ledger.recentTransactions || [];
+  const pagination = ledger.pagination;
+  const currency = expense?.currency || categoryDetails?.currency;
 
   if (isLoading) {
     return (
@@ -331,14 +244,11 @@ const ExpenseTransactionDetails = () => {
     );
   }
 
-  if (isError || !expenseRecord) {
+  if (isError || (!expense && !categoryDetails)) {
     return (
       <div className="flex flex-col justify-center items-center h-full min-h-[400px] gap-3 p-4">
-        <p className="text-danger">Expense transactions not found or failed to load</p>
-        <Button
-          color="primary"
-          onPress={() => navigate(getExpenseListPath(expenseType))}
-        >
+        <p className="text-danger">Expense not found or failed to load</p>
+        <Button color="primary" onPress={() => navigate(getExpenseListPath(expenseType))}>
           Back to {typeLabel} Expenses
         </Button>
       </div>
@@ -346,16 +256,23 @@ const ExpenseTransactionDetails = () => {
   }
 
   const paymentStatus =
-    (summary.paymentStatus && summary.paymentStatus !== 'unknown'
-      ? summary.paymentStatus
-      : null) ||
-    expenseRecord.paymentStatus ||
-    expenseRecord.status;
+    summary.paymentStatus ||
+    expense?.status ||
+    categoryDetails?.paymentStatus ||
+    'pending';
   const statusColor = PAYMENT_STATUS_COLORS[paymentStatus?.toLowerCase()] || 'default';
-  const displayTitle = getExpenseDisplayTitle(expenseRecord, typeLabel);
+
+  const expenseAmount =
+    summary.expenseAmount ?? expense?.totalAmount ?? categoryDetails?.totalCost ?? 0;
+  const paidAmount = summary.totalPaid ?? summary.paidAmount ?? 0;
+  const remainingBalance =
+    summary.remainingBalance ?? Math.max(0, expenseAmount - paidAmount);
+
+  const mappedTransactions = buildBalanceDueRows(rawTransactions.map(mapLedgerRow));
+  const totalPages = pagination?.totalPages || 1;
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
         <div className="flex items-center">
           <Button
@@ -371,9 +288,11 @@ const ExpenseTransactionDetails = () => {
               <FaReceipt className="text-indigo-600 text-lg" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">{displayTitle}</h1>
+              <h1 className="text-2xl font-bold">
+                {getExpenseDisplayTitle(expense, categoryDetails, typeLabel)}
+              </h1>
               <p className="text-sm text-gray-500">
-                {typeLabel} · Transaction & Payment Details
+                {getExpenseSubtitle(categoryDetails, typeLabel)}
               </p>
             </div>
           </div>
@@ -400,325 +319,120 @@ const ExpenseTransactionDetails = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <Card className="border border-gray-100">
-          <CardBody className="p-4">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Expense Amount</p>
+          <CardBody className="p-4 text-center sm:text-left">
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Total Expense</p>
             <p className="text-2xl font-bold text-indigo-700 mt-1">
-              {formatMoney(paymentSummary.expenseAmount, currency)}
+              {formatMoney(expenseAmount, currency)}
             </p>
           </CardBody>
         </Card>
         <Card className="border border-gray-100">
-          <CardBody className="p-4">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Paid via Vouchers</p>
-            <p className="text-2xl font-bold text-teal-700 mt-1">
-              {formatMoney(paymentSummary.paidViaVouchers, currency)}
-            </p>
-          </CardBody>
-        </Card>
-        <Card className="border border-gray-100">
-          <CardBody className="p-4">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Total Paid</p>
+          <CardBody className="p-4 text-center sm:text-left">
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Paid</p>
             <p className="text-2xl font-bold text-green-600 mt-1">
-              {formatMoney(paymentSummary.totalPaid, currency)}
+              {formatMoney(paidAmount, currency)}
             </p>
           </CardBody>
         </Card>
         <Card className="border border-gray-100">
-          <CardBody className="p-4">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Remaining Balance</p>
+          <CardBody className="p-4 text-center sm:text-left">
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Remaining</p>
             <p
               className={`text-2xl font-bold mt-1 ${
-                paymentSummary.remainingBalance > 0 ? 'text-amber-600' : 'text-gray-700'
+                remainingBalance > 0 ? 'text-amber-600' : 'text-gray-700'
               }`}
             >
-              {formatMoney(paymentSummary.remainingBalance, currency)}
+              {formatMoney(remainingBalance, currency)}
             </p>
-          </CardBody>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <Card className="lg:col-span-2 border border-gray-100">
-          <CardHeader className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold">Expense Information</h2>
-            <Chip color={statusColor} variant="flat" size="sm" className="capitalize">
-              {paymentStatus || '—'}
+            <Chip color={statusColor} variant="flat" size="sm" className="capitalize mt-2">
+              {paymentStatus}
             </Chip>
-          </CardHeader>
-          <Divider />
-          <CardBody>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {renderField('Refer Code', expenseRecord.referCode)}
-              {renderField('Purchase Order', expenseRecord.purchaseOrderNo)}
-              {renderField('Invoice Number', expenseRecord.invoiceNo)}
-              {renderField('Description', expenseRecord.description)}
-              {renderField(
-                'Amount',
-                formatMoney(
-                  expenseRecord.totalAmount ?? expenseRecord.totalCost,
-                  currency
-                )
-              )}
-              {renderField('Currency', currency?.code || currency?.name || '—')}
-              {renderField('Payment Method', expenseRecord.paymentMethod)}
-              {renderField('Due Date', formatDate(expenseRecord.dueDate))}
-              {renderField('Created', formatDateTime(expenseRecord.createdAt))}
-              {renderField('Last Updated', formatDateTime(expenseRecord.updatedAt))}
-            </div>
-            {expenseRecord.notes && (
-              <div className="mt-4">
-                <p className="text-sm text-gray-500 mb-1">Notes</p>
-                <p className="text-sm bg-gray-50 p-3 rounded-md">{expenseRecord.notes}</p>
-              </div>
-            )}
-          </CardBody>
-        </Card>
-
-        <Card className="border border-gray-100">
-          <CardHeader>
-            <h2 className="text-lg font-semibold">Payment Summary</h2>
-          </CardHeader>
-          <Divider />
-          <CardBody className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Expense Amount</span>
-              <span className="font-medium">
-                {formatMoney(paymentSummary.expenseAmount, currency)}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Paid via Vouchers</span>
-              <span className="font-medium">
-                {formatMoney(paymentSummary.paidViaVouchers, currency)}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Financial Payments</span>
-              <span className="font-medium">
-                {formatMoney(paymentSummary.paidViaFinancial, currency)}
-              </span>
-            </div>
-            <Divider />
-            <div className="flex justify-between text-sm font-semibold">
-              <span>Total Paid</span>
-              <span className="text-green-600">
-                {formatMoney(paymentSummary.totalPaid, currency)}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm font-semibold">
-              <span>Remaining</span>
-              <span
-                className={
-                  paymentSummary.remainingBalance > 0 ? 'text-amber-600' : 'text-gray-700'
-                }
-              >
-                {formatMoney(paymentSummary.remainingBalance, currency)}
-              </span>
-            </div>
-            <Divider />
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Bank Payment Vouchers</span>
-              <span className="font-medium">{summary.bankPaymentVoucherCount ?? bankPaymentVouchers.length}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Financial Payments</span>
-              <span className="font-medium">{financialPayments.length}</span>
-            </div>
           </CardBody>
         </Card>
       </div>
 
-      {categoryDetails && Object.keys(categoryDetails).length > 0 && (
       <Card className="mb-6 border border-gray-100">
         <CardHeader>
-          <h2 className="text-lg font-semibold">{typeLabel} Details</h2>
+          <h2 className="text-lg font-semibold">Details</h2>
         </CardHeader>
         <Divider />
         <CardBody>
-          <CategoryDetailsSection
-            expenseType={expenseType}
-            categoryDetails={categoryDetails}
-            currency={currency}
-          />
-        </CardBody>
-      </Card>
-      )}
-
-      <Card className="mb-6 border border-gray-100">
-        <CardHeader className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <FaUniversity className="text-teal-600" />
-            <h2 className="text-lg font-semibold">Bank Payment Vouchers</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {renderField('Refer Code', expense?.referCode)}
+            {renderField('Invoice', categoryDetails?.invoiceNo)}
+            {renderField('Description', expense?.description)}
+            {renderField('Payment Method', expense?.paymentMethod || categoryDetails?.paymentMethod)}
+            {renderField('Expense Date', formatDate(expense?.expenseDate || categoryDetails?.createdAt))}
+            {renderField('Created By', expense?.createdBy?.name)}
+            <CategoryInfoFields
+              expenseType={expenseType}
+              categoryDetails={categoryDetails}
+              currency={currency}
+            />
           </div>
-          <span className="text-sm text-gray-500">{bankPaymentVouchers.length} voucher(s)</span>
-        </CardHeader>
-        <Divider />
-        <CardBody className="p-0">
-          <Table
-            aria-label="Bank payment vouchers"
-            classNames={{ wrapper: 'min-h-[120px]' }}
-          >
-            <TableHeader>
-              <TableColumn>VOUCHER #</TableColumn>
-              <TableColumn>DATE</TableColumn>
-              <TableColumn>BANK ACCOUNT</TableColumn>
-              <TableColumn>PAYEE</TableColumn>
-              <TableColumn>AMOUNT</TableColumn>
-              <TableColumn>METHOD</TableColumn>
-              <TableColumn>STATUS</TableColumn>
-            </TableHeader>
-            <TableBody emptyContent="No bank payment vouchers linked to this expense">
-              {bankPaymentVouchers.map((voucher, index) => (
-                <TableRow key={voucher._id || voucher.voucherNumber || index}>
-                  <TableCell>
-                    <span className="font-medium text-sm">
-                      {voucher.voucherNumber || '—'}
-                    </span>
-                  </TableCell>
-                  <TableCell>{formatDate(voucher.voucherDate)}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">
-                        {voucher.bankAccount?.accountName || '—'}
-                      </span>
-                      {voucher.bankAccount?.bankName && (
-                        <span className="text-xs text-gray-500">
-                          {voucher.bankAccount.bankName}
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm">
-                      {voucher.payeeName || voucher.payee?.name || '—'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {formatMoney(voucher.amount, voucher.currency || currency)}
-                  </TableCell>
-                  <TableCell className="capitalize">
-                    {METHOD_LABELS[voucher.paymentMethod] || voucher.paymentMethod || '—'}
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      size="sm"
-                      variant="flat"
-                      color={VOUCHER_STATUS_COLORS[voucher.status?.toLowerCase()] || 'default'}
-                      className="capitalize"
-                    >
-                      {voucher.status || '—'}
-                    </Chip>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
         </CardBody>
       </Card>
-
-      {bankPaymentVouchers.some((v) => v.entries?.length > 0) && (
-        <Card className="mb-6 border border-gray-100">
-          <CardHeader>
-            <h2 className="text-lg font-semibold">Voucher Entries</h2>
-          </CardHeader>
-          <Divider />
-          <CardBody className="space-y-6">
-            {bankPaymentVouchers
-              .filter((v) => v.entries?.length > 0)
-              .map((voucher, vIndex) => (
-                <div key={voucher._id || vIndex}>
-                  <p className="text-sm font-semibold text-gray-700 mb-2">
-                    {voucher.voucherNumber || `Voucher ${vIndex + 1}`}
-                  </p>
-                  <Table aria-label={`Entries for ${voucher.voucherNumber}`} removeWrapper>
-                    <TableHeader>
-                      <TableColumn>ACCOUNT</TableColumn>
-                      <TableColumn>DESCRIPTION</TableColumn>
-                      <TableColumn>DEBIT</TableColumn>
-                      <TableColumn>CREDIT</TableColumn>
-                    </TableHeader>
-                    <TableBody>
-                      {voucher.entries.map((entry, eIndex) => (
-                        <TableRow key={entry._id || eIndex}>
-                          <TableCell>{entry.accountName || entry.account?.name || '—'}</TableCell>
-                          <TableCell>{entry.description || '—'}</TableCell>
-                          <TableCell className="text-red-600">
-                            {entry.debit ? formatMoney(entry.debit, currency) : '—'}
-                          </TableCell>
-                          <TableCell className="text-green-600">
-                            {entry.credit ? formatMoney(entry.credit, currency) : '—'}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ))}
-          </CardBody>
-        </Card>
-      )}
 
       <Card className="border border-gray-100">
         <CardHeader className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <FaWallet className="text-purple-600" />
-            <h2 className="text-lg font-semibold">Financial Payments</h2>
+          <div>
+            <h2 className="text-lg font-semibold">Payment History</h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Expense in debit · Payments in credit
+            </p>
           </div>
-          <span className="text-sm text-gray-500">{financialPayments.length} payment(s)</span>
+          {pagination?.total != null && (
+            <span className="text-sm text-gray-500">{pagination.total} entries</span>
+          )}
         </CardHeader>
         <Divider />
         <CardBody className="p-0">
           <Table
-            aria-label="Financial payments"
+            aria-label="Payment history"
+            bottomContent={
+              totalPages > 1 && (
+                <div className="flex w-full justify-center py-4">
+                  <Pagination
+                    isCompact
+                    showControls
+                    color="primary"
+                    page={page}
+                    total={totalPages}
+                    onChange={setPage}
+                  />
+                </div>
+              )
+            }
             classNames={{ wrapper: 'min-h-[120px]' }}
           >
             <TableHeader>
               <TableColumn>DATE</TableColumn>
               <TableColumn>REFERENCE</TableColumn>
               <TableColumn>DESCRIPTION</TableColumn>
-              <TableColumn>METHOD</TableColumn>
-              <TableColumn>AMOUNT</TableColumn>
-              <TableColumn>USER</TableColumn>
-              <TableColumn>STATUS</TableColumn>
+              <TableColumn>DEBIT</TableColumn>
+              <TableColumn>CREDIT</TableColumn>
+              <TableColumn>BALANCE DUE</TableColumn>
             </TableHeader>
-            <TableBody emptyContent="No financial payments linked to this expense">
-              {financialPayments.map((payment, index) => (
-                <TableRow key={payment._id || payment.referCode || index}>
-                  <TableCell>{formatDate(payment.date || payment.paymentDate)}</TableCell>
+            <TableBody emptyContent="No transactions yet">
+              {mappedTransactions.map((tx, index) => (
+                <TableRow key={`${tx.sourceId}-${tx.reference}-${index}`}>
+                  <TableCell>{formatDate(tx.date)}</TableCell>
                   <TableCell>
-                    <span className="font-medium text-sm">
-                      {payment.referCode || payment.reference || '—'}
-                    </span>
+                    <span className="font-medium text-sm">{tx.reference || '—'}</span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm">{payment.description || '—'}</span>
+                    <span className="text-sm">{tx.description || tx.typeLabel}</span>
                   </TableCell>
-                  <TableCell>
-                    {METHOD_LABELS[payment.method || payment.paymentMethod] ||
-                      payment.method ||
-                      payment.paymentMethod ||
-                      '—'}
+                  <TableCell className="text-red-600 font-medium">
+                    {tx.debit ? formatMoney(tx.debit, currency) : '—'}
                   </TableCell>
-                  <TableCell className="font-medium">
-                    {formatMoney(
-                      payment.amount ?? payment.credit ?? payment.debit,
-                      payment.currency || currency
-                    )}
+                  <TableCell className="text-green-600 font-medium">
+                    {tx.credit ? formatMoney(tx.credit, currency) : '—'}
                   </TableCell>
-                  <TableCell>
-                    <span className="text-sm">{payment.user?.name || '—'}</span>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      size="sm"
-                      variant="flat"
-                      color={payment.status === 'active' ? 'success' : 'default'}
-                      className="capitalize"
-                    >
-                      {payment.status || '—'}
-                    </Chip>
+                  <TableCell className="font-semibold">
+                    {formatMoney(tx.balanceDue, currency)}
                   </TableCell>
                 </TableRow>
               ))}
