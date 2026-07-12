@@ -248,6 +248,117 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
     return String(effect);
   };
 
+  const paymentColumns = ledgerData
+    ? [
+        { key: "referCode", label: "REF. CODE" },
+        { key: "voucher", label: "VOUCHER" },
+        { key: "amount", label: "AMOUNT" },
+        { key: "debit", label: "DEBIT" },
+        { key: "credit", label: "CREDIT" },
+        { key: "runningBalance", label: "BALANCE" },
+        { key: "method", label: "METHOD" },
+        { key: "paymentDate", label: "DATE" },
+        { key: "description", label: "DESCRIPTION" },
+        { key: "actions", label: "ACTIONS" },
+      ]
+    : [
+        { key: "referCode", label: "REF. CODE" },
+        { key: "amount", label: "AMOUNT" },
+        { key: "effect", label: "EFFECT" },
+        { key: "method", label: "METHOD" },
+        { key: "paymentDate", label: "DATE" },
+        { key: "description", label: "DESCRIPTION" },
+        { key: "actions", label: "ACTIONS" },
+      ];
+
+  const renderPaymentCell = (payment, columnKey) => {
+    const rowCurrency = payment.currency || currency;
+
+    switch (columnKey) {
+      case "referCode":
+        return payment.referCode || payment.reference || "—";
+      case "voucher":
+        return payment.code || "—";
+      case "amount":
+        return (
+          <span className="font-medium">
+            {formatCurrency(payment.amount, rowCurrency)}
+          </span>
+        );
+      case "debit":
+        return (
+          <span className="text-red-600">
+            {payment.debit
+              ? formatCurrency(payment.debit, rowCurrency)
+              : "—"}
+          </span>
+        );
+      case "credit":
+        return (
+          <span className="text-green-600">
+            {payment.credit
+              ? formatCurrency(payment.credit, rowCurrency)
+              : "—"}
+          </span>
+        );
+      case "runningBalance":
+        return (
+          <span className="font-medium">
+            {formatCurrency(payment.runningBalance, rowCurrency)}
+          </span>
+        );
+      case "effect":
+        return formatEffect(payment.effect);
+      case "method":
+        return formatMethod(payment.method);
+      case "paymentDate":
+        return formatDate(
+          payment.paymentDate ||
+            payment.date ||
+            payment.metadata?.paymentDate
+        );
+      case "description":
+        return (
+          <span className="max-w-[200px] truncate block">
+            {payment.description || "—"}
+          </span>
+        );
+      case "actions":
+        return (
+          <Dropdown>
+            <DropdownTrigger>
+              <Button isIconOnly size="sm" variant="light">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu aria-label="Payment actions">
+              <DropdownItem
+                key="edit"
+                startContent={<Edit className="h-4 w-4" />}
+                onPress={() => openEditModal(payment)}
+              >
+                Edit
+              </DropdownItem>
+              <DropdownItem
+                key="delete"
+                color="danger"
+                className="text-danger"
+                startContent={<Trash2 className="h-4 w-4" />}
+                onPress={() => {
+                  setDeletingPayment(normalizePaymentRow(payment));
+                  setIsDeleteOpen(true);
+                }}
+              >
+                Delete
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+        );
+      default:
+        return null;
+    }
+  };
+
   const openLedgerDetails = () => {
     navigate(getFinancialPaymentsDetailsPath(relatedModel, relatedId));
   };
@@ -484,112 +595,22 @@ const FinancialPaymentsSection = ({ relatedModel, relatedId, currencyId }) => {
                 td: "text-sm",
               }}
             >
-              <TableHeader>
-                <TableColumn key="referCode">REF. CODE</TableColumn>
-                {ledgerData && (
-                  <TableColumn key="voucher">VOUCHER</TableColumn>
+              <TableHeader columns={paymentColumns}>
+                {(column) => (
+                  <TableColumn
+                    key={column.key}
+                    className={column.key === "actions" ? "w-16" : undefined}
+                  >
+                    {column.label}
+                  </TableColumn>
                 )}
-                <TableColumn key="amount">AMOUNT</TableColumn>
-                {ledgerData ? (
-                  <>
-                    <TableColumn key="debit">DEBIT</TableColumn>
-                    <TableColumn key="credit">CREDIT</TableColumn>
-                    <TableColumn key="runningBalance">BALANCE</TableColumn>
-                  </>
-                ) : (
-                  <TableColumn key="effect">EFFECT</TableColumn>
-                )}
-                <TableColumn key="method">METHOD</TableColumn>
-                <TableColumn key="paymentDate">DATE</TableColumn>
-                <TableColumn key="description">DESCRIPTION</TableColumn>
-                <TableColumn key="actions" className="w-16">
-                  ACTIONS
-                </TableColumn>
               </TableHeader>
               <TableBody items={payments} emptyContent="No payments">
                 {(payment) => (
                   <TableRow key={payment._id || payment.sourceId}>
-                    <TableCell>
-                      {payment.referCode || payment.reference || "—"}
-                    </TableCell>
-                    {ledgerData && (
-                      <TableCell>{payment.code || "—"}</TableCell>
+                    {(columnKey) => (
+                      <TableCell>{renderPaymentCell(payment, columnKey)}</TableCell>
                     )}
-                    <TableCell className="font-medium">
-                      {formatCurrency(
-                        payment.amount,
-                        payment.currency || currency
-                      )}
-                    </TableCell>
-                    {ledgerData ? (
-                      <>
-                        <TableCell className="text-red-600">
-                          {payment.debit
-                            ? formatCurrency(
-                                payment.debit,
-                                payment.currency || currency
-                              )
-                            : "—"}
-                        </TableCell>
-                        <TableCell className="text-green-600">
-                          {payment.credit
-                            ? formatCurrency(
-                                payment.credit,
-                                payment.currency || currency
-                              )
-                            : "—"}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {formatCurrency(
-                            payment.runningBalance,
-                            payment.currency || currency
-                          )}
-                        </TableCell>
-                      </>
-                    ) : (
-                      <TableCell>{formatEffect(payment.effect)}</TableCell>
-                    )}
-                    <TableCell>{formatMethod(payment.method)}</TableCell>
-                    <TableCell>
-                      {formatDate(
-                        payment.paymentDate ||
-                          payment.date ||
-                          payment.metadata?.paymentDate
-                      )}
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate">
-                      {payment.description || "—"}
-                    </TableCell>
-                    <TableCell>
-                      <Dropdown>
-                        <DropdownTrigger>
-                          <Button isIconOnly size="sm" variant="light">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownTrigger>
-                        <DropdownMenu aria-label="Payment actions">
-                          <DropdownItem
-                            key="edit"
-                            startContent={<Edit className="h-4 w-4" />}
-                            onPress={() => openEditModal(payment)}
-                          >
-                            Edit
-                          </DropdownItem>
-                          <DropdownItem
-                            key="delete"
-                            color="danger"
-                            className="text-danger"
-                            startContent={<Trash2 className="h-4 w-4" />}
-                            onPress={() => {
-                              setDeletingPayment(normalizePaymentRow(payment));
-                              setIsDeleteOpen(true);
-                            }}
-                          >
-                            Delete
-                          </DropdownItem>
-                        </DropdownMenu>
-                      </Dropdown>
-                    </TableCell>
                   </TableRow>
                 )}
               </TableBody>

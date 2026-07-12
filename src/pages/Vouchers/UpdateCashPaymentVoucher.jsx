@@ -27,6 +27,14 @@ import {
 import userRequest from '../../utils/userRequest';
 import toast from 'react-hot-toast';
 import { useQuery, useQueryClient } from 'react-query';
+import {
+  EXPENSE_PAYEE_TYPES,
+  EXPENSE_CATEGORY_ENDPOINTS,
+  formatPayeeTypeLabel,
+  getExpenseDisplayName,
+  isExpensePayeeType,
+  normalizeCategoryExpensesResponse,
+} from './utils/expensePayeeTypes';
 
 const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
   const navigate = useNavigate();
@@ -242,6 +250,21 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
     return [];
   };
 
+  const fetchExpenseAccounts = async (payeeType) => {
+    const endpoint = EXPENSE_CATEGORY_ENDPOINTS[payeeType];
+    if (!endpoint) return [];
+
+    try {
+      const { data } = await userRequest.get(endpoint, {
+        params: { limit: 100, page: 1 },
+      });
+      return normalizeCategoryExpensesResponse(data);
+    } catch (error) {
+      console.error('Error fetching expense accounts:', error);
+      return [];
+    }
+  };
+
   const { data: cashBooks = [], isLoading: isLoadingCashBooks } = useQuery(
     ['cash-books'],
     fetchCashBooks
@@ -266,9 +289,17 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
   const { data: owners = [] } = useQuery(['owners'], fetchOwners);
   const { data: employees = [] } = useQuery(['employees'], fetchEmployees);
   const { data: propertyAccounts = [] } = useQuery(['property-accounts'], fetchPropertyAccounts);
+  const { data: expenseAccounts = [], isLoading: isLoadingExpenses } = useQuery(
+    ['expense-accounts', formData.payeeType],
+    () => fetchExpenseAccounts(formData.payeeType),
+    { enabled: isExpensePayeeType(formData.payeeType) }
+  );
 
   const getPayeeDisplayName = (payee) => {
     if (!payee) return '';
+    if (isExpensePayeeType(formData.payeeType)) {
+      return getExpenseDisplayName(payee, formData.payeeType);
+    }
     return (
       payee.name ||
       payee.accountName ||
@@ -308,6 +339,9 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
       case 'PropertyAccount':
         return Array.isArray(propertyAccounts) ? propertyAccounts : [];
       default:
+        if (isExpensePayeeType(formData.payeeType)) {
+          return Array.isArray(expenseAccounts) ? expenseAccounts : [];
+        }
         return [];
     }
   };
@@ -706,11 +740,16 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
                     <SelectItem key="PropertyAccount" value="PropertyAccount">
                       Property Account
                     </SelectItem>
+                    {EXPENSE_PAYEE_TYPES.map(({ key, label }) => (
+                      <SelectItem key={key} value={key} textValue={`${label} Expense`}>
+                        {label} Expense
+                      </SelectItem>
+                    ))}
                   </Select>
 
                   <Select
                     isRequired
-                    label={`Select ${formData.payeeType?.charAt(0).toUpperCase() + formData.payeeType?.slice(1)}`}
+                    label={`Select ${formatPayeeTypeLabel(formData.payeeType)}`}
                     name="payee"
                     selectedKeys={formData.payee ? [formData.payee] : []}
                     onSelectionChange={(keys) => {
@@ -724,11 +763,15 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
                       }));
                     }}
                     labelPlacement="outside"
-                    placeholder={`Select ${formData.payeeType || 'payee'}`}
+                    placeholder={`Select ${formatPayeeTypeLabel(formData.payeeType).toLowerCase()}`}
                     isDisabled={!formData.payeeType}
+                    isLoading={isExpensePayeeType(formData.payeeType) && isLoadingExpenses}
                   >
                     {(() => {
                       const payeeOptions = getPayeeOptions();
+                      if (isExpensePayeeType(formData.payeeType) && isLoadingExpenses) {
+                        return null;
+                      }
                       return Array.isArray(payeeOptions) && payeeOptions.length > 0
                         ? payeeOptions.map((payee) => (
                             <SelectItem 
@@ -740,8 +783,8 @@ const UpdateCashPaymentVoucher = ({ voucherId, onBack }) => {
                             </SelectItem>
                           ))
                         : (
-                            <SelectItem key="no-options" value="" isDisabled>
-                              No {formData.payeeType || 'payee'} available
+                            <SelectItem key="no-options" value="no-options" isDisabled textValue="No options">
+                              No {formatPayeeTypeLabel(formData.payeeType).toLowerCase()} expense available
                             </SelectItem>
                           );
                     })()}
